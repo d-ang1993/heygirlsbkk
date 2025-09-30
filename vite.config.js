@@ -29,6 +29,7 @@ export default ({ mode }) => {
           'resources/js/app.js',
           'resources/css/editor.css',
           'resources/js/editor.js',
+          'resources/js/image-optimization.js',
         ],
         refresh: true,
       }),

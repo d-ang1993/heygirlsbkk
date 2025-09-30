@@ -17,7 +17,7 @@
         {{ __('Skip to content', 'sage') }}
       </a>
 
-      <x-header />
+      <x-navbar />
 
       <main id="main" class="main">
         @yield('content')

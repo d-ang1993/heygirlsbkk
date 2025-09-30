@@ -221,7 +221,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     } else {
       // Reset to default state
-      priceDisplay.innerHTML = '<div class="price-current">Select options to see price</div>';
+          priceDisplay.innerHTML = '';
       stockDisplay.innerHTML = '<span class="stock-status">Select options to see availability</span>';
       addToCartBtn.disabled = true;
       addToCartBtn.textContent = 'Select Options';

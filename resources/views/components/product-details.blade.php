@@ -30,7 +30,7 @@
   <div class="product-price-section">
     <div id="product-price-display">
       @if($product_type === 'variable')
-        <div class="price-current">Select options to see price</div>
+        <!-- Price will be updated by JavaScript -->
       @else
         @if($product_on_sale)
           <div class="price-sale">{!! $product_price !!}</div>
@@ -46,7 +46,7 @@
   @if($product_short_description)
     <div class="product-short-description">
       {!! wpautop($product_short_description) !!}
-      <a href="#" class="description-toggle">Less</a>
+      <a href="#" class="description-toggle">Read more</a>
     </div>
   @endif
 
@@ -57,7 +57,7 @@
   <div class="stock-status-section">
     <div id="stock-status-display">
       @if($product_type === 'variable')
-        <span class="stock-status">Select options to see availability</span>
+        <!-- Stock status will be updated by JavaScript -->
       @else
         @if($product_in_stock)
           <span class="stock-status in-stock">IN STOCK</span>

@@ -6,21 +6,8 @@
   <!-- Featured Products Section -->
   @include('partials.featured-products')
 
-  <!-- NEW ARRIVAL Section -->
-  @php
-    $new_products = wc_get_products([
-        'limit' => 8,
-        'orderby' => 'date',
-        'order' => 'DESC',
-        'status' => 'publish'
-    ]);
-  @endphp
-  
-  <x-product-grid 
-    title="NEW ARRIVAL" 
-    :products="$new_products"
-    :columns="4"
-  />
+  <!-- New Arrival Section -->
+  @include('partials.new-arrival')
 
   <!-- BEST SELLER Section -->
   @php

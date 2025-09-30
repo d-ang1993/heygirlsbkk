@@ -1,19 +1,18 @@
 <!-- Quantity and Add to Cart -->
 <div class="product-form">
   @if($product_purchasable)
-    <div class="quantity-selector">
-      <label class="quantity-label">Quantity</label>
-      <div class="quantity-controls">
-        <button type="button" class="quantity-btn minus">-</button>
-        <input type="number" name="quantity" value="1" min="1" max="{{ $product->get_max_purchase_quantity() }}" class="quantity-input" />
-        <button type="button" class="quantity-btn plus">+</button>
-      </div>
-    </div>
-    
     <div class="add-to-cart-section">
+      <div class="quantity-selector">
+        <div class="quantity-controls">
+          <button type="button" class="quantity-btn minus">-</button>
+          <input type="number" name="quantity" value="1" min="1" max="{{ $product->get_max_purchase_quantity() }}" class="quantity-input" />
+          <button type="button" class="quantity-btn plus">+</button>
+        </div>
+      </div>
+      
       @if($product_type === 'variable')
         <button type="button" class="btn btn-primary add-to-cart-btn" disabled>
-          Select Options
+          ADD TO CART
         </button>
       @else
         <form class="cart" action="{{ $product->add_to_cart_url() }}" method="post" enctype="multipart/form-data">

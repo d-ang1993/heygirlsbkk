@@ -32,47 +32,121 @@
   <!-- Color Variations -->
   @if(!empty($color_variations))
     <div class="color-selection">
-      <label class="variation-label">Color</label>
+      <!-- <label class="variation-label">Color</label> -->
+      <div class="selected-color-display" id="selected-color-display">
+        <span class="selected-color-label">Color: <span id="selected-color-name">Select a color</span></span>
+      </div>
       <div class="color-dots">
         @foreach($color_variations as $color_key => $variation)
           @php
-            $variation_obj = wc_get_product($variation['variation_id']);
-            $variation_in_stock = $variation_obj->is_in_stock();
             $color_name = str_replace(['-', '_'], ' ', $color_key);
             $color_name = ucwords($color_name);
             
-            // Map color names to actual colors
-            $color_map = [
-              'black' => '#000000',
-              'white' => '#ffffff',
-              'red' => '#ff0000',
-              'blue' => '#0000ff',
-              'green' => '#008000',
-              'yellow' => '#ffff00',
-              'pink' => '#ffc0cb',
-              'purple' => '#800080',
-              'orange' => '#ffa500',
-              'brown' => '#a52a2a',
-              'gray' => '#808080',
-              'grey' => '#808080',
-              'navy' => '#000080',
-              'beige' => '#f5f5dc',
-              'khaki' => '#f0e68c',
-              'ivory' => '#fffff0',
-              'cream' => '#fffdd0',
-              'tan' => '#d2b48c',
-              'maroon' => '#800000',
-              'burgundy' => '#800020'
-            ];
+            // Check if ALL variations for this color are out of stock
+            $color_has_stock = false;
+            foreach ($variations as $check_variation) {
+              $check_attributes = $check_variation['attributes'];
+              $check_color_key = $check_attributes['attribute_pa_color'] ?? $check_attributes['attribute_color'] ?? '';
+              
+              if ($check_color_key === $color_key) {
+                $check_variation_obj = wc_get_product($check_variation['variation_id']);
+                if ($check_variation_obj && $check_variation_obj->is_in_stock()) {
+                  $color_has_stock = true;
+                  break;
+                }
+              }
+            }
             
-            $dot_color = $color_map[strtolower($color_name)] ?? '#cccccc';
+            // Check if the color is already a hex code
+            $dot_color = '#cccccc'; // Default fallback color
+            
+            if (preg_match('/^#[0-9A-Fa-f]{6}$/', $color_key)) {
+              // It's already a hex code, use it directly
+              $dot_color = $color_key;
+            } else {
+              // Map friendly color names to hex codes
+              $color_map = [
+                'black' => '#000000',
+                'white' => '#ffffff',
+                'red' => '#ff0000',
+                'blue' => '#0000ff',
+                'green' => '#008000',
+                'yellow' => '#ffff00',
+                'pink' => '#ffc0cb',
+                'purple' => '#800080',
+                'orange' => '#ffa500',
+                'brown' => '#a52a2a',
+                'gray' => '#808080',
+                'grey' => '#808080',
+                'navy' => '#000080',
+                'beige' => '#f5f5dc',
+                'khaki' => '#f0e68c',
+                'ivory' => '#fffff0',
+                'cream' => '#fffdd0',
+                'tan' => '#d2b48c',
+                'maroon' => '#800000',
+                'burgundy' => '#800020',
+                'light blue' => '#add8e6',
+                'dark blue' => '#00008b',
+                'light green' => '#90ee90',
+                'dark green' => '#006400',
+                'light gray' => '#d3d3d3',
+                'dark gray' => '#a9a9a9',
+                'light grey' => '#d3d3d3',
+                'dark grey' => '#a9a9a9',
+                'gold' => '#ffd700',
+                'silver' => '#c0c0c0',
+                'bronze' => '#cd7f32',
+                'copper' => '#b87333',
+                'rose gold' => '#e8b4b8',
+                'mint' => '#98fb98',
+                'coral' => '#ff7f50',
+                'turquoise' => '#40e0d0',
+                'lavender' => '#e6e6fa',
+                'sage' => '#9caf88',
+                'olive' => '#808000',
+                'forest' => '#228b22',
+                'royal' => '#4169e1',
+                'midnight' => '#191970',
+                'charcoal' => '#36454f',
+                'camel' => '#c19a6b',
+                'taupe' => '#483c32',
+                'mauve' => '#e0b0ff',
+                'peach' => '#ffcba4',
+                'salmon' => '#fa8072',
+                'lime' => '#00ff00',
+                'cyan' => '#00ffff',
+                'magenta' => '#ff00ff',
+                'indigo' => '#4b0082',
+                'violet' => '#8a2be2',
+                'teal' => '#008080',
+                'aqua' => '#00ffff',
+                'fuchsia' => '#ff00ff',
+                'crimson' => '#dc143c',
+                'scarlet' => '#ff2400',
+                'emerald' => '#50c878',
+                'jade' => '#00a86b',
+                'ruby' => '#e0115f',
+                'sapphire' => '#0f52ba',
+                'amber' => '#ffbf00',
+                'topaz' => '#ffc87c',
+                'pearl' => '#f8f6f0',
+                'platinum' => '#e5e4e2',
+                'steel' => '#71797e',
+                'gunmetal' => '#2a3439'
+              ];
+              
+              $dot_color = $color_map[strtolower($color_name)] ?? '#cccccc';
+            }
           @endphp
-          <button class="color-dot {{ !$variation_in_stock ? 'out-of-stock' : '' }}" 
+          <button class="color-dot {{ !$color_has_stock ? 'out-of-stock' : '' }}" 
                   style="background-color: {{ $dot_color }};"
                   title="{{ $color_name }}"
                   data-color="{{ $color_key }}"
-                  data-variation-id="{{ $variation['variation_id'] }}">
-            @if(!$variation_in_stock)
+                  data-color-name="{{ $color_name }}"
+                  data-variation-id="{{ $variation['variation_id'] }}"
+                  onclick="selectColor('{{ $color_key }}', '{{ $color_name }}', this)">
+            @if(!$color_has_stock)
               <span class="out-of-stock-x">×</span>
             @endif
           </button>
@@ -83,10 +157,33 @@
   
   <!-- Size Component -->
   @if(!empty($sizes))
+    @php
+      // Define size order
+      $size_order = ['xs', 's', 'm', 'l', 'xl', 'xxl', 'xxxl'];
+      
+      // Sort sizes according to the defined order
+      $sorted_sizes = [];
+      foreach ($size_order as $ordered_size) {
+        foreach ($sizes as $size) {
+          $normalized_size = strtolower(str_replace(['-', '_'], '', $size));
+          if ($normalized_size === $ordered_size) {
+            $sorted_sizes[] = $size;
+            break;
+          }
+        }
+      }
+      
+      // Add any remaining sizes that weren't in the predefined order
+      foreach ($sizes as $size) {
+        if (!in_array($size, $sorted_sizes)) {
+          $sorted_sizes[] = $size;
+        }
+      }
+    @endphp
     <div class="size-selection">
       <label class="variation-label">Size</label>
       <div class="size-buttons">
-        @foreach($sizes as $size)
+        @foreach($sorted_sizes as $size)
           @php
             $size_name = str_replace(['-', '_'], ' ', $size);
             $size_name = strtoupper($size_name);
@@ -125,3 +222,41 @@
     @endif
   @endif
 @endif
+
+<script>
+// Color Selection Functionality
+function selectColor(colorKey, colorName, element) {
+    // Remove active class from all color dots
+    document.querySelectorAll('.color-dot').forEach(dot => {
+        dot.classList.remove('active');
+    });
+    
+    // Add active class to selected color dot
+    element.classList.add('active');
+    
+    // Update the selected color display
+    const selectedColorName = document.getElementById('selected-color-name');
+    if (selectedColorName) {
+        selectedColorName.textContent = colorName;
+    }
+    
+    // Add underline effect to the selected color display
+    const selectedColorDisplay = document.getElementById('selected-color-display');
+    if (selectedColorDisplay) {
+        selectedColorDisplay.classList.add('color-selected');
+    }
+    
+    // You can add additional logic here for variation selection
+    console.log('Selected color:', colorName, 'Key:', colorKey);
+}
+
+// Initialize with first available color on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const firstColorDot = document.querySelector('.color-dot:not(.out-of-stock)');
+    if (firstColorDot) {
+        const colorName = firstColorDot.getAttribute('data-color-name');
+        const colorKey = firstColorDot.getAttribute('data-color');
+        selectColor(colorKey, colorName, firstColorDot);
+    }
+});
+</script>

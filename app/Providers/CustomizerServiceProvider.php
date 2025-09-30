@@ -212,6 +212,254 @@ class CustomizerServiceProvider extends ServiceProvider
             ]);
         });
 
+        // New Arrival Section
+        \add_action('customize_register', function($wp_customize) {
+            $wp_customize->add_section('new_arrival_section', [
+                'title' => __('New Arrival', 'sage'),
+                'priority' => 30,
+            ]);
+
+            // Enable/disable
+            $wp_customize->add_setting('new_arrival_enable', [
+                'default' => true,
+                'transport' => 'refresh',
+            ]);
+
+            $wp_customize->add_control('new_arrival_enable', [
+                'label' => __('Enable New Arrival Section', 'sage'),
+                'section' => 'new_arrival_section',
+                'type' => 'checkbox',
+            ]);
+
+            // Title
+            $wp_customize->add_setting('new_arrival_title', [
+                'default' => 'NEW ARRIVAL',
+                'transport' => 'postMessage',
+            ]);
+
+            $wp_customize->add_control('new_arrival_title', [
+                'label' => __('Section Title', 'sage'),
+                'section' => 'new_arrival_section',
+                'type' => 'text',
+            ]);
+
+            // Number of products
+            $wp_customize->add_setting('new_arrival_count', [
+                'default' => 4,
+                'transport' => 'refresh',
+                'sanitize_callback' => 'absint',
+            ]);
+
+            $wp_customize->add_control('new_arrival_count', [
+                'label' => __('Number of Products', 'sage'),
+                'section' => 'new_arrival_section',
+                'type' => 'select',
+                'choices' => [
+                    '4' => '4 Products',
+                    '6' => '6 Products',
+                    '8' => '8 Products',
+                ],
+            ]);
+
+            // Number of columns
+            $wp_customize->add_setting('new_arrival_columns', [
+                'default' => 4,
+                'transport' => 'refresh',
+                'sanitize_callback' => 'absint',
+            ]);
+
+            $wp_customize->add_control('new_arrival_columns', [
+                'label' => __('Number of Columns', 'sage'),
+                'section' => 'new_arrival_section',
+                'type' => 'select',
+                'choices' => [
+                    '2' => '2 Columns',
+                    '3' => '3 Columns',
+                    '4' => '4 Columns',
+                ],
+            ]);
+        });
+
+        // Footer Section
+        \add_action('customize_register', function($wp_customize) {
+            $wp_customize->add_section('footer_section', [
+                'title' => __('Footer', 'sage'),
+                'priority' => 35,
+            ]);
+
+            // Enable/disable footer
+            $wp_customize->add_setting('footer_enable', [
+                'default' => true,
+                'transport' => 'refresh',
+            ]);
+
+            $wp_customize->add_control('footer_enable', [
+                'label' => __('Enable Footer', 'sage'),
+                'section' => 'footer_section',
+                'type' => 'checkbox',
+            ]);
+
+            // Customer Center Section
+            $wp_customize->add_setting('footer_customer_title', [
+                'default' => 'CUSTOMER CENTER',
+                'transport' => 'postMessage',
+            ]);
+
+            $wp_customize->add_control('footer_customer_title', [
+                'label' => __('Customer Center Title', 'sage'),
+                'section' => 'footer_section',
+                'type' => 'text',
+            ]);
+
+            $wp_customize->add_setting('footer_customer_phone', [
+                'default' => '070-4364-9255',
+                'transport' => 'postMessage',
+            ]);
+
+            $wp_customize->add_control('footer_customer_phone', [
+                'label' => __('Customer Center Phone', 'sage'),
+                'section' => 'footer_section',
+                'type' => 'text',
+            ]);
+
+            $wp_customize->add_setting('footer_customer_hours', [
+                'default' => "OPEN 월-금\n오후 13:00 ~ 오후 18:00\n토/일/공휴일 OFF",
+                'transport' => 'postMessage',
+            ]);
+
+            $wp_customize->add_control('footer_customer_hours', [
+                'label' => __('Operating Hours', 'sage'),
+                'section' => 'footer_section',
+                'type' => 'textarea',
+            ]);
+
+            // Company Information Section
+            $wp_customize->add_setting('footer_company_brand', [
+                'default' => 'HYPNOTIC.',
+                'transport' => 'postMessage',
+            ]);
+
+            $wp_customize->add_control('footer_company_brand', [
+                'label' => __('Company Brand Name', 'sage'),
+                'section' => 'footer_section',
+                'type' => 'text',
+            ]);
+
+            $wp_customize->add_setting('footer_company_info', [
+                'default' => "COMPANY : (주)히프나틱\nCOMPANY: HYPNOTIC INC.\nOWNER : 김윤주, 김지수\nOWNER: KIM YUNJU, KIM JISOO\nTEL: 070-4364-9255\nBUSINESS NUMBER: 589-88-00495 [사업자정보확인]\nADD : 서울특별시 중구 소공로 70(충무로1가, 서울 중앙 우체국) 히프나틱 물류센터\nMAIL ORDER LICENSE: 2017-서울중구-0147\nCHIEF PRIVACY OFFICER : 김윤주, 김지수 (PLUSHYPNOTIC@HYPNOTIC.CO.KR)\n광고, 제휴문의 : PLUSHYPNOTIC@NAVER.COM",
+                'transport' => 'postMessage',
+            ]);
+
+            $wp_customize->add_control('footer_company_info', [
+                'label' => __('Company Information', 'sage'),
+                'section' => 'footer_section',
+                'type' => 'textarea',
+            ]);
+
+            // Social Links Section
+            $wp_customize->add_setting('footer_tiktok_url', [
+                'default' => '',
+                'transport' => 'postMessage',
+            ]);
+
+            $wp_customize->add_control('footer_tiktok_url', [
+                'label' => __('TikTok URL', 'sage'),
+                'section' => 'footer_section',
+                'type' => 'url',
+            ]);
+
+            $wp_customize->add_setting('footer_instagram_url', [
+                'default' => '',
+                'transport' => 'postMessage',
+            ]);
+
+            $wp_customize->add_control('footer_instagram_url', [
+                'label' => __('Instagram URL', 'sage'),
+                'section' => 'footer_section',
+                'type' => 'url',
+            ]);
+
+            $wp_customize->add_setting('footer_shopee_url', [
+                'default' => '',
+                'transport' => 'postMessage',
+            ]);
+
+            $wp_customize->add_control('footer_shopee_url', [
+                'label' => __('Shopee URL', 'sage'),
+                'section' => 'footer_section',
+                'type' => 'url',
+            ]);
+
+            $wp_customize->add_setting('footer_line_url', [
+                'default' => '',
+                'transport' => 'postMessage',
+            ]);
+
+            $wp_customize->add_control('footer_line_url', [
+                'label' => __('Line URL', 'sage'),
+                'section' => 'footer_section',
+                'type' => 'url',
+            ]);
+        });
+
+        // Navbar Section
+        \add_action('customize_register', function($wp_customize) {
+            $wp_customize->add_section('navbar_section', [
+                'title' => __('Navigation Bar', 'sage'),
+                'priority' => 20,
+            ]);
+
+            // Enable/disable navbar
+            $wp_customize->add_setting('navbar_enable', [
+                'default' => true,
+                'transport' => 'refresh',
+            ]);
+
+            $wp_customize->add_control('navbar_enable', [
+                'label' => __('Enable Navigation Bar', 'sage'),
+                'section' => 'navbar_section',
+                'type' => 'checkbox',
+            ]);
+
+            // Logo text
+            $wp_customize->add_setting('navbar_logo', [
+                'default' => 'HEYGIRLSBKK',
+                'transport' => 'postMessage',
+            ]);
+
+            $wp_customize->add_control('navbar_logo', [
+                'label' => __('Logo Text', 'sage'),
+                'section' => 'navbar_section',
+                'type' => 'text',
+            ]);
+
+            // Collections (left side of dropdown)
+            $wp_customize->add_setting('navbar_collections', [
+                'default' => "HEYGIRLSBKK\nLITTLE SISTER\nHEYGIRLSBKK PARLOUR",
+                'transport' => 'postMessage',
+            ]);
+
+            $wp_customize->add_control('navbar_collections', [
+                'label' => __('Collections (one per line)', 'sage'),
+                'section' => 'navbar_section',
+                'type' => 'textarea',
+                'description' => __('These will appear in the left column of the dropdown menu', 'sage'),
+            ]);
+
+            // Categories (right side of dropdown)
+            $wp_customize->add_setting('navbar_categories', [
+                'default' => "VIEW ALL\nNEW ARRIVALS\nFALL - WINTER 2025\nPRE - FALL 2025\nSPRING - SUMMER 2025\nRESORT 2025\nFALL - WINTER 2024\nTOPS\nBOTTOMS\nDRESSES\nJUMPSUITS\nOUTERWEAR\nACCESSORIES\nJEWELRY\nHEYGIRLSBKK REIMAGINED\nSALE",
+                'transport' => 'postMessage',
+            ]);
+
+            $wp_customize->add_control('navbar_categories', [
+                'label' => __('Categories (one per line)', 'sage'),
+                'section' => 'navbar_section',
+                'type' => 'textarea',
+                'description' => __('These will appear in the right column of the dropdown menu', 'sage'),
+            ]);
+        });
+
         // Enqueue live preview JS
         \add_action('customize_preview_init', function () {
             $uri  = \get_stylesheet_directory_uri() . '/resources/scripts/customize-preview.js';

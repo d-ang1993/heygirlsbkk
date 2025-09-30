@@ -16,13 +16,13 @@
     $price = $product->get_price_html();
     
     // Get product images
-    $lifestyleImage = wp_get_attachment_image_url($product->get_image_id(), 'large');
+    $lifestyleImage = wp_get_attachment_image_url($product->get_image_id(), 'product-hero');
     $galleryImages = $product->get_gallery_image_ids();
     $productImages = [];
     
     foreach ($galleryImages as $imageId) {
         $productImages[] = [
-            'url' => wp_get_attachment_image_url($imageId, 'medium'),
+            'url' => wp_get_attachment_image_url($imageId, 'product-thumbnail'),
             'alt' => get_post_meta($imageId, '_wp_attachment_image_alt', true) ?: $title
         ];
     }
@@ -55,6 +55,10 @@
                     src="{{ $lifestyleImage }}" 
                     alt="{{ $title }}" 
                     class="product-hero__lifestyle-image"
+                    loading="eager"
+                    decoding="sync"
+                    width="800"
+                    height="800"
                 />
             @endif
         </div>
@@ -93,6 +97,10 @@
                                 src="{{ $image['url'] }}" 
                                 alt="{{ $image['alt'] ?? $title }}" 
                                 class="product-hero__product-image"
+                                loading="lazy"
+                                decoding="async"
+                                width="400"
+                                height="400"
                             />
                         </div>
                     @endforeach

@@ -77,6 +77,8 @@ add_action('after_setup_theme', function () {
      */
     register_nav_menus([
         'primary_navigation' => __('Primary Navigation', 'sage'),
+        'primary' => __('Main Navigation Bar', 'sage'),
+        'shop-dropdown' => __('Shop Dropdown Menu', 'sage'),
     ]);
 
     /**
@@ -99,6 +101,14 @@ add_action('after_setup_theme', function () {
      * @link https://developer.wordpress.org/themes/functionality/featured-images-post-thumbnails/
      */
     add_theme_support('post-thumbnails');
+
+    /**
+     * Add custom image sizes for product displays.
+     */
+    add_image_size('product-thumbnail', 400, 400, true);
+    add_image_size('product-grid', 500, 500, true);
+    add_image_size('product-hero', 800, 800, true);
+    add_image_size('product-large', 1200, 1200, false);
 
     /**
      * Enable responsive embed support.
@@ -129,6 +139,218 @@ add_action('after_setup_theme', function () {
      */
     add_theme_support('customize-selective-refresh-widgets');
 }, 20);
+
+/**
+ * Improve image quality and add WebP support.
+ *
+ * @return void
+ */
+add_action('init', function () {
+    /**
+     * Increase JPEG quality from default 82% to 90%.
+     */
+    add_filter('jpeg_quality', function () {
+        return 90;
+    });
+
+    /**
+     * Add WebP support for modern browsers (simplified version).
+     */
+    add_filter('wp_generate_attachment_metadata', function ($metadata, $attachment_id) {
+        // Only process if we have the required functions
+        if (!function_exists('imagewebp') || !isset($metadata['sizes'])) {
+            return $metadata;
+        }
+
+        try {
+            $upload_dir = wp_upload_dir();
+            $attachment_path = get_attached_file($attachment_id);
+            
+            if (!$attachment_path || !file_exists($attachment_path)) {
+                return $metadata;
+            }
+
+            // Convert main image to WebP
+            $webp_path = preg_replace('/\.(jpg|jpeg|png)$/i', '.webp', $attachment_path);
+            if (convert_to_webp($attachment_path, $webp_path)) {
+                $metadata['file_webp'] = str_replace($upload_dir['basedir'], '', $webp_path);
+            }
+
+            // Convert thumbnails to WebP
+            foreach ($metadata['sizes'] as $size => $size_data) {
+                $thumbnail_path = $upload_dir['basedir'] . '/' . dirname($metadata['file']) . '/' . $size_data['file'];
+                if (file_exists($thumbnail_path)) {
+                    $webp_thumbnail_path = preg_replace('/\.(jpg|jpeg|png)$/i', '.webp', $thumbnail_path);
+                    if (convert_to_webp($thumbnail_path, $webp_thumbnail_path)) {
+                        $metadata['sizes'][$size]['file_webp'] = basename($webp_thumbnail_path);
+                    }
+                }
+            }
+        } catch (Exception $e) {
+            // Log error but don't break the site
+            error_log('WebP conversion error: ' . $e->getMessage());
+        }
+
+        return $metadata;
+    }, 10, 2);
+
+    /**
+     * Serve WebP images when supported by browser (simplified).
+     */
+    add_filter('wp_get_attachment_image_src', function ($image, $attachment_id, $size, $icon) {
+        if (!$image || !browser_supports_webp() || !is_string($size)) {
+            return $image;
+        }
+
+        try {
+            $metadata = wp_get_attachment_metadata($attachment_id);
+            if (!$metadata) {
+                return $image;
+            }
+
+            // Check for WebP version of the requested size
+            if ($size === 'full') {
+                if (isset($metadata['file_webp'])) {
+                    $upload_dir = wp_upload_dir();
+                    $webp_url = $upload_dir['baseurl'] . $metadata['file_webp'];
+                    if (file_exists($upload_dir['basedir'] . $metadata['file_webp'])) {
+                        $image[0] = $webp_url;
+                    }
+                }
+            } else {
+                if (isset($metadata['sizes'][$size]['file_webp'])) {
+                    $upload_dir = wp_upload_dir();
+                    $webp_url = $upload_dir['baseurl'] . '/' . dirname($metadata['file']) . '/' . $metadata['sizes'][$size]['file_webp'];
+                    $webp_path = $upload_dir['basedir'] . '/' . dirname($metadata['file']) . '/' . $metadata['sizes'][$size]['file_webp'];
+                    if (file_exists($webp_path)) {
+                        $image[0] = $webp_url;
+                    }
+                }
+            }
+        } catch (Exception $e) {
+            // Log error but don't break the site
+            error_log('WebP serving error: ' . $e->getMessage());
+        }
+
+        return $image;
+    }, 15, 4);
+});
+
+/**
+ * Convert image to WebP format.
+ */
+function convert_to_webp($source_path, $destination_path) {
+    if (!function_exists('imagewebp')) {
+        return false;
+    }
+
+    $image_info = getimagesize($source_path);
+    if (!$image_info) {
+        return false;
+    }
+
+    switch ($image_info[2]) {
+        case IMAGETYPE_JPEG:
+            $image = imagecreatefromjpeg($source_path);
+            break;
+        case IMAGETYPE_PNG:
+            $image = imagecreatefrompng($source_path);
+            // Preserve transparency
+            imagepalettetotruecolor($image);
+            imagealphablending($image, true);
+            imagesavealpha($image, true);
+            break;
+        default:
+            return false;
+    }
+
+    if (!$image) {
+        return false;
+    }
+
+    $result = imagewebp($image, $destination_path, 85);
+    imagedestroy($image);
+    
+    return $result;
+}
+
+/**
+ * Check if browser supports WebP.
+ */
+function browser_supports_webp() {
+    if (!isset($_SERVER['HTTP_ACCEPT'])) {
+        return false;
+    }
+    
+    return strpos($_SERVER['HTTP_ACCEPT'], 'image/webp') !== false;
+}
+
+/**
+ * Add additional image optimization hooks.
+ *
+ * @return void
+ */
+add_action('init', function () {
+    /**
+     * Add retina support for high-DPI displays.
+     */
+    add_filter('wp_get_attachment_image_src', function ($image, $attachment_id, $size, $icon) {
+        if (!$image || $icon || !is_string($size)) {
+            return $image;
+        }
+
+        // Check if device supports retina
+        if (isset($_COOKIE['devicePixelRatio']) && $_COOKIE['devicePixelRatio'] >= 2) {
+            $retina_size = $size . '_2x';
+            $retina_image = wp_get_attachment_image_src($attachment_id, $retina_size, $icon);
+            if ($retina_image) {
+                return $retina_image;
+            }
+        }
+
+        return $image;
+    }, 5, 4);
+
+    /**
+     * Add srcset attribute for responsive images.
+     */
+    add_filter('wp_get_attachment_image_attributes', function ($attr, $attachment, $size) {
+        if (!isset($attr['src'])) {
+            return $attr;
+        }
+
+        // Generate srcset for different sizes
+        $srcset = [];
+        $sizes = ['thumbnail', 'medium', 'large', 'full'];
+        
+        foreach ($sizes as $size_name) {
+            $src = wp_get_attachment_image_url($attachment->ID, $size_name);
+            if ($src && $src !== $attr['src']) {
+                $image_meta = wp_get_attachment_metadata($attachment->ID);
+                if (isset($image_meta['sizes'][$size_name])) {
+                    $width = $image_meta['sizes'][$size_name]['width'];
+                    $srcset[] = $src . ' ' . $width . 'w';
+                }
+            }
+        }
+
+        if (!empty($srcset)) {
+            $attr['srcset'] = implode(', ', $srcset);
+            $attr['sizes'] = '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw';
+        }
+
+        return $attr;
+    }, 10, 3);
+
+    /**
+     * Preload critical images.
+     */
+    add_action('wp_head', function () {
+        if (is_front_page() || is_shop()) {
+            echo '<link rel="preload" as="image" href="' . get_template_directory_uri() . '/resources/images/logo.png">';
+        }
+    });
+});
 
 /**
  * Register the theme sidebars.
