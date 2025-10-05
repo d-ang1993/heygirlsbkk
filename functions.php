@@ -59,3 +59,20 @@ collect(['setup', 'filters'])
             );
         }
     });
+    // add_theme_support('woocommerce');
+
+// Custom WooCommerce template handling
+add_action('template_redirect', function() {
+    if (is_shop() || is_product_category() || is_product_tag()) {
+        if (is_singular('product')) {
+            // woocommerce_content();
+        } else {
+            // For ANY product archive - load our custom template directly
+            $template_path = get_template_directory() . '/woocommerce/archive-product.php';
+            if (file_exists($template_path)) {
+                include $template_path;
+                exit;
+            }
+        }
+    }
+});

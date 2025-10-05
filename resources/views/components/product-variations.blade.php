@@ -246,17 +246,66 @@ function selectColor(colorKey, colorName, element) {
         selectedColorDisplay.classList.add('color-selected');
     }
     
-    // You can add additional logic here for variation selection
+    // Update product price when variant is selected
+    const variationId = element.getAttribute('data-variation-id');
+    if (variationId && window.variationData) {
+        const variation = window.variationData[variationId];
+        if (variation) {
+            updateProductPrice(variation);
+        }
+    }
+    
     console.log('Selected color:', colorName, 'Key:', colorKey);
 }
 
-// Initialize with first available color on page load
+// Function to update product price display
+function updateProductPrice(variation) {
+    const priceDisplay = document.getElementById('product-price-display');
+    if (!priceDisplay || !variation) return;
+    
+    const isOnSale = variation.display_regular_price && variation.display_regular_price != variation.display_price;
+    
+    if (isOnSale) {
+        priceDisplay.innerHTML = `
+            <div class="price-sale">${variation.price_html}</div>
+            <div class="price-regular">${variation.regular_price_html}</div>
+        `;
+    } else {
+        priceDisplay.innerHTML = `
+            <div class="price-current">${variation.price_html}</div>
+        `;
+    }
+}
+
+// Initialize with default color or first available color on page load
 document.addEventListener('DOMContentLoaded', function() {
-    const firstColorDot = document.querySelector('.color-dot:not(.out-of-stock)');
-    if (firstColorDot) {
-        const colorName = firstColorDot.getAttribute('data-color-name');
-        const colorKey = firstColorDot.getAttribute('data-color');
-        selectColor(colorKey, colorName, firstColorDot);
+    let selectedColorDot = null;
+    
+    // First, check if there's a default color set via form values
+    const defaultColorInput = document.querySelector('input[name="attribute_pa_color"]:checked, input[name="attribute_color"]:checked');
+    if (defaultColorInput) {
+        const defaultColorValue = defaultColorInput.value;
+        selectedColorDot = document.querySelector(`.color-dot[data-color="${defaultColorValue}"]:not(.out-of-stock)`);
+    }
+    
+    // If no default color found, use the first available color
+    if (!selectedColorDot) {
+        selectedColorDot = document.querySelector('.color-dot:not(.out-of-stock)');
+    }
+    
+    if (selectedColorDot) {
+        const colorName = selectedColorDot.getAttribute('data-color-name');
+        const colorKey = selectedColorDot.getAttribute('data-color');
+        selectColor(colorKey, colorName, selectedColorDot);
+        
+        // Also load the price for the selected color
+        const variationId = selectedColorDot.getAttribute('data-variation-id');
+        if (variationId && window.variationData) {
+            const variation = window.variationData[variationId];
+            if (variation) {
+                updateProductPrice(variation);
+            }
+        }
     }
 });
 </script>

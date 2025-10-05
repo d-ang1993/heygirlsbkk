@@ -48,7 +48,7 @@
                         @endif
                         
                         @if($product->is_featured())
-                            <div class="product-badge featured">BEST</div>
+                            <div class="product-badge featured fire-badge">BEST 🔥</div>
                         @endif
                         
                         @if($showQuickView)

@@ -73,6 +73,88 @@ class CustomizerServiceProvider extends ServiceProvider
                 'settings' => 'hero_bg_image',
             ]));
 
+            // Background image position
+            $wp_customize->add_setting('hero_bg_position', [
+                'default' => 'center center',
+                'transport' => 'postMessage',
+            ]);
+            $wp_customize->add_control('hero_bg_position', [
+                'type'    => 'select',
+                'label'   => __('Background position', 'sage'),
+                'section' => 'hero_section',
+                'choices' => [
+                    'center center' => 'Center',
+                    'top center' => 'Top Center',
+                    'bottom center' => 'Bottom Center',
+                    'left center' => 'Left Center',
+                    'right center' => 'Right Center',
+                    'top left' => 'Top Left',
+                    'top right' => 'Top Right',
+                    'bottom left' => 'Bottom Left',
+                    'bottom right' => 'Bottom Right',
+                ],
+            ]);
+
+            // Background image size
+            $wp_customize->add_setting('hero_bg_size', [
+                'default' => 'cover',
+                'transport' => 'postMessage',
+            ]);
+            $wp_customize->add_control('hero_bg_size', [
+                'type'    => 'select',
+                'label'   => __('Background size', 'sage'),
+                'section' => 'hero_section',
+                'choices' => [
+                    'cover' => 'Cover (recommended)',
+                    'contain' => 'Contain',
+                    '100% 100%' => 'Stretch to fit',
+                    'auto' => 'Original size',
+                ],
+            ]);
+
+            // Background image repeat
+            $wp_customize->add_setting('hero_bg_repeat', [
+                'default' => 'no-repeat',
+                'transport' => 'postMessage',
+            ]);
+            $wp_customize->add_control('hero_bg_repeat', [
+                'type'    => 'select',
+                'label'   => __('Background repeat', 'sage'),
+                'section' => 'hero_section',
+                'choices' => [
+                    'no-repeat' => 'No repeat',
+                    'repeat' => 'Repeat',
+                    'repeat-x' => 'Repeat horizontally',
+                    'repeat-y' => 'Repeat vertically',
+                ],
+            ]);
+
+            // Background color fallback
+            $wp_customize->add_setting('hero_bg_color', [
+                'default' => '#f8f9fa',
+                'transport' => 'postMessage',
+            ]);
+            $wp_customize->add_control(new \WP_Customize_Color_Control($wp_customize, 'hero_bg_color', [
+                'label'   => __('Background color (fallback)', 'sage'),
+                'section' => 'hero_section',
+                'description' => __('This color will show if no image is set or while image loads', 'sage'),
+            ]));
+
+            // Background image attachment
+            $wp_customize->add_setting('hero_bg_attachment', [
+                'default' => 'scroll',
+                'transport' => 'postMessage',
+            ]);
+            $wp_customize->add_control('hero_bg_attachment', [
+                'type'    => 'select',
+                'label'   => __('Background attachment', 'sage'),
+                'section' => 'hero_section',
+                'choices' => [
+                    'scroll' => 'Scroll with content',
+                    'fixed' => 'Fixed (parallax effect)',
+                ],
+            ]);
+
             // Alignment
             $wp_customize->add_setting('hero_align', ['default' => 'center', 'transport' => 'refresh']);
             $wp_customize->add_control('hero_align', [

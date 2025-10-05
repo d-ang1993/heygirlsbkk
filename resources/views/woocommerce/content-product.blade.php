@@ -1,34 +1,96 @@
 {{-- resources/views/woocommerce/content-product.blade.php --}}
 @php
   global $product;
-  $gallery = $product->get_gallery_image_ids();
-  $primary = wp_get_attachment_image_src(get_post_thumbnail_id($product->get_id()), 'product-thumbnail')[0] ?? '';
-  $secondary = isset($gallery[0]) ? wp_get_attachment_image_url($gallery[0], 'product-thumbnail') : $primary;
+  
+  // Ensure we have a valid product object
+  if (!$product) {
+    $product = wc_get_product(get_the_ID());
+  }
+  
+  // If still no product and we have a post ID, try to get it directly
+  if (!$product && get_the_ID() > 0) {
+    $product = wc_get_product(get_the_ID());
+  }
+  
+  // Skip if still no valid product
+  if (!$product || !is_a($product, 'WC_Product')) {
+    echo '<!-- No valid product found for ID: ' . get_the_ID() . ' -->';
+    return;
+  }
 @endphp
 
-<div class="group border p-3 hover:shadow-lg transition">
-  <a href="{{ get_permalink() }}">
-    <div class="relative overflow-hidden">
-      <img 
-        src="{{ $primary }}" 
-        alt="{{ get_the_title() }}" 
-        class="w-full h-auto transition-opacity duration-300 group-hover:opacity-0"
-        loading="lazy"
-        decoding="async"
-        width="400"
-        height="400"
-      >
-      <img 
-        src="{{ $secondary }}" 
-        alt="{{ get_the_title() }}" 
-        class="w-full h-auto absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-        loading="lazy"
-        decoding="async"
-        width="400"
-        height="400"
-      >
+<div class="product-card">
+  <div class="product-image">
+    <a href="{{ $product->get_permalink() }}">
+      <img src="{{ wp_get_attachment_image_url($product->get_image_id(), 'product-grid') }}" 
+           alt="{{ $product->get_name() }}" 
+           loading="lazy"
+           decoding="async"
+           width="500"
+           height="500" />
+    </a>
+    
+    @if($product->is_on_sale())
+      @php
+        $regular_price_num = (float) $product->get_regular_price();
+        $sale_price_num = (float) $product->get_sale_price();
+        $discount_percentage = $regular_price_num > 0 ? round((($regular_price_num - $sale_price_num) / $regular_price_num) * 100) : 0;
+      @endphp
+      <div class="product-badge sale">
+        {{ $discount_percentage }}% OFF
+      </div>
+    @endif
+    
+    @if($product->is_featured())
+      <div class="product-badge featured fire-badge">BEST <span class="fire-emoji">🔥</span></div>
+    @endif
+  </div>
+  
+  <div class="product-info">
+    @php
+      // Get product brand (collection name)
+      $terms = get_the_terms($product->get_id(), 'product_brand');
+      $product_brand = $terms && !is_wp_error($terms) ? $terms[0]->name : '';
+    @endphp
+    
+    @if($product_brand)
+      <div class="product-brand">{{ $product_brand }}</div>
+    @endif
+    
+    @php
+      // Get available variations for variable products to display color dots
+      $colors = [];
+      if ($product->is_type('variable')) {
+          $variations = $product->get_available_variations();
+          foreach ($variations as $variation) {
+              $variation_attributes = $variation['attributes'];
+              $color_key = $variation_attributes['attribute_pa_color'] ?? $variation_attributes['attribute_color'] ?? '';
+              if ($color_key && !in_array($color_key, $colors)) {
+                  $colors[] = $color_key;
+              }
+          }
+      }
+    @endphp
+    
+    @if(!empty($colors))
+      <div class="product-colors">
+        @foreach($colors as $color)
+          <span class="color-dot" style="background-color: {{ strtolower($color) }};" title="{{ $color }}"></span>
+        @endforeach
+      </div>
+    @endif
+    
+    <h3 class="product-title">
+      <a href="{{ $product->get_permalink() }}">{{ $product->get_name() }}</a>
+    </h3>
+    
+    <div class="product-price">
+      @if($product->is_on_sale())
+        <span class="price-sale">{!! $product->get_price_html() !!}</span>
+        <span class="price-regular">{!! wc_price($product->get_regular_price()) !!}</span>
+      @else
+        <span class="price-current">{!! $product->get_price_html() !!}</span>
+      @endif
     </div>
-    <h2 class="mt-3 text-lg font-medium">{{ get_the_title() }}</h2>
-    <span class="block text-red-600 font-bold">{!! $product->get_price_html() !!}</span>
-  </a>
+  </div>
 </div>

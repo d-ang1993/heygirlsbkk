@@ -17,30 +17,31 @@
 
   <!-- Product Title -->
   <h1 class="product-title">{{ $product_name }}</h1>
-  
-  <!-- Brand (if available) -->
-  @php
-    $brand = get_post_meta($product_id, '_brand', true) ?: get_post_meta($product_id, 'brand', true);
-  @endphp
-  @if($brand)
-    <div class="product-brand">{{ $brand }}</div>
-  @endif
 
-  <!-- Product Price -->
-  <div class="product-price-section">
-    <div id="product-price-display">
-      @if($product_type === 'variable')
-        <!-- Price will be updated by JavaScript -->
+<!-- Product Price -->
+<div class="product-price-section">
+  <div id="product-price-display">
+    @if($product_type === 'variable')
+      <!-- Variable products: Show price range -->
+      <div class="price-current">{!! $product->get_price_html() !!}</div>
+    @elseif($product_type === 'simple')
+      <!-- Simple products: Show price with sale logic -->
+      @if($product_on_sale)
+        <div class="price-wrapper">
+          <div class="price-sale">{!! wc_price($product->get_sale_price()) !!}</div>
+          <div class="price-regular">{!! wc_price($product->get_regular_price()) !!}</div>
+        </div>
       @else
-        @if($product_on_sale)
-          <div class="price-sale">{!! $product_price !!}</div>
-          <div class="price-regular">{!! wc_price($product_regular_price) !!}</div>
-        @else
-          <div class="price-current">{!! $product_price !!}</div>
-        @endif
+        <div class="price-current">{!! wc_price($product->get_price()) !!}</div>
       @endif
-    </div>
+    @else
+      <!-- Fallback for other product types (grouped, external, etc.) -->
+      <div class="price-wrapper">
+        <div class="price-current">{!! $product->get_price_html() !!}</div>
+      </div>
+    @endif
   </div>
+</div>
 
   <!-- Product Short Description -->
   @if($product_short_description)
@@ -56,10 +57,28 @@
   <!-- Stock Status -->
   <div class="stock-status-section">
     <div id="stock-status-display">
-      @if($product_type === 'variable')
-        <!-- Stock status will be updated by JavaScript -->
+      @php
+        // Get the current product if not already available
+        $current_product = $product ?? wc_get_product();
+        if ($current_product) {
+          $stock_status = $current_product->get_stock_status();
+          $is_in_stock = $current_product->is_in_stock();
+          $stock_quantity = $current_product->get_stock_quantity();
+        } else {
+          $stock_status = 'outofstock';
+          $is_in_stock = false;
+          $stock_quantity = 0;
+        }
+      @endphp
+      
+      @if($current_product && $current_product->is_type('variable'))
+        @if($is_in_stock)
+          <span class="stock-status in-stock">IN STOCK</span>
+        @else
+          <span class="stock-status out-of-stock">OUT OF STOCK</span>
+        @endif
       @else
-        @if($product_in_stock)
+        @if($is_in_stock)
           <span class="stock-status in-stock">IN STOCK</span>
         @else
           <span class="stock-status out-of-stock">OUT OF STOCK</span>
@@ -69,6 +88,7 @@
   </div>
 
   <!-- Product Form -->
+      
   @include('components.product-form')
 
   <!-- Product Features -->

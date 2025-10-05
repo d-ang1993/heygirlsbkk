@@ -192,6 +192,45 @@ if (!$shop_menu) {
                         </a>
                     @endforeach
                 </div>
+
+                <!-- Accessories -->
+                <div class="dropdown-section">
+                    <div class="dropdown-section-title">ACCESSORIES</div>
+                    @php
+                    // Get the "Accessories" product category
+                    $accessories_parent_cat = get_term_by('name', 'Accessories', 'product_cat');
+                    $accessory_items = [];
+                    
+                    if (!$accessories_parent_cat) {
+                        // Try alternative names
+                        $accessories_parent_cat = get_term_by('slug', 'accessories', 'product_cat');
+                    }
+                    
+                    if ($accessories_parent_cat) {
+                        // Get all child categories directly
+                        $child_categories = get_terms(array(
+                            'taxonomy' => 'product_cat',
+                            'parent' => $accessories_parent_cat->term_id,
+                            'hide_empty' => false
+                        ));
+                        
+                        // Convert child categories to menu-like items
+                        foreach ($child_categories as $child_cat) {
+                            $accessory_items[] = (object) array(
+                                'title' => $child_cat->name,
+                                'url' => get_term_link($child_cat),
+                                'object' => 'product_cat',
+                                'object_id' => $child_cat->term_id
+                            );
+                        }
+                    }
+                    @endphp
+                    @foreach($accessory_items as $item)
+                        <a href="{{ $item->url }}" class="dropdown-category">
+                            {{ strtoupper($item->title) }}
+                        </a>
+                    @endforeach
+                </div>
             </div>
         </div>
         @endif
