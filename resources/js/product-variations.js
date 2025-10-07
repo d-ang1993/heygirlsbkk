@@ -1,4 +1,25 @@
 document.addEventListener('DOMContentLoaded', function() {
+  // Prevent form submission to avoid page reload and resubmission issues
+  const customCartForm = document.querySelector('.custom-add-cart-form');
+  
+  if (customCartForm) {
+    customCartForm.addEventListener('submit', function(event) {
+      event.preventDefault();
+      event.stopPropagation();
+      console.log('Custom cart form submission prevented, using AJAX instead');
+    });
+  }
+  
+  // Debug: Log any other form submissions that might be happening
+  document.addEventListener('submit', function(event) {
+    if (event.target.classList.contains('cart') || event.target.classList.contains('variations_form') || event.target.classList.contains('custom-add-cart-form')) {
+      console.log('=== FORM SUBMISSION DETECTED ===');
+      console.log('Form class:', event.target.className);
+      console.log('Form action:', event.target.action);
+      console.log('Event target:', event.target);
+    }
+  });
+  
   // Product variation selection functionality
   const addToCartBtn = document.querySelector('.add-to-cart-btn');
   const quantityInput = document.querySelector('.quantity-input');
@@ -296,7 +317,19 @@ document.addEventListener('DOMContentLoaded', function() {
         if (addToCartBtn) {
         addToCartBtn.disabled = !selectedVariation.in_stock;
         addToCartBtn.textContent = selectedVariation.in_stock ? 'ADD TO CART' : 'OUT OF STOCK';
-        addToCartBtn.onclick = selectedVariation.in_stock ? () => addToCart() : null;
+        
+        // Remove any existing onclick handlers to prevent duplicates
+        addToCartBtn.onclick = null;
+        
+        // Only add onclick if in stock and not already added
+        if (selectedVariation.in_stock && !addToCartBtn.dataset.handlerAdded) {
+          addToCartBtn.onclick = (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            addToCart(event);
+          };
+          addToCartBtn.dataset.handlerAdded = 'true';
+        }
   
           // Debug: Log the button state
           console.log('Button disabled:', addToCartBtn.disabled, 'Stock:', selectedVariation.in_stock);
@@ -337,47 +370,215 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
+// Add to cart function
+function addToCart(event) {
+  // Prevent default & stop all other listeners (avoids WooCommerce double fire)
+  if (event) {
+    event.preventDefault();
+    event.stopImmediatePropagation(); // <-- key change
+  }
+
+  // Prevent multiple simultaneous calls
+  if (window.addToCartProcessing) {
+    console.log('⚠️ Add to cart already processing, ignoring duplicate call');
+    return;
+  }
   
-  // Add to cart function
-  function addToCart() {
-    if (!selectedVariation) return;
-    
-    const quantity = getCurrentQuantity();
-    
-    // Create form data
-    const formData = new FormData();
-    formData.append('add-to-cart', selectedVariation.id);
-    formData.append('quantity', quantity);
-    
-    // Add variation attributes
-    if (selectedColor) {
-      formData.append('attribute_pa_color', selectedColor);
+  window.addToCartProcessing = true;
+  console.log('=== CUSTOM ADD TO CART CALLED ===');
+  console.log('selectedVariation:', selectedVariation);
+  console.log('selectedAttributes:', selectedAttributes);
+
+  if (!selectedVariation) {
+    showCartMessage('Please select all required options', 'error');
+    window.addToCartProcessing = false;
+    return;
+  }
+
+  const quantity = getCurrentQuantity();
+  const formData = new FormData();
+
+  // Required WooCommerce fields
+  const productId =
+    window.item.product_id || selectedVariation.product_id || selectedVariation.id;
+  formData.append('product_id', productId);
+  formData.append('add-to-cart', selectedVariation.id);
+  formData.append('variation_id', selectedVariation.id);
+  formData.append('quantity', quantity);
+  
+  // Request fragments for cart updates
+  formData.append('wc-ajax', 'add_to_cart');
+  formData.append('fragments', 'true');
+
+  // Add variation attributes (auto handles custom attributes)
+  for (const [key, value] of Object.entries(selectedAttributes)) {
+    if (value) {
+      const attrKey =
+        key.startsWith('attribute_') || key.startsWith('pa_')
+          ? key
+          : `attribute_pa_${key}`;
+      formData.append(attrKey, value);
     }
-    if (selectedSize) {
-      formData.append('attribute_pa_size', selectedSize);
-    }
-    
-    // Submit to WooCommerce
-    fetch(window.productAddToCartUrl, {
-      method: 'POST',
-      body: formData
+  }
+
+  // Determine AJAX endpoint
+  let ajaxUrl = '/?wc-ajax=add_to_cart';
+  if (
+    typeof wc_add_to_cart_params !== 'undefined' &&
+    wc_add_to_cart_params.wc_ajax_url
+  ) {
+    ajaxUrl = wc_add_to_cart_params.wc_ajax_url.replace(
+      '%%endpoint%%',
+      'add_to_cart'
+    );
+  } else if (typeof window.productAddToCartUrl !== 'undefined') {
+    ajaxUrl = window.productAddToCartUrl;
+  } else {
+    formData.append('action', 'woocommerce_add_to_cart');
+    ajaxUrl = '/wp-admin/admin-ajax.php';
+  }
+
+  console.log('AJAX URL:', ajaxUrl);
+  console.log('Form data:', Object.fromEntries(formData));
+
+  // Submit to WooCommerce
+  fetch(ajaxUrl, {
+    method: 'POST',
+    body: formData,
+    credentials: 'same-origin',
+  })
+    .then((response) => {
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return response.text();
     })
-    .then(response => {
-      if (response.ok) {
-        // Show success message or redirect
-        alert('Product added to cart!');
-        // You can also trigger a cart update event here
-        if (typeof wc_add_to_cart_params !== 'undefined') {
-          $(document.body).trigger('added_to_cart', [response.fragments, response.cart_hash, $('.add-to-cart-btn')]);
-        }
-      } else {
-        alert('Error adding product to cart');
+    .then((text) => {
+      try {
+        return JSON.parse(text);
+      } catch {
+        console.warn('Non-JSON response — treating as success');
+        return { success: true };
       }
     })
-    .catch(error => {
-      console.error('Error:', error);
-      alert('Error adding product to cart');
+    .then((data) => {
+      console.log('📦 Parsed WooCommerce response:', data);
+      console.log('Success:', data.success);
+      console.log('Data:', data.data);
+      console.log('Fragments:', data.fragments);
+
+      if (data.success === false) {
+        showCartMessage('Error: ' + (data.data || 'Unknown error'), 'error');
+        return;
+      }
+
+      // ✅ Successful add-to-cart (no message needed)
+
+      // Update cart fragments if available
+      if (data.fragments) {
+        Object.entries(data.fragments).forEach(([selector, html]) => {
+          const el = document.querySelector(selector);
+          if (el) el.innerHTML = html;
+        });
+      }
+
+      // Dispatch WooCommerce-compatible event
+      console.log('=== ADD TO CART SUCCESS ===');
+      console.log('Fragments data:', data.fragments);
+      console.log('Cart hash:', data.cart_hash);
+      console.log('jQuery available:', typeof jQuery !== 'undefined');
+      
+      // Always use vanilla JavaScript event (more reliable)
+      const evt = new CustomEvent('added_to_cart', {
+        detail: {
+          fragments: data.fragments,
+          cart_hash: data.cart_hash,
+          button: document.querySelector('.add-to-cart-btn'),
+        },
+      });
+      console.log('Dispatching custom added_to_cart event:', evt);
+      document.body.dispatchEvent(evt);
+      
+      // Also trigger jQuery event if available (for compatibility)
+      if (typeof jQuery !== 'undefined') {
+        console.log('Also triggering jQuery event for compatibility');
+        jQuery(document.body).trigger('added_to_cart', [
+          data.fragments,
+          data.cart_hash,
+          jQuery('.add-to-cart-btn'),
+        ]);
+      }
+
+      // ✅ Flash button success state
+      const button = document.querySelector('.add-to-cart-btn');
+      if (button) {
+        const original = button.innerHTML;
+        button.innerHTML = '✅ Added!';
+        button.style.background = '#10b981';
+        setTimeout(() => {
+          button.innerHTML = original;
+          button.style.background = '';
+        }, 2000);
+      }
+
+      // ✅ Open cart drawer (no page reload on any device)
+      setTimeout(() => {
+        if (typeof window.openCartDrawer === 'function') {
+          window.openCartDrawer(true); // This will force refresh cart content
+        } else {
+          const trigger = document.querySelector('.cart-trigger');
+          if (trigger) {
+            trigger.click();
+          } else {
+            console.log('Cart trigger not found, trying alternative...');
+            // Alternative: try to open cart drawer by triggering the cart button
+            const cartButton = document.querySelector('.navbar-bag, .cart-trigger, [data-cart-url]');
+            if (cartButton) cartButton.click();
+          }
+        }
+        
+      // Ensure cart content is refreshed after opening
+      if (typeof window.loadCartContent === 'function') {
+        setTimeout(() => window.loadCartContent(true), 100);
+      }
+      
+      // Force update bag count as fallback
+      if (typeof window.updateBagCount === 'function') {
+        setTimeout(() => {
+          console.log('🔄 Fallback: Calling updateBagCount directly');
+          window.updateBagCount();
+        }, 200);
+      }
+      
+      // Reset processing flag
+      window.addToCartProcessing = false;
+      }, 500); // Reduced delay for faster response
+    })
+    .catch((err) => {
+      console.error('Add to cart error:', err);
+      showCartMessage('❌ Error adding product to cart', 'error');
+      // Reset processing flag on error
+      window.addToCartProcessing = false;
     });
+}
+
+  
+  // Show cart message function
+  function showCartMessage(message, type) {
+    // Create or update cart message
+    let messageEl = document.querySelector('.cart-message');
+    if (!messageEl) {
+      messageEl = document.createElement('div');
+      messageEl.className = 'cart-message';
+      document.body.appendChild(messageEl);
+    }
+    
+    messageEl.textContent = message;
+    messageEl.className = `cart-message ${type}`;
+    messageEl.style.display = 'block';
+    
+    // Hide after 3 seconds
+    setTimeout(() => {
+      messageEl.style.display = 'none';
+    }, 3000);
   }
   
   // Update wishlist button for variable products
@@ -443,62 +644,72 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // TI Wishlist integration for variable products
-jQuery(function($) {
+document.addEventListener('DOMContentLoaded', function() {
   console.log('TI Wishlist integration starting...');
   
   // Wait for the page to fully load
   setTimeout(function() {
-    var $form = $('form.variations_form, form[data-product_variations], .variations_form');
-    var $wishlistBtn = $('.tinvwl_add_to_wishlist_button, [data-tinv-wl-list], .tinv-wl-button, .tinvwl-button, .tinvwl_add_to_wishlist');
+    var form = document.querySelector('form.variations_form, form[data-product_variations], .variations_form');
+    var wishlistBtn = document.querySelector('.tinvwl_add_to_wishlist_button, [data-tinv-wl-list], .tinv-wl-button, .tinvwl-button, .tinvwl_add_to_wishlist');
     
-    console.log('Form found:', $form.length);
-    console.log('Wishlist button found:', $wishlistBtn.length);
-    console.log('Wishlist button HTML:', $wishlistBtn[0]);
+    console.log('Form found:', form ? 1 : 0);
+    console.log('Wishlist button found:', wishlistBtn ? 1 : 0);
+    console.log('Wishlist button HTML:', wishlistBtn);
     
     // Check if it's a variable product by looking at the wishlist button data
-    var isVariableProduct = $wishlistBtn.attr('data-tinv-wl-producttype') === 'variable';
+    var isVariableProduct = wishlistBtn && wishlistBtn.getAttribute('data-tinv-wl-producttype') === 'variable';
     console.log('Is variable product:', isVariableProduct);
     
     // Check if we're on a variable product page
-    if ((isVariableProduct || $form.length) && $wishlistBtn.length) {
+    if ((isVariableProduct || form) && wishlistBtn) {
       console.log('Setting up wishlist for variable product');
       
       // Disable by default
-      $wishlistBtn.addClass('disabled').attr('data-variation-id', 0);
-      $wishlistBtn.css('opacity', '0.5').css('pointer-events', 'none');
+      wishlistBtn.classList.add('disabled');
+      wishlistBtn.setAttribute('data-variation-id', 0);
+      wishlistBtn.style.opacity = '0.5';
+      wishlistBtn.style.pointerEvents = 'none';
 
       // When a valid variation is found (WooCommerce event)
-      $form.on('found_variation', function(event, variation) {
-        console.log('WooCommerce variation found:', variation);
-        if (variation && variation.variation_id) {
-          $wishlistBtn.removeClass('disabled');
-          $wishlistBtn.attr('data-variation-id', variation.variation_id);
-          $wishlistBtn.attr('data-tinv-wl-productvariation', variation.variation_id);
-          $wishlistBtn.css('opacity', '1').css('pointer-events', 'auto');
-          console.log('Wishlist button enabled for variation:', variation.variation_id);
-        }
-      });
+      if (form) {
+        form.addEventListener('found_variation', function(event) {
+          console.log('WooCommerce variation found:', event.detail);
+          var variation = event.detail;
+          if (variation && variation.variation_id) {
+            wishlistBtn.classList.remove('disabled');
+            wishlistBtn.setAttribute('data-variation-id', variation.variation_id);
+            wishlistBtn.setAttribute('data-tinv-wl-productvariation', variation.variation_id);
+            wishlistBtn.style.opacity = '1';
+            wishlistBtn.style.pointerEvents = 'auto';
+            console.log('Wishlist button enabled for variation:', variation.variation_id);
+          }
+        });
+      }
       
       // Also listen for custom variation selection (your existing logic)
-      $(document).on('click', '.color-dot.selected, .size-button.selected', function() {
-        console.log('Custom variation selection detected');
-        // Check if we have a selected variation from your existing logic
-        setTimeout(function() {
-          var selectedVariation = window.selectedVariation;
-          if (selectedVariation && selectedVariation.variation_id) {
-            console.log('Custom variation found:', selectedVariation);
-            $wishlistBtn.removeClass('disabled');
-            $wishlistBtn.attr('data-variation-id', selectedVariation.variation_id);
-            $wishlistBtn.attr('data-tinv-wl-productvariation', selectedVariation.variation_id);
-            $wishlistBtn.css('opacity', '1').css('pointer-events', 'auto');
-            console.log('Wishlist button enabled for custom variation:', selectedVariation.variation_id);
-          }
-        }, 100);
+      document.addEventListener('click', function(e) {
+        if ((e.target.classList.contains('color-dot') && e.target.classList.contains('selected')) ||
+            (e.target.classList.contains('size-button') && e.target.classList.contains('selected'))) {
+          console.log('Custom variation selection detected');
+          // Check if we have a selected variation from your existing logic
+          setTimeout(function() {
+            var selectedVariation = window.selectedVariation;
+            if (selectedVariation && selectedVariation.variation_id) {
+              console.log('Custom variation found:', selectedVariation);
+              wishlistBtn.classList.remove('disabled');
+              wishlistBtn.setAttribute('data-variation-id', selectedVariation.variation_id);
+              wishlistBtn.setAttribute('data-tinv-wl-productvariation', selectedVariation.variation_id);
+              wishlistBtn.style.opacity = '1';
+              wishlistBtn.style.pointerEvents = 'auto';
+              console.log('Wishlist button enabled for custom variation:', selectedVariation.variation_id);
+            }
+          }, 100);
+        }
       });
 
       // Block wishlist add if no variation selected
-      $wishlistBtn.on('click', function(e) {
-        var vid = $(this).data('variation-id') || $(this).attr('data-variation-id');
+      wishlistBtn.addEventListener('click', function(e) {
+        var vid = this.getAttribute('data-variation-id');
         console.log('Wishlist clicked, variation ID:', vid);
         if (!vid || vid == 0) {
           e.preventDefault();
@@ -507,11 +718,12 @@ jQuery(function($) {
           return false;
         }
       });
-    } else if ($wishlistBtn.length) {
+    } else if (wishlistBtn) {
       console.log('Simple product - wishlist enabled immediately');
     } else {
-      console.log('No wishlist button found. Available buttons:', $('button, a').length);
-      console.log('All buttons:', $('button, a').map(function() { return this.className; }).get());
+      var allButtons = document.querySelectorAll('button, a');
+      console.log('No wishlist button found. Available buttons:', allButtons.length);
+      console.log('All buttons:', Array.from(allButtons).map(function(btn) { return btn.className; }));
     }
   }, 1000); // Wait 1 second for shortcode to render
 });

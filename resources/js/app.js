@@ -3,6 +3,12 @@ import.meta.glob([
   '../fonts/**',
 ]);
 
+// Import live search functionality
+import './live-search.js';
+
+// Import cart functionality
+import './cart.js';
+
 // Hero carousel functionality is now handled by hero.blade.php
 
 // Navbar dropdown functionality

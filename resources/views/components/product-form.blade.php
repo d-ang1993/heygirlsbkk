@@ -13,7 +13,7 @@
       
       @if($product_type === 'variable')
         {{-- Dynamic form for variable products --}}
-        <form class="variations_form cart" method="post" enctype="multipart/form-data" data-product_id="{{ $product_id }}" data-product_variations="{{ json_encode($variations_data ?? []) }}">
+        <form class="custom-add-cart-form" method="post" enctype="multipart/form-data" data-product_id="{{ $product_id }}">
           @csrf
           {{-- Hidden inputs for variation data --}}
           <input type="hidden" name="add-to-cart" value="{{ $product_id }}">
@@ -39,13 +39,16 @@
             @endforeach
           @endif
           
-          <button type="submit" class="btn btn-primary add-to-cart-btn" disabled>
+          <button type="button" class="btn btn-primary add-to-cart-btn" data-product-id="{{ $product_id }}" disabled>
             ADD TO CART
           </button>
         </form>
       @else
-        <form class="cart" action="{{ $product->add_to_cart_url() }}" method="post" enctype="multipart/form-data">
-          <button type="submit" name="add-to-cart" value="{{ $product_id }}" class="btn btn-primary add-to-cart-btn">
+        <form class="custom-add-cart-form" action="{{ wc_get_cart_url() }}" method="post" enctype="multipart/form-data">
+          @csrf
+          <input type="hidden" name="add-to-cart" value="{{ $product_id }}">
+          <input type="hidden" name="quantity" value="1" class="quantity-input">
+          <button type="button" name="add-to-cart" value="{{ $product_id }}" class="btn btn-primary add-to-cart-btn" data-product_id="{{ $product_id }}">
             ADD TO CART
           </button>
         </form>

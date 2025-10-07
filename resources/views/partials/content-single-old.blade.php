@@ -589,7 +589,7 @@
           formData.append('attribute_pa_size', selectedSize);
         }
         
-        // Submit to WooCommerce
+        <!-- // Submit to WooCommerce
         fetch(window.productAddToCartUrl, {
           method: 'POST',
           body: formData
@@ -610,7 +610,7 @@
           console.error('Error:', error);
           alert('Error adding product to cart');
         });
-      }
+      } -->
       
       // Initialize display
       updateProductDisplay();

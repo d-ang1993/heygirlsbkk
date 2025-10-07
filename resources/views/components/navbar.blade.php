@@ -46,9 +46,17 @@ if (!$shop_menu) {
         <div class="navbar-top">
             <div class="navbar-location">THAILAND</div>
             <div class="navbar-account">
-                <a href="#" class="navbar-link">SIGN IN</a>
-                <span class="navbar-separator">|</span>
-                <a href="#" class="navbar-link">SIGN UP</a>
+                @if(is_user_logged_in())
+                    {{-- User is logged in - show My Account --}}
+                    <a href="{{ esc_url(wc_get_page_permalink('myaccount')) }}" class="navbar-link">MY ACCOUNT</a>
+                    <span class="navbar-separator">|</span>
+                    <a href="{{ esc_url(wp_logout_url(home_url())) }}" class="navbar-link">LOGOUT</a>
+                @else
+                    {{-- User is not logged in - show Sign In/Sign Up --}}
+                    <a href="{{ esc_url(add_query_arg('action', 'login', wc_get_page_permalink('myaccount'))) }}" class="navbar-link">SIGN IN</a>
+                    <span class="navbar-separator">|</span>
+                    <a href="{{ esc_url(add_query_arg('action', 'register', wc_get_page_permalink('myaccount'))) }}" class="navbar-link">SIGN UP</a>
+                @endif
             </div>
         </div>
 
@@ -110,12 +118,36 @@ if (!$shop_menu) {
             </div>
 
             <div class="navbar-right">
-                <div class="navbar-search">
-                    <input type="text" placeholder="FIND SOMETHING" class="search-input">
-                    <span class="search-label">SEARCH</span>
+                <div class="navbar-search-container">
+                    <form class="navbar-search" method="get" action="{{ home_url('/') }}">
+                        <input type="text" 
+                        placeholder="FIND SOMETHING" 
+                        class="search-input" 
+                        name="s" 
+                        autocomplete="off"
+                        autocorrect="off"
+                        autocapitalize="off"
+                        spellcheck="false"
+                        value="{{ get_search_query() }}" oninput="this.style.width = Math.max(120, this.value.length * 8 + 20) + 'px'">
+                        <button type="submit" class="search-label">SEARCH</button>
+                    </form>
+                    
+                    <!-- Search Dropdown Results -->
+                    <div class="search-dropdown" id="search-dropdown" style="display: none;">
+                        <div class="search-dropdown-content">
+                            <div class="search-results-list" id="search-results-list">
+                                <!-- Results will be populated here -->
+                            </div>
+                            <div class="search-dropdown-footer">
+                                <a href="#" id="view-all-results" class="view-all-link">
+                                    View all results
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <a href="#" class="navbar-link navbar-bag">
-                    BAG(<span class="bag-count">0</span>)
+                <a href="#" class="navbar-link navbar-bag cart-trigger" data-cart-url="{{ wc_get_cart_url() }}">
+                    BAG(<span class="bag-count">{{ WC()->cart->get_cart_contents_count() }}</span>)
                 </a>
             </div>
         </div>
@@ -236,4 +268,61 @@ if (!$shop_menu) {
         @endif
     </div>
 </nav>
+
+<!-- Cart Drawer -->
+<div class="cart-drawer" id="cart-drawer">
+    <div class="cart-drawer-overlay"></div>
+    <div class="cart-drawer-content">
+        <div class="cart-drawer-header">
+            <h3>Shopping Cart</h3>
+            <button class="cart-drawer-close" type="button">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        
+        <div class="cart-drawer-body">
+            <div class="cart-loading">
+                <div class="spinner"></div>
+                <p>Loading cart...</p>
+            </div>
+            
+            <div class="cart-content" style="display: none;">
+                <div class="cart-items"></div>
+                <div class="cart-empty" style="display: none;">
+                    <div class="empty-cart-icon">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <circle cx="9" cy="21" r="1"></circle>
+                            <circle cx="20" cy="21" r="1"></circle>
+                            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                        </svg>
+                    </div>
+                    <h4>Your cart is empty</h4>
+                    <p>Add some items to get started</p>
+                    <button class="btn btn-primary continue-shopping">Continue Shopping</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="cart-drawer-footer" style="display: none;">
+            <div class="cart-totals">
+                <div class="cart-subtotal">
+                    <span>Subtotal:</span>
+                    <span class="cart-subtotal-amount"></span>
+                </div>
+                <div class="cart-total">
+                    <span>Total:</span>
+                    <span class="cart-total-amount"></span>
+                </div>
+            </div>
+            <div class="cart-actions">
+                <a href="#" class="btn btn-secondary view-cart-btn">View Cart</a>
+                <a href="#" class="btn btn-primary checkout-btn">Checkout</a>
+            </div>
+        </div>
+    </div>
+</div>
+
 @endif
