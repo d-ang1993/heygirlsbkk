@@ -3,31 +3,44 @@ name: Deploy Sage Theme to Hostinger
 on:
   push:
     branches:
-      - main  # deploys on push to main
+      - main  # deploy on push to main
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ Checkout the repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      # 2️⃣ Setup PHP (for Composer)
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.1
+          extensions: mbstring, exif, pcntl, bcmath, gd
+
+      # 3️⃣ Install Composer dependencies
+      - name: Install PHP dependencies
+        run: composer install --no-dev --prefer-dist --optimize-autoloader
+
+      # 4️⃣ Setup Node (for Vite/Build)
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
           node-version: 18
 
-      - name: Install dependencies
+      # 5️⃣ Install Node dependencies
+      - name: Install Node dependencies
         run: npm ci
 
-      - name: Build for production
+      # 6️⃣ Build for production
+      - name: Build production assets
         run: npm run build
 
-      - name: List build output
-        run: ls -la
-
-      - name: Deploy via FTP
+      # 7️⃣ Deploy via FTP
+      - name: Deploy via FTP to Hostinger
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: 145.79.28.100
@@ -35,26 +48,17 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           port: 21
           local-dir: ./
-          server-dir: /domains/heygirlsbkk.com/public_html/wp-content/themes/heygirlsbkk/
-          dangerous-clean-slate: false
+          # 👇 adjust this path to your actual theme location
+          server-dir: /public_html/heygirlsbkk.com/wp-content/themes/heygirlsbkk/
           exclude: |
             **/.git*
             **/.github*
             **/node_modules/**
-            # **/vendor/**
-            **/package-lock.json
-            **/composer.lock
+            **/tests/**
+            **/README.md
+            **/LICENSE*
             **/.env
-            **/composer.json
-            **/package.json
-            **/vite.config.js
-            **/webpack.mix.js
-            **/tailwind.config.js
-            **/postcss.config.js
-            **/babel.config.js
             **/.DS_Store
             **/Thumbs.db
             **/npm-debug.log
             **/yarn-error.log
-            **/README.md
-            **/LICENSE*
