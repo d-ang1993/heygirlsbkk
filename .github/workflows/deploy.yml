@@ -3,29 +3,30 @@ name: Deploy Sage Theme to Hostinger
 on:
   push:
     branches:
-      - main  # deploy on push to main
+      - main  # deploys when pushing to main
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout the repository
+      # 1️⃣ Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2️⃣ Setup PHP (for Composer)
+      # 2️⃣ Setup PHP for Composer
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: 8.1
+          php-version: 8.3
           extensions: mbstring, exif, pcntl, bcmath, gd
+          coverage: none
 
-      # 3️⃣ Install Composer dependencies
+      # 3️⃣ Install PHP dependencies
       - name: Install PHP dependencies
         run: composer install --no-dev --prefer-dist --optimize-autoloader
 
-      # 4️⃣ Setup Node (for Vite/Build)
+      # 4️⃣ Setup Node for Sage build
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
@@ -35,11 +36,11 @@ jobs:
       - name: Install Node dependencies
         run: npm ci
 
-      # 6️⃣ Build for production
+      # 6️⃣ Build production assets
       - name: Build production assets
         run: npm run build
 
-      # 7️⃣ Deploy via FTP
+      # 7️⃣ Deploy via FTP to Hostinger
       - name: Deploy via FTP to Hostinger
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
@@ -47,9 +48,11 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           port: 21
+
+          # 👇 Correct Hostinger path
           local-dir: ./
-          # 👇 adjust this path to your actual theme location
-          server-dir: /public_html/heygirlsbkk.com/wp-content/themes/heygirlsbkk/
+          server-dir: /domains/heygirlsbkk.com/public_html/wp-content/themes/heygirlsbkk/
+
           exclude: |
             **/.git*
             **/.github*
