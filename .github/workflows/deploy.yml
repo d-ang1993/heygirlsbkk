@@ -31,13 +31,37 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           port: 21
-          # The local folder you want to upload (this whole theme folder)
-          local-dir: ./
-          # The target directory on your Hostinger install:
+
+          # 👇 change this ONLY if your theme is inside a subfolder
+          # If your functions.php, style.css, etc. are in repo root:
+          # local-dir: ./
+          # If they are in a subfolder (like /heygirlsbkk), use:
+          local-dir: ./heygirlsbkk
+
+          # The target directory on your Hostinger install
           server-dir: /public_html/wp-content/themes/heygirlsbkk/
-          # Optional safety flags:
+
+          # Exclude unnecessary files/folders
           exclude: |
             **/.git*
             **/.github*
-            node_modules/**
-            vendor/**
+            **/node_modules/**
+            **/vendor/**
+            **/package-lock.json
+            **/composer.lock
+            **/.env
+            **/composer.json
+            **/package.json
+            **/vite.config.js
+            **/webpack.mix.js
+            **/tailwind.config.js
+            **/postcss.config.js
+            **/babel.config.js
+            **/.env
+            **/.DS_Store
+            **/Thumbs.db
+            **/npm-debug.log
+            **/yarn-error.log
+            **/README.md
+            **/LICENSE.md
+            **/LICENSE
