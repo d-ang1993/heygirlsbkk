@@ -415,7 +415,7 @@ function enqueue_woocommerce_ajax_scripts() {
     }
 }
 
-// Enable AJAX add to cart for product grid
+// Enable AJAX add to cart for product grids
 add_action('wp_enqueue_scripts', 'enable_ajax_add_to_cart');
 
 function enable_ajax_add_to_cart() {
