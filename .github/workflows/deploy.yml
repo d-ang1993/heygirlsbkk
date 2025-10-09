@@ -36,7 +36,7 @@ jobs:
           local-dir: ./
           server-dir: /public_html/wp-content/themes/heygirlsbkk/
 
-          # Exclude unnecessary files/folders
+          # Exclude unnecessary files/folders try again.
           exclude: |
             **/.git*
             **/.github*
