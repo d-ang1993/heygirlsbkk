@@ -372,19 +372,19 @@ document.addEventListener('DOMContentLoaded', function() {
   
 // Add to cart function
 function addToCart(event) {
-  // Prevent default & stop all other listeners (avoids WooCommerce double fire)
+  // Prevent default form submission & duplicate triggers
   if (event) {
     event.preventDefault();
-    event.stopImmediatePropagation(); // <-- key change
+    event.stopImmediatePropagation();
   }
 
-  // Prevent multiple simultaneous calls
+  // Prevent multiple simultaneous requests
   if (window.addToCartProcessing) {
     console.log('⚠️ Add to cart already processing, ignoring duplicate call');
     return;
   }
-  
   window.addToCartProcessing = true;
+
   console.log('=== CUSTOM ADD TO CART CALLED ===');
   console.log('selectedVariation:', selectedVariation);
   console.log('selectedAttributes:', selectedAttributes);
@@ -398,39 +398,50 @@ function addToCart(event) {
   const quantity = getCurrentQuantity();
   const formData = new FormData();
 
-  // Required WooCommerce fields
+  // ✅ Required WooCommerce fields
   const productId =
-    window.item.product_id || selectedVariation.product_id || selectedVariation.id;
+    window.item?.product_id || selectedVariation?.product_id || selectedVariation?.id;
+
   formData.append('product_id', productId);
-  formData.append('add-to-cart', selectedVariation.id);
+  formData.append('add-to-cart', productId);
   formData.append('variation_id', selectedVariation.id);
   formData.append('quantity', quantity);
-  
-  // Request fragments for cart updates
-  formData.append('wc-ajax', 'add_to_cart');
-  formData.append('fragments', 'true');
 
-  // Add variation attributes (auto handles custom attributes)
-  for (const [key, value] of Object.entries(selectedAttributes)) {
-    if (value) {
-      const attrKey =
-        key.startsWith('attribute_') || key.startsWith('pa_')
-          ? key
-          : `attribute_pa_${key}`;
-      formData.append(attrKey, value);
+// ✅ Append correct attribute keys (handles pa_ and custom)
+const allAttributes = {
+  ...selectedVariation.attributes,
+  ...selectedAttributes,
+};
+
+console.log('All attributes:', allAttributes);
+
+  Object.entries(allAttributes).forEach(([key, value]) => {
+    if (!value) return;
+
+    // Normalize key — ensure correct WooCommerce naming convention
+    let attrKey;
+    if (key.startsWith('attribute_')) {
+      attrKey = key; // already correct
+    } else if (key.startsWith('pa_')) {
+      attrKey = `attribute_${key}`;
+    } else {
+      attrKey = `attribute_pa_${key.replace(/^pa_/, '')}`;
     }
-  }
 
-  // Determine AJAX endpoint
+    // Normalize value to WooCommerce-friendly slug (lowercase, no spaces)
+    const normalizedValue = value.toString().trim().toLowerCase().replace(/\s+/g, '-');
+
+    // ✅ Append both for WooCommerce + CartFlows compatibility
+    formData.append(attrKey, normalizedValue);
+    formData.append(`variation[${attrKey}]`, normalizedValue);
+
+    console.log(`Added attribute: ${attrKey} = ${normalizedValue}`);
+  });
+
+  // ✅ Determine AJAX endpoint (WooCommerce core-safe)
   let ajaxUrl = '/?wc-ajax=add_to_cart';
-  if (
-    typeof wc_add_to_cart_params !== 'undefined' &&
-    wc_add_to_cart_params.wc_ajax_url
-  ) {
-    ajaxUrl = wc_add_to_cart_params.wc_ajax_url.replace(
-      '%%endpoint%%',
-      'add_to_cart'
-    );
+  if (typeof wc_add_to_cart_params !== 'undefined' && wc_add_to_cart_params.wc_ajax_url) {
+    ajaxUrl = wc_add_to_cart_params.wc_ajax_url.replace('%%endpoint%%', 'add_to_cart');
   } else if (typeof window.productAddToCartUrl !== 'undefined') {
     ajaxUrl = window.productAddToCartUrl;
   } else {
@@ -438,10 +449,10 @@ function addToCart(event) {
     ajaxUrl = '/wp-admin/admin-ajax.php';
   }
 
-  console.log('AJAX URL:', ajaxUrl);
-  console.log('Form data:', Object.fromEntries(formData));
+  console.log('🧾 AJAX URL:', ajaxUrl);
+  console.log('📦 Form Data:', Object.fromEntries([...formData.entries()]));
 
-  // Submit to WooCommerce
+  // ✅ Perform WooCommerce AJAX Add to Cart
   fetch(ajaxUrl, {
     method: 'POST',
     body: formData,
@@ -454,25 +465,21 @@ function addToCart(event) {
     .then((text) => {
       try {
         return JSON.parse(text);
-      } catch {
+      } catch (e) {
         console.warn('Non-JSON response — treating as success');
         return { success: true };
       }
     })
     .then((data) => {
-      console.log('📦 Parsed WooCommerce response:', data);
-      console.log('Success:', data.success);
-      console.log('Data:', data.data);
-      console.log('Fragments:', data.fragments);
+      console.log('📦 WooCommerce Response:', data);
 
       if (data.success === false) {
         showCartMessage('Error: ' + (data.data || 'Unknown error'), 'error');
+        window.addToCartProcessing = false;
         return;
       }
 
-      // ✅ Successful add-to-cart (no message needed)
-
-      // Update cart fragments if available
+      // ✅ Update cart fragments if available
       if (data.fragments) {
         Object.entries(data.fragments).forEach(([selector, html]) => {
           const el = document.querySelector(selector);
@@ -480,13 +487,7 @@ function addToCart(event) {
         });
       }
 
-      // Dispatch WooCommerce-compatible event
-      console.log('=== ADD TO CART SUCCESS ===');
-      console.log('Fragments data:', data.fragments);
-      console.log('Cart hash:', data.cart_hash);
-      console.log('jQuery available:', typeof jQuery !== 'undefined');
-      
-      // Always use vanilla JavaScript event (more reliable)
+      // ✅ Fire WooCommerce-compatible event
       const evt = new CustomEvent('added_to_cart', {
         detail: {
           fragments: data.fragments,
@@ -494,12 +495,9 @@ function addToCart(event) {
           button: document.querySelector('.add-to-cart-btn'),
         },
       });
-      console.log('Dispatching custom added_to_cart event:', evt);
       document.body.dispatchEvent(evt);
-      
-      // Also trigger jQuery event if available (for compatibility)
+
       if (typeof jQuery !== 'undefined') {
-        console.log('Also triggering jQuery event for compatibility');
         jQuery(document.body).trigger('added_to_cart', [
           data.fragments,
           data.cart_hash,
@@ -507,7 +505,7 @@ function addToCart(event) {
         ]);
       }
 
-      // ✅ Flash button success state
+      // ✅ Flash success UI
       const button = document.querySelector('.add-to-cart-btn');
       if (button) {
         const original = button.innerHTML;
@@ -519,43 +517,31 @@ function addToCart(event) {
         }, 2000);
       }
 
-      // ✅ Open cart drawer (no page reload on any device)
+      // ✅ Open Cart Drawer (no redirect)
       setTimeout(() => {
         if (typeof window.openCartDrawer === 'function') {
-          window.openCartDrawer(true); // This will force refresh cart content
+          window.openCartDrawer(true); // force reload
         } else {
-          const trigger = document.querySelector('.cart-trigger');
-          if (trigger) {
-            trigger.click();
-          } else {
-            console.log('Cart trigger not found, trying alternative...');
-            // Alternative: try to open cart drawer by triggering the cart button
-            const cartButton = document.querySelector('.navbar-bag, .cart-trigger, [data-cart-url]');
-            if (cartButton) cartButton.click();
-          }
+          const trigger =
+            document.querySelector('.cart-trigger, .navbar-bag, [data-cart-url]');
+          if (trigger) trigger.click();
         }
-        
-      // Ensure cart content is refreshed after opening
-      if (typeof window.loadCartContent === 'function') {
-        setTimeout(() => window.loadCartContent(true), 100);
-      }
-      
-      // Force update bag count as fallback
-      if (typeof window.updateBagCount === 'function') {
-        setTimeout(() => {
-          console.log('🔄 Fallback: Calling updateBagCount directly');
-          window.updateBagCount();
-        }, 200);
-      }
-      
-      // Reset processing flag
-      window.addToCartProcessing = false;
-      }, 500); // Reduced delay for faster response
+
+        // Optional UI refresh helpers
+        if (typeof window.loadCartContent === 'function') {
+          setTimeout(() => window.loadCartContent(true), 100);
+        }
+        if (typeof window.updateBagCount === 'function') {
+          setTimeout(() => window.updateBagCount(), 200);
+        }
+
+        // ✅ Reset processing flag
+        window.addToCartProcessing = false;
+      }, 500);
     })
     .catch((err) => {
-      console.error('Add to cart error:', err);
+      console.error('❌ Add to cart error:', err);
       showCartMessage('❌ Error adding product to cart', 'error');
-      // Reset processing flag on error
       window.addToCartProcessing = false;
     });
 }

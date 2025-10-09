@@ -258,6 +258,7 @@ function initCartDrawer() {
     });
     
     function openCartDrawer(forceRefresh = false) {
+        console.log('🛒 Opening cart drawer...', forceRefresh ? '(force refresh)' : '');
         cartDrawer.classList.add('active');
         document.body.style.overflow = 'hidden';
         loadCartContent(forceRefresh);
@@ -309,8 +310,30 @@ function initCartDrawer() {
             return response.json();
         })
         .then(data => {
-            console.log('Cart data received:', data);
+            console.log('=== CART DRAWER OPENED - BAG DATA ===');
+            console.log('Full cart response:', data);
             if (data.success) {
+                console.log('✅ Cart data loaded successfully');
+                console.log('📦 Cart items:', data.data?.items || []);
+                console.log('💰 Cart total:', data.data?.total || 'N/A');
+                console.log('📊 Cart subtotal:', data.data?.subtotal || 'N/A');
+                console.log('🔢 Item count:', data.data?.count || 0);
+                
+                // Log each item in detail
+                if (data.data?.items && data.data.items.length > 0) {
+                    console.log('=== CART ITEMS DETAILS ===');
+                    data.data.items.forEach((item, index) => {
+                        console.log(`Item ${index + 1}:`, {
+                            name: item.name,
+                            quantity: item.quantity,
+                            price: item.price,
+                            variation: item.variation,
+                            cart_item_key: item.cart_item_key
+                        });
+                    });
+                } else {
+                    console.log('🛒 Cart is empty');
+                }
                 // Cache the data
                 cartCache = data.data;
                 cacheTimestamp = now;
