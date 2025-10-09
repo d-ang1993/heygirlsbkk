@@ -35,7 +35,7 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           port: 21
           local-dir: ./
-          server-dir: /public_html/wp-content/themes/heygirlsbkk/
+          server-dir: /domains/heygirlsbkk.com/public_html/wp-content/themes/heygirlsbkk/
           dangerous-clean-slate: false
           exclude: |
             **/.git*
