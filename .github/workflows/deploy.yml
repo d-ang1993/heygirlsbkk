@@ -50,7 +50,7 @@ jobs:
           port: 21
           timeout: 60000
 
-          # 👇 Correct Hostinger path
+          # 👇 Correct Hostinger paths
           local-dir: ./
           server-dir: /domains/heygirlsbkk.com/public_html/wp-content/themes/heygirlsbkk/
 
