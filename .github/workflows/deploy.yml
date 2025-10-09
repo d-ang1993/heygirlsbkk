@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Setup Node
@@ -32,13 +32,8 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           port: 21
 
-          # 👇 change this ONLY if your theme is inside a subfolder
-          # If your functions.php, style.css, etc. are in repo root:
-          # local-dir: ./
-          # If they are in a subfolder (like /heygirlsbkk), use:
-          local-dir: ./heygirlsbkk
-
-          # The target directory on your Hostinger install
+          # 👇 Deploy the entire theme directory
+          local-dir: ./
           server-dir: /public_html/wp-content/themes/heygirlsbkk/
 
           # Exclude unnecessary files/folders
