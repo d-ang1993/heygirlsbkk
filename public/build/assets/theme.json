@@ -1,0 +1,119 @@
+{
+  "__processed__": "This file was generated using Vite",
+  "$schema": "https://schemas.wp.org/trunk/theme.json",
+  "version": 3,
+  "settings": {
+    "layout": {
+      "contentSize": "48rem"
+    },
+    "background": {
+      "backgroundImage": true
+    },
+    "color": {
+      "custom": false,
+      "customDuotone": false,
+      "customGradient": false,
+      "defaultDuotone": false,
+      "defaultGradients": false,
+      "defaultPalette": false,
+      "duotone": [],
+      "palette": [
+        {
+          "name": "Red (50)",
+          "slug": "red-50",
+          "color": "oklch(97.1% .013 17.38)"
+        },
+        {
+          "name": "Red (100)",
+          "slug": "red-100",
+          "color": "oklch(93.6% .032 17.717)"
+        },
+        {
+          "name": "Red (400)",
+          "slug": "red-400",
+          "color": "oklch(70.4% .191 22.216)"
+        },
+        {
+          "name": "Red (600)",
+          "slug": "red-600",
+          "color": "oklch(57.7% .245 27.325)"
+        },
+        {
+          "name": "Yellow (50)",
+          "slug": "yellow-50",
+          "color": "oklch(98.7% .026 102.212)"
+        },
+        {
+          "name": "Yellow (400)",
+          "slug": "yellow-400",
+          "color": "oklch(85.2% .199 91.936)"
+        },
+        {
+          "name": "Green (50)",
+          "slug": "green-50",
+          "color": "oklch(98.2% .018 155.826)"
+        },
+        {
+          "name": "Green (400)",
+          "slug": "green-400",
+          "color": "oklch(79.2% .209 151.711)"
+        },
+        {
+          "name": "Indigo (50)",
+          "slug": "indigo-50",
+          "color": "oklch(96.2% .018 272.314)"
+        },
+        {
+          "name": "Indigo (400)",
+          "slug": "indigo-400",
+          "color": "oklch(67.3% .182 276.935)"
+        },
+        {
+          "name": "Gray (50)",
+          "slug": "gray-50",
+          "color": "oklch(98.5% .002 247.839)"
+        },
+        {
+          "name": "Gray (200)",
+          "slug": "gray-200",
+          "color": "oklch(92.8% .006 264.531)"
+        }
+      ]
+    },
+    "custom": {
+      "spacing": {},
+      "typography": {
+        "font-size": {},
+        "line-height": {}
+      }
+    },
+    "spacing": {
+      "padding": true,
+      "units": [
+        "px",
+        "%",
+        "em",
+        "rem",
+        "vw",
+        "vh"
+      ]
+    },
+    "typography": {
+      "defaultFontSizes": false,
+      "customFontSize": false,
+      "fontFamilies": [
+        {
+          "name": "sans",
+          "slug": "sans",
+          "fontFamily": "ui-sans-serif,system-ui,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji"
+        },
+        {
+          "name": "mono",
+          "slug": "mono",
+          "fontFamily": "ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,Courier New,monospace"
+        }
+      ],
+      "fontSizes": []
+    }
+  }
+}

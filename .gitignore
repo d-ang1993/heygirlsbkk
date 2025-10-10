@@ -1,7 +1,11 @@
 /node_modules
 /vendor
+
+# Ignore public files except for build output
 /public/*
 !/public/.gitkeep
+!/public/build/**
+
 .env
 npm-debug.log
 
