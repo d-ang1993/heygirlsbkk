@@ -3,66 +3,58 @@ name: Deploy Sage Theme to Hostinger
 on:
   push:
     branches:
-      - main  # deploys when pushing to main
+      - main
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2️⃣ Setup PHP for Composer
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: 8.3
-          extensions: mbstring, exif, pcntl, bcmath, gd
-          coverage: none
-
-      # 3️⃣ Install PHP dependencies
-      - name: Install PHP dependencies
-        run: composer install --no-dev --prefer-dist --optimize-autoloader
-
-      # 4️⃣ Setup Node for Sage build
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
           node-version: 18
 
-      # 5️⃣ Install Node dependencies
-      - name: Install Node dependencies
+      - name: Install dependencies
         run: npm ci
 
-      # 6️⃣ Build production assets
-      - name: Build production assets
+      - name: Build for production
         run: npm run build
 
-      # 7️⃣ Deploy via FTP to Hostinger
-      - name: Deploy via FTP to Hostinger
+      - name: Install Composer dependencies
+        run: composer install --no-dev --optimize-autoloader
+
+      - name: Deploy via SFTP to Hostinger
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
-          server: 145.79.28.100
+          server: sftp://145.79.28.100
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          port: 21
-          timeout: 60000
-
-          # 👇 Correct Hostinger paths
+          port: 22
           local-dir: ./
           server-dir: /domains/heygirlsbkk.com/public_html/wp-content/themes/heygirlsbkk/
-
+          state-name: .ftp-deploy-sync-state.json
+          timeout: 120000
           exclude: |
             **/.git*
             **/.github*
-            **/node_modules/**
-            **/tests/**
-            **/README.md
-            **/LICENSE*
-            **/.env
-            **/.DS_Store
-            **/Thumbs.db
-            **/npm-debug.log
-            **/yarn-error.log
+            node_modules/**
+            tests/**
+            storage/**
+            .env
+            .DS_Store
+            Thumbs.db
+            npm-debug.log
+            yarn-error.log
+            README.md
+            LICENSE*
+            composer.json
+            package.json
+            package-lock.json
+            vite.config.js
+            postcss.config.js
+            tailwind.config.js
+            webpack.mix.js

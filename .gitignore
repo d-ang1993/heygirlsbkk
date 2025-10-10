@@ -4,3 +4,7 @@
 !/public/.gitkeep
 .env
 npm-debug.log
+
+# Allow GitHub Actions workflow
+!.github/
+!.github/workflows/
