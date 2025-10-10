@@ -56,4 +56,5 @@ jobs:
             **/yarn-error.log
             **/README.md
             **/LICENSE.md
-            **/resources/**
+            **/resources/css/**
+            **/resources/js/**
