@@ -3,7 +3,7 @@ name: Deploy Sage Theme to Hostinger
 on:
   push:
     branches:
-      - main
+      - main  # deploys when you push to main
 
 jobs:
   build-and-deploy:
@@ -24,37 +24,33 @@ jobs:
       - name: Build for production
         run: npm run build
 
-      - name: Install Composer dependencies
-        run: composer install --no-dev --optimize-autoloader
-
-      - name: Deploy via SFTP to Hostinger
+      - name: Deploy via FTP to Hostinger
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
-          server: sftp://145.79.28.100
+          server: 145.79.28.100
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          port: 22
+          port: 21
+          protocol: ftp
           local-dir: ./
           server-dir: /domains/heygirlsbkk.com/public_html/wp-content/themes/heygirlsbkk/
-          state-name: .ftp-deploy-sync-state.json
-          timeout: 120000
           exclude: |
             **/.git*
             **/.github*
-            node_modules/**
-            tests/**
-            storage/**
-            .env
-            .DS_Store
-            Thumbs.db
-            npm-debug.log
-            yarn-error.log
-            README.md
-            LICENSE*
-            composer.json
-            package.json
-            package-lock.json
-            vite.config.js
-            postcss.config.js
-            tailwind.config.js
-            webpack.mix.js
+            **/node_modules/**
+            **/vendor/**
+            **/.env
+            **/package.json
+            **/package-lock.json
+            **/composer.json
+            **/composer.lock
+            **/vite.config.js
+            **/webpack.mix.js
+            **/tailwind.config.js
+            **/postcss.config.js
+            **/.DS_Store
+            **/Thumbs.db
+            **/npm-debug.log
+            **/yarn-error.log
+            **/README.md
+            **/LICENSE.md
