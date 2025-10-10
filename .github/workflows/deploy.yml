@@ -47,9 +47,12 @@ jobs:
             **/webpack.mix.js
             **/tailwind.config.js
             **/postcss.config.js
+            **/vite.config.js
+            **/public/.vite/**
             **/.DS_Store
             **/Thumbs.db
             **/npm-debug.log
             **/yarn-error.log
             **/README.md
             **/LICENSE.md
+            **/resources/**
