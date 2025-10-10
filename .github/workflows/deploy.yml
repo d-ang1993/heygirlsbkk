@@ -49,6 +49,7 @@ jobs:
             **/postcss.config.js
             **/vite.config.js
             **/public/.vite/**
+            **/public/hot
             **/.DS_Store
             **/Thumbs.db
             **/npm-debug.log
