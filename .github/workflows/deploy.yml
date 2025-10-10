@@ -44,7 +44,6 @@ jobs:
             **/package-lock.json
             **/composer.json
             **/composer.lock
-            **/vite.config.js
             **/webpack.mix.js
             **/tailwind.config.js
             **/postcss.config.js

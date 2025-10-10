@@ -1,14 +1,16 @@
 import { defineConfig, loadEnv } from 'vite'
-import tailwindcss from '@tailwindcss/vite';
+import tailwindcss from '@tailwindcss/vite'
 import laravel from 'laravel-vite-plugin'
-import { wordpressPlugin, wordpressThemeJson } from '@roots/vite-plugin';
+import { wordpressPlugin, wordpressThemeJson } from '@roots/vite-plugin'
 
 export default ({ mode }) => {
-  // Load env file
+  // Load env variables
   const env = loadEnv(mode, process.cwd(), '')
 
   return defineConfig({
-    base: '/app/themes/heygirlsbkk/public/',
+    // ✅ This is the correct base path for WordPress themes on Hostinger/live servers
+    base: '/wp-content/themes/heygirlsbkk/public/',
+
     server: {
       host: 'localhost',
       port: 3000,
@@ -17,12 +19,28 @@ export default ({ mode }) => {
         host: 'heygirlsbkk.local',
       },
     },
+
     build: {
+      // ✅ Output compiled files into public/build
       outDir: 'public/build',
       emptyOutDir: true,
+      manifest: true,
+      rollupOptions: {
+        input: [
+          'resources/css/app.css',
+          'resources/js/app.js',
+          'resources/css/editor.css',
+          'resources/js/editor.js',
+          'resources/js/image-optimization.js',
+        ],
+      },
     },
+
     plugins: [
+      // ✅ TailwindCSS (native Vite integration)
       tailwindcss(),
+
+      // ✅ Laravel Vite plugin (for automatic manifest + refresh)
       laravel({
         input: [
           'resources/css/app.css',
@@ -34,16 +52,17 @@ export default ({ mode }) => {
         refresh: true,
       }),
 
+      // ✅ WordPress integration for Sage
       wordpressPlugin(),
 
-      // Generate the theme.json file in the public/build/assets directory
-      // based on the Tailwind config and the theme.json file from base theme folder
+      // ✅ Automatically generate theme.json (keeps Gutenberg + Tailwind synced)
       wordpressThemeJson({
         disableTailwindColors: false,
         disableTailwindFonts: false,
         disableTailwindFontSizes: false,
       }),
     ],
+
     resolve: {
       alias: {
         '@scripts': '/resources/js',
