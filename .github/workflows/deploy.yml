@@ -36,8 +36,7 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           port: 21
           protocol: ftp
-          security: implicit
-          passive: true
+          security: loose
           log-level: minimal
           dry-run: false
           local-dir: ./
