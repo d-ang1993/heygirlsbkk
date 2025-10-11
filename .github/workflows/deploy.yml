@@ -36,11 +36,12 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           port: 21
           protocol: ftp
-          security: explicit
+          security: implicit
           passive: true
+          log-level: minimal
+          dry-run: false
           local-dir: ./
           server-dir: /domains/heygirlsbkk.com/public_html/wp-content/themes/heygirlsbkk/
-          state-name: .ftp-deploy-sync-state.json
           exclude: |
             **/.git*
             **/.github*
