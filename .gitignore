@@ -12,3 +12,4 @@ npm-debug.log
 # Allow GitHub Actions workflow
 !.github/
 !.github/workflows/
+public/hot
