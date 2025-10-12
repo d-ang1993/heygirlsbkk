@@ -34,7 +34,7 @@ export default ({ mode }) => {
           'resources/js/image-optimization.js',
         ],
       },
-      manifestDir: '.', // ✅ ensures manifest.json is in /build/, not /.vite/
+      // Remove manifestDir to put manifest.json directly in outDir
     },
 
     plugins: [
@@ -51,6 +51,7 @@ export default ({ mode }) => {
           'resources/js/image-optimization.js',
         ],
         refresh: true,
+        buildDirectory: 'build',
       }),
 
       // ✅ WordPress integration for Sage
