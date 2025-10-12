@@ -1,0 +1,11 @@
+/**
+ * Base Variables
+ * Global CSS variables and Tailwind directives
+ */
+
+@import "tailwindcss";
+
+:root {
+  --hero-height: 60vh;
+}
+
