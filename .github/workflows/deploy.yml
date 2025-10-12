@@ -41,6 +41,7 @@ jobs:
             **/.git*
             **/.github*
             **/node_modules/**
+            **/vendor/**
             **/.env
             **/package.json
             **/package-lock.json

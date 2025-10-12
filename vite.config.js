@@ -34,6 +34,7 @@ export default ({ mode }) => {
           'resources/js/image-optimization.js',
         ],
       },
+      manifestDir: '.', // ✅ ensures manifest.json is in /build/, not /.vite/
     },
 
     plugins: [
