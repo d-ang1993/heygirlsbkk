@@ -3,19 +3,18 @@ name: Deploy Sage Theme to Hostinger
 on:
   push:
     branches:
-      - main
+      - main  # deploys when you push to main
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v3
         with:
           node-version: 18
 
@@ -36,9 +35,6 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           port: 21
           protocol: ftp
-          security: loose
-          log-level: minimal
-          dry-run: false
           local-dir: ./
           server-dir: /domains/heygirlsbkk.com/public_html/wp-content/themes/heygirlsbkk/
           exclude: |
@@ -46,8 +42,10 @@ jobs:
             **/.github*
             **/node_modules/**
             **/.env
-            **/package*.json
-            **/composer*.json
+            **/package.json
+            **/package-lock.json
+            **/composer.json
+            **/composer.lock
             **/webpack.mix.js
             **/tailwind.config.js
             **/postcss.config.js
@@ -59,4 +57,4 @@ jobs:
             **/npm-debug.log
             **/yarn-error.log
             **/README.md
-            **/LICENSE*
+            **/LICENSE.md
