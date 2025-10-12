@@ -8,6 +8,7 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
       - name: Checkout repository
@@ -29,14 +30,17 @@ jobs:
 
       - name: Deploy via FTP to Hostinger
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        timeout-minutes: 20
         with:
           server: 145.79.28.100
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           port: 21
           protocol: ftp
+          timeout: 600000
           local-dir: ./
           server-dir: /domains/heygirlsbkk.com/public_html/wp-content/themes/heygirlsbkk/
+          dangerous-clean-slate: false
           exclude: |
             **/.git*
             **/.github*
@@ -47,9 +51,12 @@ jobs:
             **/package-lock.json
             **/composer.json
             **/composer.lock
+            **/vite.config.js
             **/webpack.mix.js
             **/tailwind.config.js
             **/postcss.config.js
+            **/resources/css/**
+            **/resources/js/**
             **/public/.vite/**
             **/public/hot
             **/.DS_Store
