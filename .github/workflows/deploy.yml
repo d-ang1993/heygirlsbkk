@@ -50,7 +50,6 @@ jobs:
             **/webpack.mix.js
             **/tailwind.config.js
             **/postcss.config.js
-            **/vite.config.js
             **/public/.vite/**
             **/public/hot
             **/.DS_Store
