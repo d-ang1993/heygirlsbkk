@@ -30,10 +30,14 @@
     
     // Debug: Console log all variations and attributes
     echo '<script>';
+    echo 'console.log("Product ID:", ' . $product->get_id() . ');';
+    echo 'console.log("Product Type:", "' . $product_type . '");';
     echo 'console.log("All Variations:", ' . json_encode($variations) . ');';
     echo 'console.log("All Attributes:", ' . json_encode($attributes) . ');';
     echo 'console.log("Color Variations:", ' . json_encode($color_variations) . ');';
     echo 'console.log("Size Variations:", ' . json_encode($size_variations) . ');';
+    echo 'console.log("Product is variable:", ' . ($product->is_type('variable') ? 'true' : 'false') . ');';
+    echo 'console.log("Has attributes:", ' . ($product->has_attributes() ? 'true' : 'false') . ');';
     echo '</script>';
   @endphp
   
