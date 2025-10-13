@@ -28,8 +28,13 @@
       }
     }
     
-    // Debug: Console log color variations
-    echo '<script>console.log("Color Variations:", ' . json_encode($color_variations) . ');</script>';
+    // Debug: Console log all variations and attributes
+    echo '<script>';
+    echo 'console.log("All Variations:", ' . json_encode($variations) . ');';
+    echo 'console.log("All Attributes:", ' . json_encode($attributes) . ');';
+    echo 'console.log("Color Variations:", ' . json_encode($color_variations) . ');';
+    echo 'console.log("Size Variations:", ' . json_encode($size_variations) . ');';
+    echo '</script>';
   @endphp
   
   <!-- Color Variations -->
