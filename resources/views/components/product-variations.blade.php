@@ -27,6 +27,9 @@
         }
       }
     }
+    
+    // Debug: Console log color variations
+    echo '<script>console.log("Color Variations:", ' . json_encode($color_variations) . ');</script>';
   @endphp
   
   <!-- Color Variations -->
