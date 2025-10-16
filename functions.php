@@ -405,37 +405,36 @@ function add_to_cart_fragments($fragments) {
     return $fragments;
 }
 
-// Enable WooCommerce AJAX for add to cart
-add_action('wp_enqueue_scripts', 'enqueue_woocommerce_ajax_scripts');
-
-function enqueue_woocommerce_ajax_scripts() {
-    if (function_exists('is_woocommerce') && (is_woocommerce() || is_cart() || is_checkout() || is_shop() || is_product())) {
-        wp_enqueue_script('wc-add-to-cart');
-        wp_enqueue_script('wc-cart-fragments');
-    }
-}
-
-// Enable AJAX add to cart for product grids
+// Enable AJAX add to cart for product pages
 add_action('wp_enqueue_scripts', 'enable_ajax_add_to_cart');
 
 function enable_ajax_add_to_cart() {
     if (function_exists('is_woocommerce') && class_exists('WooCommerce')) {
-        // Enqueue WooCommerce scripts
-        wp_enqueue_script('wc-add-to-cart');
-        wp_enqueue_script('wc-cart-fragments');
+        // Only load cart fragments for cart updates, NOT add-to-cart script on product pages
+        // since we have a custom implementation
+        if (is_product()) {
+            // On product pages, dequeue WooCommerce's add-to-cart to prevent double submission
+            wp_dequeue_script('wc-add-to-cart');
+            
+            // But keep cart fragments for cart updates
+            wp_enqueue_script('wc-cart-fragments');
+        } else {
+            // On shop/archive pages, use WooCommerce's native add-to-cart
+            wp_enqueue_script('wc-add-to-cart');
+            wp_enqueue_script('wc-cart-fragments');
+        }
 
         // Localize script for AJAX parameters
-        wp_localize_script('wc-add-to-cart', 'wc_add_to_cart_params', array(
+        wp_localize_script('wc-cart-fragments', 'wc_add_to_cart_params', array(
             'ajax_url' => WC()->ajax_url(),
             'wc_ajax_url' => WC_AJAX::get_endpoint('%%endpoint%%'),
             'i18n_view_cart' => esc_attr__('View cart', 'woocommerce'),
-            // 'cart_url' => apply_filters('woocommerce_add_to_cart_redirect', wc_get_cart_url()),
             'is_cart' => is_cart(),
             'cart_redirect_after_add' => get_option('woocommerce_cart_redirect_after_add')
         ));
 
         // Also localize for our custom cart.js
-        wp_localize_script('wc-add-to-cart', 'wc_cart_params', array(
+        wp_localize_script('wc-cart-fragments', 'wc_cart_params', array(
             'ajax_url' => WC()->ajax_url(),
             'wc_ajax_url' => WC_AJAX::get_endpoint('%%endpoint%%'),
             'cart_url' => wc_get_cart_url(),
@@ -585,3 +584,132 @@ function clear_cart_drawer_cache() {
     // This will be handled by the JavaScript cache invalidation
     // when the cart drawer is opened after modifications
 }
+
+// Display color swatches on product page
+add_action( 'woocommerce_before_add_to_cart_form', 'show_color_swatches_on_product_page' );
+function show_color_swatches_on_product_page() {
+    global $product;
+
+    if ( ! $product->is_type( 'variable' ) ) return;
+
+    $attributes = $product->get_variation_attributes();
+
+    if ( isset( $attributes['pa_color'] ) ) {
+        echo '<div class="product-color-swatches">';
+        echo '<h4>Color:</h4>';
+        foreach ( $attributes['pa_color'] as $color ) {
+            echo '<span class="color-swatch" style="background:' . esc_attr( $color ) . ';"></span>';
+        }
+        echo '</div>';
+    }
+}
+
+// Basic styling for swatches
+add_action( 'wp_head', function() {
+    echo '<style>
+        .product-color-swatches { margin-bottom: 10px; }
+        .product-color-swatches .color-swatch {
+            display:inline-block;
+            width:25px;
+            height:25px;
+            border-radius:50%;
+            border:1px solid #ccc;
+            margin-right:6px;
+            cursor:pointer;
+        }
+        .product-color-swatches .color-swatch:hover {
+            border-color:#000;
+        }
+    </style>';
+});
+
+/**
+ * Debug Cart Contents
+ * Add this to see what's actually in the cart
+ */
+add_action('wp_head', function() {
+    if (is_admin()) return;
+    
+    // Check if we're on a cart or checkout page
+    if (is_cart() || is_checkout() || (isset($_GET['debug_cart']) && $_GET['debug_cart'] === '1')) {
+        $cart = WC()->cart;
+        
+        if ($cart && !$cart->is_empty()) {
+            echo '<!-- CART DEBUG START -->';
+            echo '<!-- Cart Items Count: ' . $cart->get_cart_contents_count() . ' -->';
+            
+            foreach ($cart->get_cart() as $cart_item_key => $cart_item) {
+                echo '<!-- Cart Item: ' . $cart_item_key . ' -->';
+                echo '<!-- Product ID: ' . $cart_item['product_id'] . ' -->';
+                echo '<!-- Variation ID: ' . ($cart_item['variation_id'] ?? 'none') . ' -->';
+                echo '<!-- Quantity: ' . $cart_item['quantity'] . ' -->';
+                
+                if (!empty($cart_item['variation'])) {
+                    echo '<!-- Variations: ' . json_encode($cart_item['variation']) . ' -->';
+                } else {
+                    echo '<!-- Variations: none -->';
+                }
+                
+                // Get product object
+                $product = $cart_item['data'];
+                if ($product) {
+                    echo '<!-- Product Name: ' . $product->get_name() . ' -->';
+                    echo '<!-- Product Type: ' . $product->get_type() . ' -->';
+                    echo '<!-- In Stock: ' . ($product->is_in_stock() ? 'yes' : 'no') . ' -->';
+                }
+                
+                echo '<!-- Cart Item Data: ' . json_encode($cart_item) . ' -->';
+                echo '<!-- --- -->';
+            }
+            
+            echo '<!-- CART DEBUG END -->';
+        } else {
+            echo '<!-- CART DEBUG: Cart is empty -->';
+        }
+    }
+});
+
+/**
+ * Add cart debug to cart page content
+ */
+add_action('woocommerce_cart_contents', function() {
+    if (isset($_GET['debug_cart']) && $_GET['debug_cart'] === '1') {
+        $cart = WC()->cart;
+        
+        echo '<div style="background: #f0f0f0; padding: 20px; margin: 20px 0; border: 2px solid #333;">';
+        echo '<h3>Cart Debug Information</h3>';
+        
+        if ($cart && !$cart->is_empty()) {
+            echo '<p><strong>Cart Items Count:</strong> ' . $cart->get_cart_contents_count() . '</p>';
+            
+            foreach ($cart->get_cart() as $cart_item_key => $cart_item) {
+                echo '<div style="border: 1px solid #ccc; padding: 10px; margin: 10px 0;">';
+                echo '<h4>Cart Item: ' . $cart_item_key . '</h4>';
+                echo '<p><strong>Product ID:</strong> ' . $cart_item['product_id'] . '</p>';
+                echo '<p><strong>Variation ID:</strong> ' . ($cart_item['variation_id'] ?? 'none') . '</p>';
+                echo '<p><strong>Quantity:</strong> ' . $cart_item['quantity'] . '</p>';
+                
+                if (!empty($cart_item['variation'])) {
+                    echo '<p><strong>Variations:</strong> ' . json_encode($cart_item['variation'], JSON_PRETTY_PRINT) . '</p>';
+                } else {
+                    echo '<p><strong>Variations:</strong> none</p>';
+                }
+                
+                $product = $cart_item['data'];
+                if ($product) {
+                    echo '<p><strong>Product Name:</strong> ' . $product->get_name() . '</p>';
+                    echo '<p><strong>Product Type:</strong> ' . $product->get_type() . '</p>';
+                    echo '<p><strong>In Stock:</strong> ' . ($product->is_in_stock() ? 'yes' : 'no') . '</p>';
+                }
+                
+                echo '<details><summary>Full Cart Item Data</summary><pre>' . json_encode($cart_item, JSON_PRETTY_PRINT) . '</pre></details>';
+                echo '</div>';
+            }
+        } else {
+            echo '<p><strong>Cart is empty</strong></p>';
+        }
+        
+        echo '</div>';
+    }
+});
+

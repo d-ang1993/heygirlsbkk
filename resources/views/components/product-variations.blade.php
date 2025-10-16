@@ -1,6 +1,8 @@
 <!-- Product Variations -->
 @if($product_type === 'variable')
   @php
+    // Use the variations_data passed from the parent component, or fallback to getting it directly
+    $product = wc_get_product($product->get_id() ?? $product);
     $variations = $product->get_available_variations();
     $attributes = $product->get_variation_attributes();
     
@@ -9,7 +11,19 @@
     $size_variations = [];
     
     foreach ($variations as $variation) {
-      $variation_attributes = $variation['attributes'];
+      // Handle both formats: variations_data format and get_available_variations format
+      if (isset($variation['attributes'])) {
+        $variation_attributes = $variation['attributes'];
+      } else {
+        // If it's from variations_data, we need to reconstruct the attributes format
+        $variation_attributes = [];
+        if (isset($variation['color']) && !empty($variation['color'])) {
+          $variation_attributes['attribute_pa_color'] = $variation['color'];
+        }
+        if (isset($variation['sizes']) && !empty($variation['sizes'])) {
+          $variation_attributes['attribute_pa_sizes'] = $variation['sizes'];
+        }
+      }
       
       // Check for color variations
       if (isset($variation_attributes['attribute_pa_color']) || isset($variation_attributes['attribute_color'])) {
@@ -20,39 +34,83 @@
       }
       
       // Check for size variations
-      if (isset($variation_attributes['attribute_pa_size']) || isset($variation_attributes['attribute_size'])) {
-        $size_key = $variation_attributes['attribute_pa_size'] ?? $variation_attributes['attribute_size'];
+      if (isset($variation_attributes['attribute_pa_sizes']) || isset($variation_attributes['attribute_size'])) {
+        $size_key = $variation_attributes['attribute_pa_sizes'] ?? $variation_attributes['attribute_size'];
         if (!isset($size_variations[$size_key])) {
           $size_variations[$size_key] = $variation;
         }
       }
     }
     
-    // Debug: Console log all variations and attributes
-    echo '<script>';
-    echo 'console.log("Product ID:", ' . $product->get_id() . ');';
-    echo 'console.log("Product Type:", "' . $product_type . '");';
-    echo 'console.log("All Variations:", ' . json_encode($variations) . ');';
-    echo 'console.log("All Attributes:", ' . json_encode($attributes) . ');';
-    echo 'console.log("Color Variations:", ' . json_encode($color_variations) . ');';
-    echo 'console.log("Size Variations:", ' . json_encode($size_variations) . ');';
-    echo 'console.log("Product is variable:", ' . ($product->is_type('variable') ? 'true' : 'false') . ');';
-    echo 'console.log("Has attributes:", ' . ($product->has_attributes() ? 'true' : 'false') . ');';
-    echo '</script>';
   @endphp
+  
+  <!-- Debug Script -->
+  <script>
+    console.log("Product ID:", {!! $product->get_id() !!});
+    console.log("Product Type:", "{!! $product_type !!}");
+    console.log("All Variations:", {!! json_encode($variations) !!});
+    console.log("All Attributes:", {!! json_encode($attributes) !!});
+    console.log("Color Variations:", {!! json_encode($color_variations) !!});
+    console.log("Size Variations:", {!! json_encode($size_variations) !!});
+    console.log("Product is variable:", {!! $product->is_type('variable') ? 'true' : 'false' !!});
+    console.log("Has attributes:", {!! $product->has_attributes() ? 'true' : 'false' !!});
+    console.log("Variations data passed:", {!! json_encode($variations_data ?? []) !!});
+  </script>
+  
+  <!-- Single Color Styling -->
+  <style>
+    .color-dots.single-color .color-dot.single-color-selected {
+      border: 2px solid #000 !important;
+      transform: scale(1.1);
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
+    .color-dots.single-color .color-dot {
+      cursor: default;
+    }
+    .color-dots.single-color .color-dot:hover {
+      transform: none;
+    }
+  </style>
   
   <!-- Color Variations -->
   @if(!empty($color_variations))
     <div class="color-selection">
       <!-- <label class="variation-label">Color</label> -->
       <div class="selected-color-display" id="selected-color-display">
-        <span class="selected-color-label">Color: <span id="selected-color-name">Select a color</span></span>
+        <span class="selected-color-label">Color: <span id="selected-color-name">
+          @if(count($color_variations) === 1)
+            @php
+              $single_color_key = array_keys($color_variations)[0];
+              $single_color_name = str_replace(['-', '_'], ' ', $single_color_key);
+              $single_color_name = ucwords($single_color_name);
+            @endphp
+            {{ $single_color_name }}
+          @else
+            Select a color
+          @endif
+        </span></span>
       </div>
-      <div class="color-dots">
+      <div class="color-dots {{ count($color_variations) === 1 ? 'single-color' : '' }}">
         @foreach($color_variations as $color_key => $variation)
           @php
             $color_name = str_replace(['-', '_'], ' ', $color_key);
             $color_name = ucwords($color_name);
+            
+            // Get the term by slug from the 'pa_color' taxonomy
+            $color_term = get_term_by('slug', $color_key, 'pa_color');
+            
+            // Default fallback color
+            $dot_color = '#cccccc';
+            
+            if ($color_term) {
+              // Get hex color from Variation Swatches for WooCommerce plugin
+              $color_meta = get_term_meta($color_term->term_id, 'product_attribute_color', true);
+              if (!empty($color_meta)) {
+                $dot_color = $color_meta;
+              } else {
+                $dot_color = '#cccccc'; // fallback color
+              }
+            }
             
             // Check if ALL variations for this color are out of stock
             $color_has_stock = false;
@@ -68,90 +126,8 @@
                 }
               }
             }
-            
-            // Check if the color is already a hex code
-            $dot_color = '#cccccc'; // Default fallback color
-            
-            if (preg_match('/^#[0-9A-Fa-f]{6}$/', $color_key)) {
-              // It's already a hex code, use it directly
-              $dot_color = $color_key;
-            } else {
-              // Map friendly color names to hex codes
-              $color_map = [
-                'black' => '#000000',
-                'white' => '#ffffff',
-                'red' => '#ff0000',
-                'blue' => '#0000ff',
-                'green' => '#008000',
-                'yellow' => '#ffff00',
-                'pink' => '#ffc0cb',
-                'purple' => '#800080',
-                'orange' => '#ffa500',
-                'brown' => '#a52a2a',
-                'gray' => '#808080',
-                'grey' => '#808080',
-                'navy' => '#000080',
-                'beige' => '#f5f5dc',
-                'khaki' => '#f0e68c',
-                'ivory' => '#fffff0',
-                'cream' => '#fffdd0',
-                'tan' => '#d2b48c',
-                'maroon' => '#800000',
-                'burgundy' => '#800020',
-                'light blue' => '#add8e6',
-                'dark blue' => '#00008b',
-                'light green' => '#90ee90',
-                'dark green' => '#006400',
-                'light gray' => '#d3d3d3',
-                'dark gray' => '#a9a9a9',
-                'light grey' => '#d3d3d3',
-                'dark grey' => '#a9a9a9',
-                'gold' => '#ffd700',
-                'silver' => '#c0c0c0',
-                'bronze' => '#cd7f32',
-                'copper' => '#b87333',
-                'rose gold' => '#e8b4b8',
-                'mint' => '#98fb98',
-                'coral' => '#ff7f50',
-                'turquoise' => '#40e0d0',
-                'lavender' => '#e6e6fa',
-                'sage' => '#9caf88',
-                'olive' => '#808000',
-                'forest' => '#228b22',
-                'royal' => '#4169e1',
-                'midnight' => '#191970',
-                'charcoal' => '#36454f',
-                'camel' => '#c19a6b',
-                'taupe' => '#483c32',
-                'mauve' => '#e0b0ff',
-                'peach' => '#ffcba4',
-                'salmon' => '#fa8072',
-                'lime' => '#00ff00',
-                'cyan' => '#00ffff',
-                'magenta' => '#ff00ff',
-                'indigo' => '#4b0082',
-                'violet' => '#8a2be2',
-                'teal' => '#008080',
-                'aqua' => '#00ffff',
-                'fuchsia' => '#ff00ff',
-                'crimson' => '#dc143c',
-                'scarlet' => '#ff2400',
-                'emerald' => '#50c878',
-                'jade' => '#00a86b',
-                'ruby' => '#e0115f',
-                'sapphire' => '#0f52ba',
-                'amber' => '#ffbf00',
-                'topaz' => '#ffc87c',
-                'pearl' => '#f8f6f0',
-                'platinum' => '#e5e4e2',
-                'steel' => '#71797e',
-                'gunmetal' => '#2a3439'
-              ];
-              
-              $dot_color = $color_map[strtolower($color_name)] ?? '#cccccc';
-            }
           @endphp
-          <button class="color-dot {{ !$color_has_stock ? 'out-of-stock' : '' }}" 
+          <button class="color-dot {{ !$color_has_stock ? 'out-of-stock' : '' }} {{ count($color_variations) === 1 ? 'single-color-selected' : '' }}" 
                   style="background-color: {{ $dot_color }};"
                   title="{{ $color_name }}"
                   data-color="{{ $color_key }}"
@@ -199,7 +175,36 @@
           @php
             $size_name = str_replace(['-', '_'], ' ', $size);
             $size_name = strtoupper($size_name);
-            $size_in_stock = true; // You can add stock checking logic here if needed
+            
+            // Check if this size is in stock for single color products
+            $size_in_stock = true; // Default to available
+            if (count($color_variations) === 1) {
+              // For single color products, check if this size is available
+              $single_color_key = array_keys($color_variations)[0];
+              foreach ($variations as $variation) {
+                if (isset($variation['attributes'])) {
+                  $variation_attributes = $variation['attributes'];
+                } else {
+                  $variation_attributes = [];
+                  if (isset($variation['color']) && $variation['color'] === $single_color_key) {
+                    $variation_attributes['attribute_pa_color'] = $variation['color'];
+                  }
+                  if (isset($variation['sizes']) && $variation['sizes'] === $size) {
+                    $variation_attributes['attribute_pa_sizes'] = $variation['sizes'];
+                  }
+                }
+                
+                $variation_color = $variation_attributes['attribute_pa_color'] ?? $variation_attributes['attribute_color'] ?? '';
+                $variation_size = $variation_attributes['attribute_pa_sizes'] ?? $variation_attributes['attribute_size'] ?? '';
+                
+                if ($variation_color === $single_color_key && $variation_size === $size) {
+                  // Found matching variation, check if it's in stock
+                  $variation_obj = wc_get_product($variation['variation_id']);
+                  $size_in_stock = $variation_obj && $variation_obj->is_in_stock();
+                  break;
+                }
+              }
+            }
           @endphp
           <button class="size-button {{ !$size_in_stock ? 'out-of-stock' : '' }}"
                   data-size="{{ $size }}">
@@ -292,23 +297,44 @@ function updateProductPrice(variation) {
 // Initialize with default color or first available color on page load
 document.addEventListener('DOMContentLoaded', function() {
     let selectedColorDot = null;
+    const availableColorDots = document.querySelectorAll('.color-dot:not(.out-of-stock)');
     
-    // First, check if there's a default color set via form values
-    const defaultColorInput = document.querySelector('input[name="attribute_pa_color"]:checked, input[name="attribute_color"]:checked');
-    if (defaultColorInput) {
-        const defaultColorValue = defaultColorInput.value;
-        selectedColorDot = document.querySelector(`.color-dot[data-color="${defaultColorValue}"]:not(.out-of-stock)`);
-    }
-    
-    // If no default color found, use the first available color
-    if (!selectedColorDot) {
-        selectedColorDot = document.querySelector('.color-dot:not(.out-of-stock)');
+    // If there's only one color available, auto-select it
+    if (availableColorDots.length === 1) {
+        selectedColorDot = availableColorDots[0];
+        console.log('Auto-selecting single available color');
+    } else {
+        // First, check if there's a default color set via form values
+        const defaultColorInput = document.querySelector('input[name="attribute_pa_color"]:checked, input[name="attribute_color"]:checked');
+        if (defaultColorInput) {
+            const defaultColorValue = defaultColorInput.value;
+            selectedColorDot = document.querySelector(`.color-dot[data-color="${defaultColorValue}"]:not(.out-of-stock)`);
+        }
+        
+        // If no default color found, use the first available color
+        if (!selectedColorDot) {
+            selectedColorDot = document.querySelector('.color-dot:not(.out-of-stock)');
+        }
     }
     
     if (selectedColorDot) {
         const colorName = selectedColorDot.getAttribute('data-color-name');
         const colorKey = selectedColorDot.getAttribute('data-color');
         selectColor(colorKey, colorName, selectedColorDot);
+        
+        // Add the selected class immediately for single color products
+        if (availableColorDots.length === 1) {
+            selectedColorDot.classList.add('active');
+            // Update the selected color display immediately
+            const selectedColorName = document.getElementById('selected-color-name');
+            if (selectedColorName) {
+                selectedColorName.textContent = colorName;
+            }
+            const selectedColorDisplay = document.getElementById('selected-color-display');
+            if (selectedColorDisplay) {
+                selectedColorDisplay.classList.add('color-selected');
+            }
+        }
         
         // Also load the price for the selected color
         const variationId = selectedColorDot.getAttribute('data-variation-id');
@@ -320,4 +346,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 });
+
+// Make variations data available to JavaScript
+window.productVariations = {!! json_encode($variations_data ?? []) !!};
 </script>

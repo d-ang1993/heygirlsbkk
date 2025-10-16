@@ -52,7 +52,7 @@
   @endif
 
   <!-- Product Variations -->
-  @include('components.product-variations', ['product' => $product, 'product_type' => $product_type])
+  @include('components.product-variations', ['product' => $product, 'product_type' => $product_type, 'variations_data' => $variations_data])
 
   <!-- Stock Status -->
   <div class="stock-status-section">

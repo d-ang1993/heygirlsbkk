@@ -586,7 +586,7 @@
           formData.append('attribute_pa_color', selectedColor);
         }
         if (selectedSize) {
-          formData.append('attribute_pa_size', selectedSize);
+          formData.append('attribute_pa_sizes', selectedSize);
         }
         
         <!-- // Submit to WooCommerce

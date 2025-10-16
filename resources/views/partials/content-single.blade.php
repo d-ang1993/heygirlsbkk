@@ -141,7 +141,7 @@
           $variations_data[] = [
             'id' => $variation['variation_id'],
             'color' => $color,
-            'size' => $size,
+            'sizes' => $size,
             'price' => $variation_obj->get_price_html(),
             'regular_price' => $variation_obj->get_regular_price(),
             'sale_price' => $variation_obj->get_sale_price(),

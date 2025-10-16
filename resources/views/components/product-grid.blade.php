@@ -25,16 +25,40 @@
         
         <div class="product-grid product-grid--{{ $columns }}-cols">
             @foreach($products as $product)
-                <div class="product-card">
-                    <div class="product-image">
+                @php
+                    // Get all product images (gallery + featured)
+                    $image_ids = [];
+                    $featured_image_id = $product->get_image_id();
+                    if ($featured_image_id) {
+                        $image_ids[] = $featured_image_id;
+                    }
+                    $gallery_ids = $product->get_gallery_image_ids();
+                    if (!empty($gallery_ids)) {
+                        $image_ids = array_merge($image_ids, $gallery_ids);
+                    }
+                    $has_multiple_images = count($image_ids) > 1;
+                @endphp
+                
+                <div class="product-card" data-product-id="{{ $product->get_id() }}">
+                    <div class="product-image {{ $has_multiple_images ? 'has-carousel' : '' }}" 
+                         data-images='@json(array_map(function($id) { return wp_get_attachment_image_url($id, "product-grid"); }, $image_ids))'>
                         <a href="{{ $product->get_permalink() }}">
-                            <img src="{{ wp_get_attachment_image_url($product->get_image_id(), 'product-grid') }}" 
+                            <img class="product-main-image" 
+                                 src="{{ wp_get_attachment_image_url($product->get_image_id(), 'product-grid') }}" 
                                  alt="{{ $product->get_name() }}" 
                                  loading="lazy"
                                  decoding="async"
                                  width="500"
                                  height="500" />
                         </a>
+                        
+                        @if($has_multiple_images)
+                            <div class="image-indicators">
+                                @foreach($image_ids as $index => $img_id)
+                                    <span class="indicator {{ $index === 0 ? 'active' : '' }}" data-index="{{ $index }}"></span>
+                                @endforeach
+                            </div>
+                        @endif
                         
                         @if($showDiscount && $product->is_on_sale())
                             @php
@@ -59,13 +83,13 @@
                                         <circle cx="12" cy="12" r="3"></circle>
                                     </svg>
                                 </button>
-                                <button class="add-to-cart-btn" data-product-id="{{ $product->get_id() }}">
+                                <!-- <button class="add-to-cart-btn" data-product-id="{{ $product->get_id() }}">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <circle cx="9" cy="21" r="1"></circle>
                                         <circle cx="20" cy="21" r="1"></circle>
                                         <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
                                     </svg>
-                                </button>
+                                </button> -->
                             </div>
                         @endif
                     </div>
@@ -95,44 +119,24 @@
                                 }
                             }
                             
-                            // Clean up color names and get colors
+                            // Get color swatches from plugin
                             $color_swatches = [];
                             foreach ($colors as $color_key) {
                                 $color_name = str_replace(['-', '_'], ' ', $color_key);
                                 $color_name = ucwords($color_name);
                                 
-                                // Check if the color is already a hex code
+                                // Get the term by slug from the 'pa_color' taxonomy
+                                $color_term = get_term_by('slug', $color_key, 'pa_color');
+                                
+                                // Default fallback color
                                 $dot_color = '#cccccc';
-                                if (preg_match('/^#[0-9A-Fa-f]{6}$/', $color_key)) {
-                                    $dot_color = $color_key;
-                                } else {
-                                    // Map friendly color names to hex codes
-                                    $color_map = [
-                                        'black' => '#000000', 'white' => '#ffffff', 'red' => '#ff0000',
-                                        'blue' => '#0000ff', 'green' => '#008000', 'yellow' => '#ffff00',
-                                        'pink' => '#ffc0cb', 'purple' => '#800080', 'orange' => '#ffa500',
-                                        'brown' => '#a52a2a', 'gray' => '#808080', 'grey' => '#808080',
-                                        'navy' => '#000080', 'beige' => '#f5f5dc', 'khaki' => '#f0e68c',
-                                        'ivory' => '#fffff0', 'cream' => '#fffdd0', 'tan' => '#d2b48c',
-                                        'maroon' => '#800000', 'burgundy' => '#800020', 'light blue' => '#add8e6',
-                                        'dark blue' => '#00008b', 'light green' => '#90ee90', 'dark green' => '#006400',
-                                        'light gray' => '#d3d3d3', 'dark gray' => '#a9a9a9', 'light grey' => '#d3d3d3',
-                                        'dark grey' => '#a9a9a9', 'gold' => '#ffd700', 'silver' => '#c0c0c0',
-                                        'bronze' => '#cd7f32', 'copper' => '#b87333', 'rose gold' => '#e8b4b8',
-                                        'mint' => '#98fb98', 'coral' => '#ff7f50', 'turquoise' => '#40e0d0',
-                                        'lavender' => '#e6e6fa', 'sage' => '#9caf88', 'olive' => '#808000',
-                                        'forest' => '#228b22', 'royal' => '#4169e1', 'midnight' => '#191970',
-                                        'charcoal' => '#36454f', 'camel' => '#c19a6b', 'taupe' => '#483c32',
-                                        'mauve' => '#e0b0ff', 'peach' => '#ffcba4', 'salmon' => '#fa8072',
-                                        'lime' => '#00ff00', 'cyan' => '#00ffff', 'magenta' => '#ff00ff',
-                                        'indigo' => '#4b0082', 'violet' => '#8a2be2', 'teal' => '#008080',
-                                        'aqua' => '#00ffff', 'fuchsia' => '#ff00ff', 'crimson' => '#dc143c',
-                                        'scarlet' => '#ff2400', 'emerald' => '#50c878', 'jade' => '#00a86b',
-                                        'ruby' => '#e0115f', 'sapphire' => '#0f52ba', 'amber' => '#ffbf00',
-                                        'topaz' => '#ffc87c', 'pearl' => '#f8f6f0', 'platinum' => '#e5e4e2',
-                                        'steel' => '#71797e', 'gunmetal' => '#2a3439'
-                                    ];
-                                    $dot_color = $color_map[strtolower($color_name)] ?? '#cccccc';
+                                
+                                if ($color_term) {
+                                    // Get hex color from Variation Swatches for WooCommerce plugin
+                                    $color_meta = get_term_meta($color_term->term_id, 'product_attribute_color', true);
+                                    if (!empty($color_meta)) {
+                                        $dot_color = $color_meta;
+                                    }
                                 }
                                 
                                 $color_swatches[] = [
@@ -236,6 +240,9 @@
     overflow: hidden;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%; /* Ensure all cards have same height */
 }
 
 .product-card:hover {
@@ -247,17 +254,72 @@
     position: relative;
     overflow: hidden;
     aspect-ratio: 1;
+    flex-shrink: 0; /* Don't shrink the image */
 }
 
 .product-image img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease, opacity 0.5s ease;
 }
 
 .product-card:hover .product-image img {
     transform: scale(1.05);
+}
+
+.image-indicators {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 6px;
+    z-index: 3;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.product-card:hover .image-indicators {
+    opacity: 1;
+}
+
+.indicator {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.indicator.active {
+    background: #fff;
+    width: 20px;
+    border-radius: 3px;
+}
+
+.indicator.active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: rgba(255, 192, 203, 0.8); /* Pink color */
+    width: 100%;
+    border-radius: inherit;
+    animation: progressFill 3s linear forwards;
+}
+
+@keyframes progressFill {
+    0% {
+        width: 0%;
+    }
+    100% {
+        width: 100%;
+    }
 }
 
 .product-badge {
@@ -321,58 +383,97 @@
 
 .product-info {
     padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 120px; /* Ensure consistent card height */
 }
 
-.product-color {
-    margin-bottom: 8px;
+/* Color swatches section - fixed height */
+.product-colors {
+    min-height: 24px; /* Reserve space for color swatches */
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    align-items: center;
 }
 
-.color-label {
-    display: inline-block;
-    padding: 4px 8px;
-    background: #f8f9fa;
-    border: 1px solid #e9ecef;
-    border-radius: 4px;
-    font-size: 0.8rem;
-    font-weight: 500;
-    color: #666;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+.color-swatch {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
 }
 
+/* Product title section - fixed height */
 .product-title {
-    margin: 0 0 10px 0;
+    margin: 0;
     font-size: 1rem;
     font-weight: 500;
     line-height: 1.4;
+    min-height: 28px; /* Reserve space for title (2 lines max) */
+    display: flex;
 }
 
 .product-title a {
     color: #333;
     text-decoration: none;
-    transition: color 0.2s;
+    transition: all 0.4s ease;
+    display: block;
+    width: 100%;
+    text-align: center;
 }
 
 .product-title a:hover {
-    color: #000;
+    background: linear-gradient(45deg, #ff6b9d, #ff8fab,rgb(159, 136, 144));
+    background-size: 200% 200%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradientShift 1.5s ease-in-out infinite;
+    transform: scale(1.05);
 }
 
+@keyframes gradientShift {
+    0%, 100% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+/* Price section - fixed height */
 .product-price {
-    margin-bottom: 10px;
+    min-height: 48px; /* Reserve space for price + sale price */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 2px;
 }
 
 .price-current,
 .price-sale {
     font-size: 1.1rem;
     font-weight: 600;
-    color: #000;
+    color: #ff6b9d; /* Pink color */
 }
 
 .price-regular {
     font-size: 0.9rem;
     color: #999;
     text-decoration: line-through;
-    margin-left: 8px;
+    margin: 0;
+}
+
+/* Handle empty sections gracefully */
+.product-colors:empty {
+    display: block; /* Still show the reserved space */
+}
+
+.product-price:empty {
+    display: block; /* Still show the reserved space */
 }
 
 .product-rating {
@@ -429,3 +530,76 @@
     }
 }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const productCards = document.querySelectorAll('.product-card');
+    
+    productCards.forEach(card => {
+        const productImage = card.querySelector('.product-image.has-carousel');
+        if (!productImage) return;
+        
+        const images = JSON.parse(productImage.getAttribute('data-images') || '[]');
+        if (images.length <= 1) return;
+        
+        const img = productImage.querySelector('.product-main-image');
+        const indicators = productImage.querySelectorAll('.indicator');
+        let currentIndex = 0;
+        let intervalId = null;
+        const cycleDuration = 3000; // 3 seconds
+        
+        function showImage(index) {
+            currentIndex = index;
+            img.style.opacity = '0';
+            
+            setTimeout(() => {
+                img.src = images[index];
+                img.style.opacity = '1';
+                
+                // Update indicators - this will restart the CSS animation
+                indicators.forEach((indicator, i) => {
+                    indicator.classList.toggle('active', i === index);
+                });
+            }, 250);
+        }
+        
+        function startCarousel() {
+            if (intervalId) return;
+            
+            intervalId = setInterval(() => {
+                const nextIndex = (currentIndex + 1) % images.length;
+                showImage(nextIndex);
+            }, cycleDuration);
+        }
+        
+        function stopCarousel() {
+            if (intervalId) {
+                clearInterval(intervalId);
+                intervalId = null;
+            }
+            
+            // Reset to first image
+            if (currentIndex !== 0) {
+                showImage(0);
+            }
+        }
+        
+        // Start carousel on hover
+        card.addEventListener('mouseenter', startCarousel);
+        card.addEventListener('mouseleave', stopCarousel);
+        
+        // Click on indicators to manually change image
+        indicators.forEach((indicator, index) => {
+            indicator.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Clear existing interval and restart
+                if (intervalId) clearInterval(intervalId);
+                showImage(index);
+                startCarousel();
+            });
+        });
+    });
+});
+</script>

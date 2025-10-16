@@ -38,7 +38,7 @@ jobs:
           port: 21
           protocol: ftp
           timeout: 600000
-          local-dir: ./
+          local-dir: ./ 
           server-dir: /domains/heygirlsbkk.com/public_html/wp-content/themes/heygirlsbkk/
           dangerous-clean-slate: false
           exclude: |
@@ -51,12 +51,9 @@ jobs:
             **/package-lock.json
             **/composer.json
             **/composer.lock
-            **/vite.config.js
             **/webpack.mix.js
             **/tailwind.config.js
             **/postcss.config.js
-            **/resources/css/**
-            **/resources/js/**
             **/public/.vite/**
             **/public/hot
             **/.DS_Store
