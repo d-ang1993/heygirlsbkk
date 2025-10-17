@@ -732,4 +732,7 @@ input[name="password2"] {
 .hero__bg--fallback {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
-
+/* Hide View Cart Button After Adding to Cart */
+.added_to_cart.wc-forward {
+  display: none !important;
+}

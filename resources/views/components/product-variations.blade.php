@@ -132,8 +132,7 @@
                   title="{{ $color_name }}"
                   data-color="{{ $color_key }}"
                   data-color-name="{{ $color_name }}"
-                  data-variation-id="{{ $variation['variation_id'] }}"
-                  onclick="selectColor('{{ $color_key }}', '{{ $color_name }}', this)">
+                  data-variation-id="{{ $variation['variation_id'] }}">
             @if(!$color_has_stock)
               <span class="out-of-stock-x">×</span>
             @endif

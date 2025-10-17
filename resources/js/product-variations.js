@@ -1,30 +1,24 @@
 document.addEventListener('DOMContentLoaded', function() {
-  // Prevent ALL form submissions for add-to-cart forms
+  // Prevent form submission to avoid page reload and resubmission issues
   const customCartForm = document.querySelector('.custom-add-cart-form');
   
   if (customCartForm) {
     customCartForm.addEventListener('submit', function(event) {
       event.preventDefault();
       event.stopPropagation();
-      event.stopImmediatePropagation();
       console.log('Custom cart form submission prevented, using AJAX instead');
-      return false;
     });
   }
   
-  // Prevent ANY form submission that might add to cart
+  // Debug: Log any other form submissions that might be happening
   document.addEventListener('submit', function(event) {
-    if (event.target.classList.contains('cart') || 
-        event.target.classList.contains('variations_form') || 
-        event.target.classList.contains('custom-add-cart-form')) {
-      console.log('=== FORM SUBMISSION PREVENTED ===');
+    if (event.target.classList.contains('cart') || event.target.classList.contains('variations_form') || event.target.classList.contains('custom-add-cart-form')) {
+      console.log('=== FORM SUBMISSION DETECTED ===');
       console.log('Form class:', event.target.className);
-      event.preventDefault();
-      event.stopPropagation();
-      event.stopImmediatePropagation();
-      return false;
+      console.log('Form action:', event.target.action);
+      console.log('Event target:', event.target);
     }
-  }, true); // Use capture phase to catch it early
+  });
   
   // Product variation selection functionality
   const addToCartBtn = document.querySelector('.add-to-cart-btn');
@@ -34,25 +28,20 @@ document.addEventListener('DOMContentLoaded', function() {
   const priceDisplay = document.getElementById('product-price-display');
   const stockDisplay = document.getElementById('stock-status-display');
   
-  // Debug: Check if button is found
-  console.log('Add to cart button found:', addToCartBtn);
   
   let selectedAttributes = {};
   let selectedVariation = null;
   
   // Variations data from PHP
   const variations = window.productVariations || [];
-  console.log('Available variations:', variations);
-  if (variations.length > 0) {
-    console.log('First variation structure:', variations[0]);
-    console.log('First variation keys:', Object.keys(variations[0]));
-  }
   
   // Event delegation for all variation types
   document.addEventListener('click', function(e) {
   // Color selection
     if (e.target.classList.contains('color-dot')) {
-      console.log('Color dot clicked:', e.target);
+      e.preventDefault(); // Prevent any inline onclick from running
+      e.stopPropagation();
+      
       const dot = e.target;
       if (dot.classList.contains('out-of-stock')) return;
       
@@ -63,7 +52,8 @@ document.addEventListener('DOMContentLoaded', function() {
       dot.classList.add('selected');
       selectedAttributes.color = dot.getAttribute('data-color');
       
-      console.log('Color selected:', selectedAttributes.color);
+      // ✅ Reset quantity to 1 when color changes
+      updateQuantityDisplay(1);
       
       // Update all variation availability
       updateAllVariationAvailability();
@@ -74,7 +64,6 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Size selection
     if (e.target.classList.contains('size-button')) {
-      console.log('Size button clicked:', e.target);
       const button = e.target;
       if (button.classList.contains('out-of-stock')) return;
       
@@ -85,7 +74,8 @@ document.addEventListener('DOMContentLoaded', function() {
       button.classList.add('selected');
       selectedAttributes.sizes = button.getAttribute('data-size');
       
-      console.log('Size selected:', selectedAttributes.sizes);
+      // ✅ Reset quantity to 1 when size changes
+      updateQuantityDisplay(1);
       
       // Update all variation availability
       updateAllVariationAvailability();
@@ -119,14 +109,29 @@ document.addEventListener('DOMContentLoaded', function() {
   const spinnerUp = document.querySelector('.spinner-btn.up');
   const spinnerDown = document.querySelector('.spinner-btn.down');
   
+  // Debug: Check if quantity elements are found
+  console.log('🔍 Quantity elements found:');
+  console.log('  quantityValue:', quantityValue);
+  console.log('  minusBtn:', minusBtn);
+  console.log('  plusBtn:', plusBtn);
+  console.log('  spinnerUp:', spinnerUp);
+  console.log('  spinnerDown:', spinnerDown);
+  
   function updateQuantityDisplay(value) {
+    console.log('🔄 updateQuantityDisplay called with:', value);
+    console.log('🔄 quantityValue element:', quantityValue);
     if (quantityValue) {
       quantityValue.textContent = value;
+      console.log('✅ Updated quantity display to:', value);
+    } else {
+      console.error('❌ quantityValue element not found!');
     }
   }
   
   function getCurrentQuantity() {
-    return quantityValue ? parseInt(quantityValue.textContent) || 1 : 1;
+    const current = quantityValue ? parseInt(quantityValue.textContent) || 1 : 1;
+    console.log('📊 getCurrentQuantity:', current, 'element:', quantityValue, 'textContent:', quantityValue?.textContent);
+    return current;
   }
   
   if (minusBtn) {
@@ -141,7 +146,9 @@ document.addEventListener('DOMContentLoaded', function() {
   if (plusBtn) {
     plusBtn.addEventListener('click', function() {
       const currentValue = getCurrentQuantity();
-      const maxValue = selectedVariation ? selectedVariation.stock_quantity : 999;
+      // ✅ Get current selectedVariation dynamically (not from closure)
+      const maxValue = window.selectedVariation ? window.selectedVariation.stock_quantity : 999;
+      console.log('➕ Plus clicked - current:', currentValue, 'max:', maxValue, 'selectedVariation:', window.selectedVariation);
       if (currentValue < maxValue) {
         updateQuantityDisplay(currentValue + 1);
       }
@@ -151,7 +158,9 @@ document.addEventListener('DOMContentLoaded', function() {
   if (spinnerUp) {
     spinnerUp.addEventListener('click', function() {
       const currentValue = getCurrentQuantity();
-      const maxValue = selectedVariation ? selectedVariation.stock_quantity : 999;
+      // ✅ Get current selectedVariation dynamically (not from closure)
+      const maxValue = window.selectedVariation ? window.selectedVariation.stock_quantity : 999;
+      console.log('⬆️ SpinnerUp clicked - current:', currentValue, 'max:', maxValue, 'selectedVariation:', window.selectedVariation);
       if (currentValue < maxValue) {
         updateQuantityDisplay(currentValue + 1);
       }
@@ -244,6 +253,9 @@ document.addEventListener('DOMContentLoaded', function() {
   function getSelectableAttributes() {
     if (variations.length === 0) return [];
     
+    // ✅ Always require both color and sizes as selectable attributes
+    const requiredAttributes = ['color', 'sizes'];
+    
     // Get all possible attribute keys from all variations
     const allKeys = new Set();
     variations.forEach(variation => {
@@ -256,21 +268,33 @@ document.addEventListener('DOMContentLoaded', function() {
       'in_stock', 'stock_quantity', 'variation_id', 'price_html'
     ];
     
-    // Get only the attributes that have different values across variations
-    // (meaning they are actual selectable attributes, not metadata)
-    const selectableAttributes = Array.from(allKeys).filter(key => {
-      if (metadataFields.includes(key)) return false;
+    // Start with required attributes that exist in the variations
+    const selectableAttributes = requiredAttributes.filter(attr => allKeys.has(attr));
+    
+    // Add any other attributes that have different values across variations
+    const additionalAttributes = Array.from(allKeys).filter(key => {
+      if (metadataFields.includes(key) || requiredAttributes.includes(key)) return false;
       
       // Check if this attribute has different values across variations
       const values = variations.map(v => v[key]).filter(v => v !== null && v !== undefined && v !== '');
       const uniqueValues = [...new Set(values)];
       
+      // Debug: Log each attribute's uniqueness
+      console.log(`🔍 Attribute "${key}":`, {
+        values: values,
+        uniqueValues: uniqueValues,
+        isSelectable: uniqueValues.length > 1
+      });
+      
       // If there are multiple unique values, it's a selectable attribute
       return uniqueValues.length > 1;
     });
     
-    console.log('Detected selectable attributes:', selectableAttributes);
-    return selectableAttributes;
+    const finalAttributes = [...selectableAttributes, ...additionalAttributes];
+    console.log('🎯 Final detected selectable attributes:', finalAttributes);
+    console.log('🎨 Required attributes (color & sizes):', selectableAttributes);
+    
+    return finalAttributes;
   }
 
   function checkRequiredAttributes() {
@@ -291,81 +315,68 @@ document.addEventListener('DOMContentLoaded', function() {
   
   function updateProductDisplay() {
     console.log('updateProductDisplay called');
+  
     // Check if we have all required attributes selected
     const hasRequiredAttributes = checkRequiredAttributes();
     console.log('Has required attributes:', hasRequiredAttributes);
-    
+  
     if (hasRequiredAttributes) {
       selectedVariation = variations.find(v => {
         return Object.entries(selectedAttributes).every(([key, value]) => v[key] === value);
       });
       
-      // Debug: Log the selected variation
+      // ✅ Make selectedVariation available globally for quantity buttons
+      window.selectedVariation = selectedVariation;
+  
       console.log('Selected variation:', selectedVariation);
       console.log('Selected attributes:', selectedAttributes);
   
       if (selectedVariation) {
-        // Use WooCommerce's formatted HTML with fallback
-        console.log('Price data:', {
-          price: selectedVariation.price,
-          price_html: selectedVariation.price_html,
-          regular_price: selectedVariation.regular_price,
-          sale_price: selectedVariation.sale_price
-        });
-        
-        const priceHtml = selectedVariation.price || selectedVariation.price_html || 'Price not available';
+        // ✅ Display correct price and stock
+        const priceHtml = selectedVariation.price_html || selectedVariation.price || 'Price not available';
         priceDisplay.innerHTML = priceHtml;
   
         stockDisplay.innerHTML = selectedVariation.in_stock
           ? '<span class="stock-status in-stock">IN STOCK</span>'
           : '<span class="stock-status out-of-stock">OUT OF STOCK</span>';
   
+        // ✅ Handle Add to Cart button logic safely
         if (addToCartBtn) {
           addToCartBtn.disabled = !selectedVariation.in_stock;
           addToCartBtn.textContent = selectedVariation.in_stock ? 'ADD TO CART' : 'OUT OF STOCK';
           addToCartBtn.style.pointerEvents = selectedVariation.in_stock ? 'auto' : 'none';
-          
-          // Remove any existing onclick handlers to prevent duplicates
-          addToCartBtn.onclick = null;
-          
-          // Always add onclick handler when in stock
-          if (selectedVariation.in_stock) {
-            addToCartBtn.onclick = (event) => {
+  
+          // ✅ Bind only once — prevent duplicate click handlers
+          if (!addToCartBtn.dataset.bound) {
+            addToCartBtn.dataset.bound = 'true';
+            addToCartBtn.addEventListener('click', (event) => {
               event.preventDefault();
               event.stopPropagation();
               addToCart(event);
-            };
+            });
+            console.log('🧩 Add to Cart bound once.');
+          } else {
+            console.log('⚠️ Add to Cart already bound, skipping rebind.');
           }
-
-          // Debug: Log the button state
-          console.log('Button disabled:', addToCartBtn.disabled, 'Stock:', selectedVariation.in_stock);
         }
   
-        // Update wishlist button for variable products
-        console.log('About to update wishlist button with variation:', selectedVariation.variation_id);
-        console.log('Full selectedVariation object:', selectedVariation);
-        console.log('Available properties:', Object.keys(selectedVariation));
-        
-        // Try different possible property names for variation ID
+        // ✅ Update wishlist button with current variation
         const variationId = selectedVariation.variation_id || selectedVariation.id || selectedVariation.variationId;
-        console.log('Extracted variation ID:', variationId);
-        
         updateWishlistButton(variationId);
-        
-        // Stock quantity is now handled in the getCurrentQuantity function
+  
       } else {
+        // ❌ Invalid combination
         priceDisplay.innerHTML = '<div class="price-current">Combination not available</div>';
         stockDisplay.innerHTML = '<span class="stock-status out-of-stock">NOT AVAILABLE</span>';
         if (addToCartBtn) {
           addToCartBtn.disabled = true;
           addToCartBtn.textContent = 'Combination Not Available';
           addToCartBtn.style.pointerEvents = 'none';
-          addToCartBtn.onclick = null;
         }
       }
+  
     } else {
-      // Reset to default range price until a selection is made
-      // Get the default price from the first variation or use a fallback
+      // ⏳ No attributes selected yet
       const defaultPrice = variations.length > 0 ? variations[0].price : 'Price not available';
       priceDisplay.innerHTML = defaultPrice;
       stockDisplay.innerHTML = '<span class="stock-status">Select options to see availability</span>';
@@ -373,48 +384,35 @@ document.addEventListener('DOMContentLoaded', function() {
         addToCartBtn.disabled = true;
         addToCartBtn.textContent = 'Select Options';
         addToCartBtn.style.pointerEvents = 'none';
-        addToCartBtn.onclick = null;
       }
     }
   }
   
+  
 // Add to cart function
 function addToCart(event) {
-  // Prevent default form submission & duplicate triggers
   if (event) {
     event.preventDefault();
-    event.stopPropagation();
     event.stopImmediatePropagation();
   }
 
-  // Prevent multiple simultaneous requests (debounce mechanism)
+  // Prevent double submissions
   if (window.addToCartProcessing) {
     console.log('⚠️ Add to cart already processing, ignoring duplicate call');
-    return false;
+    return;
   }
-  
-  // Set a timestamp to prevent rapid repeated calls
-  const now = Date.now();
-  if (window.lastAddToCartTime && (now - window.lastAddToCartTime) < 2000) {
-    console.log('⚠️ Add to cart called too quickly, ignoring duplicate');
-    return false;
-  }
-  window.lastAddToCartTime = now;
   window.addToCartProcessing = true;
 
-console.log('=== CUSTOM ADD TO CART CALLED ===');
-console.log('selectedVariation:', selectedVariation);
-console.log('selectedVariation.attributes:', selectedVariation?.attributes);
-console.log('selectedAttributes:', selectedAttributes);
+  console.log('=== CUSTOM ADD TO CART CALLED ===');
+  console.log('selectedVariation:', selectedVariation);
+  console.log('selectedAttributes:', selectedAttributes);
 
   if (!selectedVariation) {
     showCartMessage('Please select all required options', 'error');
     window.addToCartProcessing = false;
-    // Don't disable button permanently, just show error message
     return;
   }
 
-  // Temporarily disable button during processing
   const button = document.querySelector('.add-to-cart-btn');
   if (button) {
     button.disabled = true;
@@ -423,53 +421,42 @@ console.log('selectedAttributes:', selectedAttributes);
 
   const quantity = getCurrentQuantity();
   const formData = new FormData();
-
-  // ✅ Required WooCommerce fields
   const productId =
-    window.item?.product_id || selectedVariation?.product_id || selectedVariation?.id;
+    button?.dataset.productId || // your data-product-id attribute
+    button?.getAttribute('data-product-id') || // backup
+    window.productData?.id ||
+    window.product_id ||
+    null;
 
+  // ✅ WooCommerce core fields
   formData.append('product_id', productId);
   formData.append('add-to-cart', productId);
   formData.append('variation_id', selectedVariation.id);
   formData.append('quantity', quantity);
 
-// ✅ Append correct attribute keys (handles pa_ and custom)
-const allAttributes = {
-  ...selectedVariation.attributes,
-  ...selectedAttributes,
-};
-
-console.log('All attributes:', allAttributes);
-
+  // ✅ Attributes
+  const allAttributes = { ...selectedVariation.attributes, ...selectedAttributes };
   Object.entries(allAttributes).forEach(([key, value]) => {
     if (!value) return;
 
-    // Normalize key — ensure correct WooCommerce naming convention
     let attrKey;
     if (key.startsWith('attribute_')) {
-      attrKey = key; // already correct
+      attrKey = key;
     } else if (key.startsWith('pa_')) {
       attrKey = `attribute_${key}`;
     } else {
       attrKey = `attribute_pa_${key.replace(/^pa_/, '')}`;
     }
 
-    // Normalize value to WooCommerce-friendly slug (lowercase, no spaces)
     const normalizedValue = value.toString().trim().toLowerCase().replace(/\s+/g, '-');
-
-    // ✅ Append both for WooCommerce + CartFlows compatibility
     formData.append(attrKey, normalizedValue);
     formData.append(`variation[${attrKey}]`, normalizedValue);
-
-    console.log(`Added attribute: ${attrKey} = ${normalizedValue}`);
   });
 
-  // ✅ Determine AJAX endpoint (WooCommerce core-safe)
+  // ✅ AJAX endpoint
   let ajaxUrl = '/?wc-ajax=add_to_cart';
   if (typeof wc_add_to_cart_params !== 'undefined' && wc_add_to_cart_params.wc_ajax_url) {
     ajaxUrl = wc_add_to_cart_params.wc_ajax_url.replace('%%endpoint%%', 'add_to_cart');
-  } else if (typeof window.productAddToCartUrl !== 'undefined') {
-    ajaxUrl = window.productAddToCartUrl;
   } else {
     formData.append('action', 'woocommerce_add_to_cart');
     ajaxUrl = '/wp-admin/admin-ajax.php';
@@ -478,7 +465,7 @@ console.log('All attributes:', allAttributes);
   console.log('🧾 AJAX URL:', ajaxUrl);
   console.log('📦 Form Data:', Object.fromEntries([...formData.entries()]));
 
-  // ✅ Perform WooCommerce AJAX Add to Cart
+  // ✅ Send AJAX request
   fetch(ajaxUrl, {
     method: 'POST',
     body: formData,
@@ -492,7 +479,7 @@ console.log('All attributes:', allAttributes);
       try {
         return JSON.parse(text);
       } catch (e) {
-        console.warn('Non-JSON response — treating as success');
+        console.warn('Non-JSON response, assuming success');
         return { success: true };
       }
     })
@@ -502,10 +489,11 @@ console.log('All attributes:', allAttributes);
       if (data.success === false) {
         showCartMessage('Error: ' + (data.data || 'Unknown error'), 'error');
         window.addToCartProcessing = false;
+        reEnableAddToCartButton();
         return;
       }
 
-      // ✅ Update cart fragments if available
+      // ✅ Update fragments if returned
       if (data.fragments) {
         Object.entries(data.fragments).forEach(([selector, html]) => {
           const el = document.querySelector(selector);
@@ -513,16 +501,7 @@ console.log('All attributes:', allAttributes);
         });
       }
 
-      // ✅ Fire WooCommerce-compatible event
-      const evt = new CustomEvent('added_to_cart', {
-        detail: {
-          fragments: data.fragments,
-          cart_hash: data.cart_hash,
-          button: document.querySelector('.add-to-cart-btn'),
-        },
-      });
-      document.body.dispatchEvent(evt);
-
+      // ✅ Trigger WooCommerce-native event only (no CustomEvent)
       if (typeof jQuery !== 'undefined') {
         jQuery(document.body).trigger('added_to_cart', [
           data.fragments,
@@ -531,8 +510,7 @@ console.log('All attributes:', allAttributes);
         ]);
       }
 
-      // ✅ Flash success UI
-      const button = document.querySelector('.add-to-cart-btn');
+      // ✅ Success UI animation
       if (button) {
         const original = button.innerHTML;
         button.innerHTML = '✅ Added!';
@@ -540,23 +518,22 @@ console.log('All attributes:', allAttributes);
         setTimeout(() => {
           button.innerHTML = original;
           button.style.background = '';
-          // Re-enable button after success animation
           button.disabled = false;
           button.style.pointerEvents = 'auto';
         }, 2000);
       }
 
-      // ✅ Open Cart Drawer (no redirect)
+      // ✅ Open Cart Drawer (or refresh)
       setTimeout(() => {
         if (typeof window.openCartDrawer === 'function') {
-          window.openCartDrawer(true); // force reload
+          window.openCartDrawer(true);
         } else {
           const trigger =
             document.querySelector('.cart-trigger, .navbar-bag, [data-cart-url]');
           if (trigger) trigger.click();
         }
 
-        // Optional UI refresh helpers
+        // Optional refresh hooks
         if (typeof window.loadCartContent === 'function') {
           setTimeout(() => window.loadCartContent(true), 100);
         }
@@ -564,42 +541,33 @@ console.log('All attributes:', allAttributes);
           setTimeout(() => window.updateBagCount(), 200);
         }
 
-        // ✅ Reset processing flag and re-enable button
         window.addToCartProcessing = false;
-        reEnableAddToCartButton();
       }, 500);
     })
     .catch((err) => {
       console.error('❌ Add to cart error:', err);
       showCartMessage('❌ Error adding product to cart', 'error');
-      
-      // Re-enable button on error
       window.addToCartProcessing = false;
       reEnableAddToCartButton();
     });
 }
 
+
 // Function to properly re-enable the add to cart button
 function reEnableAddToCartButton() {
   const button = document.querySelector('.add-to-cart-btn');
   if (!button) return;
-  
-  // Check if we have a valid selected variation
+
   if (selectedVariation && selectedVariation.in_stock) {
     button.disabled = false;
     button.style.pointerEvents = 'auto';
     button.textContent = 'ADD TO CART';
-    button.onclick = (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      addToCart(event);
-    };
-    console.log('✅ Add to cart button re-enabled');
+    console.log('✅ Add to cart button re-enabled (no rebind)');
   } else {
-    // If no valid variation, call updateProductDisplay to set proper state
     updateProductDisplay();
   }
 }
+
   
   // Show cart message function
   function showCartMessage(message, type) {
@@ -675,6 +643,30 @@ function reEnableAddToCartButton() {
       console.log('Wishlist button initialized and disabled');
     }
   }
+  
+  // ✅ Initialize single color products by auto-selecting the color
+  function initializeSingleColorProducts() {
+    if (variations.length === 0) return;
+    
+    const colorDots = document.querySelectorAll('.color-dot');
+    
+    // If there's only one color, auto-select it
+    if (colorDots.length === 1) {
+      const singleColor = colorDots[0].getAttribute('data-color');
+      console.log('🎨 Auto-selecting single color:', singleColor);
+      
+      // Add selected class to the single color dot
+      colorDots[0].classList.add('selected');
+      
+      // Set in selectedAttributes
+      selectedAttributes.color = singleColor;
+      
+      console.log('✅ Single color auto-selected:', selectedAttributes);
+    }
+  }
+  
+  // ✅ Auto-select single color products
+  initializeSingleColorProducts();
   
   // Initialize display
   updateProductDisplay();

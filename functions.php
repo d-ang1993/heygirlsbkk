@@ -405,36 +405,46 @@ function add_to_cart_fragments($fragments) {
     return $fragments;
 }
 
-// Enable AJAX add to cart for product pages
-add_action('wp_enqueue_scripts', 'enable_ajax_add_to_cart');
+// Enable WooCommerce AJAX for add to cart
+add_action('wp_enqueue_scripts', 'enqueue_woocommerce_ajax_scripts');
 
-function enable_ajax_add_to_cart() {
+function enqueue_woocommerce_ajax_scripts() {
+    if (function_exists('is_woocommerce') && (is_woocommerce() || is_cart() || is_checkout() || is_shop() || is_product())) {
+        wp_enqueue_script('wc-add-to-cart');
+        wp_enqueue_script('wc-cart-fragments');
+    }
+}
+
+/**
+ * Enable WooCommerce AJAX Add to Cart and Cart Fragments (safe, non-duplicate)
+ */
+add_action('wp_enqueue_scripts', 'xircus_enqueue_woocommerce_ajax_scripts');
+
+function xircus_enqueue_woocommerce_ajax_scripts() {
+    // Only load on WooCommerce-related pages
     if (function_exists('is_woocommerce') && class_exists('WooCommerce')) {
-        // Only load cart fragments for cart updates, NOT add-to-cart script on product pages
-        // since we have a custom implementation
-        if (is_product()) {
-            // On product pages, dequeue WooCommerce's add-to-cart to prevent double submission
-            wp_dequeue_script('wc-add-to-cart');
-            
-            // But keep cart fragments for cart updates
-            wp_enqueue_script('wc-cart-fragments');
-        } else {
-            // On shop/archive pages, use WooCommerce's native add-to-cart
+
+        // ✅ Enqueue WooCommerce core scripts if not already loaded
+        if (!wp_script_is('wc-add-to-cart', 'enqueued')) {
             wp_enqueue_script('wc-add-to-cart');
+        }
+        if (!wp_script_is('wc-cart-fragments', 'enqueued')) {
             wp_enqueue_script('wc-cart-fragments');
         }
 
-        // Localize script for AJAX parameters
-        wp_localize_script('wc-cart-fragments', 'wc_add_to_cart_params', array(
-            'ajax_url' => WC()->ajax_url(),
-            'wc_ajax_url' => WC_AJAX::get_endpoint('%%endpoint%%'),
-            'i18n_view_cart' => esc_attr__('View cart', 'woocommerce'),
-            'is_cart' => is_cart(),
-            'cart_redirect_after_add' => get_option('woocommerce_cart_redirect_after_add')
-        ));
+        // ✅ Localize parameters for wc-add-to-cart.js (native support)
+        if (wp_script_is('wc-add-to-cart', 'enqueued')) {
+            wp_localize_script('wc-add-to-cart', 'wc_add_to_cart_params', array(
+                'ajax_url' => WC()->ajax_url(),
+                'wc_ajax_url' => WC_AJAX::get_endpoint('%%endpoint%%'),
+                'i18n_view_cart' => esc_attr__('View cart', 'woocommerce'),
+                'is_cart' => is_cart(),
+                'cart_redirect_after_add' => get_option('woocommerce_cart_redirect_after_add')
+            ));
+        }
 
-        // Also localize for our custom cart.js
-        wp_localize_script('wc-cart-fragments', 'wc_cart_params', array(
+        // ✅ Localize your custom cart.js safely (for drawer, etc.)
+        wp_localize_script('wc-add-to-cart', 'wc_cart_params', array(
             'ajax_url' => WC()->ajax_url(),
             'wc_ajax_url' => WC_AJAX::get_endpoint('%%endpoint%%'),
             'cart_url' => wc_get_cart_url(),
@@ -443,7 +453,6 @@ function enable_ajax_add_to_cart() {
         ));
     }
 }
-
 // Cart Drawer AJAX Handlers
 
 add_action('wp_ajax_woocommerce_get_cart_contents', 'handle_get_cart_contents');
@@ -713,3 +722,10 @@ add_action('woocommerce_cart_contents', function() {
     }
 });
 
+add_action('woocommerce_add_to_cart', function() {
+    if (WC()->cart && WC()->session) {
+        WC()->cart->calculate_totals();
+        WC()->session->set('cart', WC()->cart->get_cart());
+        WC()->session->save_data();
+    }
+});
