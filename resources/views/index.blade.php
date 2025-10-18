@@ -22,6 +22,7 @@
     title="BEST SELLER" 
     :products="$best_products"
     :columns="4"
+    viewAllUrl="{{ add_query_arg('orderby', 'popularity', wc_get_page_permalink('shop')) }}"
   />
 
   <!-- SALE Section -->
@@ -37,6 +38,7 @@
     title="SALE" 
     :products="$sale_products"
     :columns="4"
+    viewAllUrl="{{ add_query_arg('on_sale', '1', wc_get_page_permalink('shop')) }}"
   />
 
   <!-- Category Navigation

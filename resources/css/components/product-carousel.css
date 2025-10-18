@@ -110,38 +110,16 @@
 }
 
 .selected-color-label {
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 1rem;
+  font-weight: 900;
   color: #333;
   position: relative;
   display: inline-block;
   transition: all 0.3s ease;
 }
 
-.selected-color-display.color-selected .selected-color-label {
-  color: #000;
-  font-weight: 600;
-}
 
-.selected-color-display.color-selected .selected-color-label::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background: #000;
-  animation: underlineSlide 0.3s ease;
-}
 
-@keyframes underlineSlide {
-  from {
-    width: 0;
-  }
-  to {
-    width: 100%;
-  }
-}
 
 .color-dot {
   position: relative;

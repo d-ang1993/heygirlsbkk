@@ -23,10 +23,21 @@ if ($enable && $categoryId) {
 @endphp
 
 @if($enable && !empty($featuredProducts))
+@php
+  // Generate the collection URL
+  $collectionUrl = '#';
+  if ($categoryId) {
+    $category = get_term($categoryId, 'product_cat');
+    if ($category && !is_wp_error($category)) {
+      $collectionUrl = get_term_link($category);
+    }
+  }
+@endphp
 <x-product-grid 
   title="{{ $title }}" 
   :products="$featuredProducts"
   :columns="$columns"
+  :viewAllUrl="$collectionUrl"
 />
 @else
 <!-- Debug info for Featured Products -->

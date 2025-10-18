@@ -80,6 +80,35 @@
     .color-dots.single-color .color-dot:hover {
       transform: none;
     }
+    
+    /* Enhanced color text styling with gradient */
+    #selected-color-name {
+      font-weight: 700 !important;
+      letter-spacing: 0.5px;
+      background: linear-gradient(45deg, var(--text-color, #333), #000);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      /* Fallback for browsers that don't support background-clip */
+      color: var(--text-color, #333);
+      /* Add underline only to the color name */
+      text-decoration: underline;
+      text-decoration-color: var(--text-color, #333);
+      text-underline-offset: 2px;
+    }
+    
+    /* Ensure gradient works properly */
+    #selected-color-name.gradient-text {
+      background: linear-gradient(45deg, var(--text-color, #333), #000);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    /* Remove underline from the "Color:" label */
+    .selected-color-label {
+      text-decoration: none !important;
+    }
   </style>
   
   <!-- Color Variations -->
@@ -87,13 +116,28 @@
     <div class="color-selection">
       <!-- <label class="variation-label">Color</label> -->
       <div class="selected-color-display" id="selected-color-display">
-        <span class="selected-color-label">Color: <span id="selected-color-name">
+        <span class="selected-color-label">Color: <span id="selected-color-name" 
           @if(count($color_variations) === 1)
             @php
               $single_color_key = array_keys($color_variations)[0];
               $single_color_name = str_replace(['-', '_'], ' ', $single_color_key);
               $single_color_name = ucwords($single_color_name);
+              
+              // Get the actual color for the text
+              $single_color_term = get_term_by('slug', $single_color_key, 'pa_color');
+              $single_color_value = '#cccccc'; // fallback
+              if ($single_color_term) {
+                $color_meta = get_term_meta($single_color_term->term_id, 'product_attribute_color', true);
+                if (!empty($color_meta)) {
+                  $single_color_value = $color_meta;
+                }
+              }
             @endphp
+            style="color: {{ $single_color_value }};"
+            data-color="{{ $single_color_value }}"
+          @endif
+        >
+          @if(count($color_variations) === 1)
             {{ $single_color_name }}
           @else
             Select a color
@@ -264,6 +308,15 @@ function selectColor(colorKey, colorName, element) {
     const selectedColorName = document.getElementById('selected-color-name');
     if (selectedColorName) {
         selectedColorName.textContent = colorName;
+        
+        // Update the text color to match the selected color
+        const colorValue = element.style.backgroundColor;
+        if (colorValue) {
+            // Set CSS custom property for gradient
+            selectedColorName.style.setProperty('--text-color', colorValue);
+            selectedColorName.classList.add('gradient-text');
+            selectedColorName.setAttribute('data-color', colorValue);
+        }
     }
     
     // Add underline effect to the selected color display
@@ -338,6 +391,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const selectedColorName = document.getElementById('selected-color-name');
             if (selectedColorName) {
                 selectedColorName.textContent = colorName;
+                
+                // Apply the color to the text
+                const colorValue = selectedColorDot.style.backgroundColor;
+                if (colorValue) {
+                    selectedColorName.style.setProperty('--text-color', colorValue);
+                    selectedColorName.classList.add('gradient-text');
+                    selectedColorName.setAttribute('data-color', colorValue);
+                }
             }
             const selectedColorDisplay = document.getElementById('selected-color-display');
             if (selectedColorDisplay) {

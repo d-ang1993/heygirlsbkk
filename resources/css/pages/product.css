@@ -574,11 +574,7 @@
   text-decoration: none; 
   color: inherit; 
 }
-.related-product-card img { 
-  width: 100%; 
-  height: 180px; 
-  object-fit: cover; 
-}
+/* Removed conflicting related-product-card img styles - now handled in related-products.css */
 .related-product-card h3 { 
   padding: 12px; 
   font-size: 14px; 

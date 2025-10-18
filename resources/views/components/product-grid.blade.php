@@ -3,7 +3,8 @@
     'products' => [],
     'columns' => 4,
     'showDiscount' => true,
-    'showQuickView' => true
+    'showQuickView' => true,
+    'viewAllUrl' => null
 ])
 
 @php
@@ -20,7 +21,11 @@
     <div class="container">
         <div class="section-header">
             <h2 class="section-title">{{ $title }}</h2>
-            <a href="#" class="view-all-link">View All →</a>
+            @if($viewAllUrl)
+                <a href="{{ $viewAllUrl }}" class="view-all-link">View All →</a>
+            @else
+                <a href="{{ wc_get_page_permalink('shop') }}" class="view-all-link">View All →</a>
+            @endif
         </div>
         
         <div class="product-grid product-grid--{{ $columns }}-cols">
