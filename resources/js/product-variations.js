@@ -34,6 +34,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Variations data from PHP
   const variations = window.productVariations || [];
+
   
   // Event delegation for all variation types
   document.addEventListener('click', function(e) {
@@ -253,8 +254,16 @@ document.addEventListener('DOMContentLoaded', function() {
   function getSelectableAttributes() {
     if (variations.length === 0) return [];
     
-    // ✅ Always require both color and sizes as selectable attributes
-    const requiredAttributes = ['color', 'sizes'];
+    // ✅ Use dynamic attributes from window.productAttributes
+    const requiredAttributes = window.productAttributes || [];
+    console.log('🎯 Dynamic attributes from product:', window.productAttributes);
+    console.log('🎯 Using required attributes:', requiredAttributes);
+    
+    // If no dynamic attributes found, return empty array
+    if (!requiredAttributes || requiredAttributes.length === 0) {
+      console.log('⚠️ No dynamic attributes found, returning empty array');
+      return [];
+    }
     
     // Get all possible attribute keys from all variations
     const allKeys = new Set();
@@ -279,20 +288,12 @@ document.addEventListener('DOMContentLoaded', function() {
       const values = variations.map(v => v[key]).filter(v => v !== null && v !== undefined && v !== '');
       const uniqueValues = [...new Set(values)];
       
-      // Debug: Log each attribute's uniqueness
-      console.log(`🔍 Attribute "${key}":`, {
-        values: values,
-        uniqueValues: uniqueValues,
-        isSelectable: uniqueValues.length > 1
-      });
-      
       // If there are multiple unique values, it's a selectable attribute
       return uniqueValues.length > 1;
     });
     
     const finalAttributes = [...selectableAttributes, ...additionalAttributes];
-    console.log('🎯 Final detected selectable attributes:', finalAttributes);
-    console.log('🎨 Required attributes (color & sizes):', selectableAttributes);
+    console.log('🎯 Final selectable attributes:', finalAttributes);
     
     return finalAttributes;
   }
@@ -322,7 +323,11 @@ document.addEventListener('DOMContentLoaded', function() {
   
     if (hasRequiredAttributes) {
       selectedVariation = variations.find(v => {
-        return Object.entries(selectedAttributes).every(([key, value]) => v[key] === value);
+        return Object.entries(selectedAttributes).every(([key, value]) => {
+          // Map selectedAttributes keys to variation data keys
+          const variationKey = key === 'sizes' ? 'sizes' : key;
+          return v[variationKey] === value;
+        });
       });
       
       // ✅ Make selectedVariation available globally for quantity buttons
@@ -330,6 +335,13 @@ document.addEventListener('DOMContentLoaded', function() {
   
       console.log('Selected variation:', selectedVariation);
       console.log('Selected attributes:', selectedAttributes);
+      
+      // ✅ Update hidden variation_id input field in the form
+      const variationInput = document.getElementById('variation_id');
+      if (variationInput && selectedVariation?.id) {
+        variationInput.value = selectedVariation.id;
+        console.log('🔧 Updated variation_id field to:', selectedVariation.id);
+      }
   
       if (selectedVariation) {
         // ✅ Display correct price and stock
@@ -390,166 +402,183 @@ document.addEventListener('DOMContentLoaded', function() {
   
   
 // Add to cart function
+// Add to cart function - use WooCommerce native form
 function addToCart(event) {
   if (event) {
     event.preventDefault();
     event.stopImmediatePropagation();
   }
 
-  // Prevent double submissions
-  if (window.addToCartProcessing) {
-    console.log('⚠️ Add to cart already processing, ignoring duplicate call');
-    return;
-  }
-  window.addToCartProcessing = true;
-
-  console.log('=== CUSTOM ADD TO CART CALLED ===');
+  console.log('=== ADD TO CART CALLED ===');
   console.log('selectedVariation:', selectedVariation);
   console.log('selectedAttributes:', selectedAttributes);
 
   if (!selectedVariation) {
     showCartMessage('Please select all required options', 'error');
-    window.addToCartProcessing = false;
     return;
   }
 
+  // Find the native WooCommerce form
+  const nativeForm = document.querySelector('.woocommerce-native-form form');
+  if (!nativeForm) {
+    console.error('❌ Native WooCommerce form not found');
+    showCartMessage('Form not available', 'error');
+    return;
+  }
+
+  // Update the native form with our selected values
+  updateNativeForm(nativeForm);
+  
+  // Submit the form via AJAX to avoid page reload
+  console.log('✅ Submitting native WooCommerce form via AJAX');
+  submitFormViaAjax(nativeForm);
+}
+
+// Update the native WooCommerce form with our selected values
+function updateNativeForm(form) {
+  // Update variation_id
+  const variationIdInput = form.querySelector('input[name="variation_id"]');
+  if (variationIdInput && selectedVariation) {
+    variationIdInput.value = selectedVariation.id;
+    console.log('🔧 Updated variation_id to:', selectedVariation.id);
+  }
+
+  // Update quantity
+  const quantityInput = form.querySelector('input[name="quantity"]');
+  if (quantityInput) {
+    const quantity = getCurrentQuantity();
+    quantityInput.value = quantity;
+    console.log('🔧 Updated quantity to:', quantity);
+  }
+
+  // Update attribute inputs
+  Object.entries(selectedAttributes).forEach(([key, value]) => {
+    if (value) {
+      // Format the attribute key
+      let attrKey;
+      if (key.startsWith('attribute_')) {
+        attrKey = key;
+      } else if (key.startsWith('pa_')) {
+        attrKey = `attribute_${key}`;
+      } else {
+        // Convert 'sizes' to 'size' for the attribute key
+        const normalizedKey = key === 'sizes' ? 'size' : key;
+        attrKey = `attribute_pa_${normalizedKey}`;
+      }
+
+      // Find and update the attribute input
+      const attrInput = form.querySelector(`input[name="${attrKey}"]`);
+      if (attrInput) {
+        attrInput.value = value;
+        console.log(`🔧 Updated ${attrKey} to:`, value);
+      } else {
+        console.warn(`⚠️ Attribute input not found: ${attrKey}`);
+      }
+    }
+  });
+}
+
+// Submit the WooCommerce form via AJAX to avoid page reload
+function submitFormViaAjax(form) {
+  const formData = new FormData(form);
+  
+  // Add AJAX action for WooCommerce
+  formData.append('wc-ajax', 'add_to_cart');
+  
+  // Get the form action URL
+  const formAction = form.action || window.location.href;
+  
+  console.log('🚀 Submitting AJAX request to:', formAction);
+  console.log('📦 Form Data:', Object.fromEntries([...formData.entries()]));
+  
+  // Show loading state
   const button = document.querySelector('.add-to-cart-btn');
   if (button) {
     button.disabled = true;
+    button.textContent = 'Adding...';
     button.style.pointerEvents = 'none';
   }
-
-  const quantity = getCurrentQuantity();
-  const formData = new FormData();
-  const productId =
-    button?.dataset.productId || // your data-product-id attribute
-    button?.getAttribute('data-product-id') || // backup
-    window.productData?.id ||
-    window.product_id ||
-    null;
-
-  // ✅ WooCommerce core fields
-  formData.append('product_id', productId);
-  formData.append('add-to-cart', productId);
-  formData.append('variation_id', selectedVariation.id);
-  formData.append('quantity', quantity);
-
-  // ✅ Attributes
-  const allAttributes = { ...selectedVariation.attributes, ...selectedAttributes };
-  Object.entries(allAttributes).forEach(([key, value]) => {
-    if (!value) return;
-
-    let attrKey;
-    if (key.startsWith('attribute_')) {
-      attrKey = key;
-    } else if (key.startsWith('pa_')) {
-      attrKey = `attribute_${key}`;
-    } else {
-      attrKey = `attribute_pa_${key.replace(/^pa_/, '')}`;
-    }
-
-    const normalizedValue = value.toString().trim().toLowerCase().replace(/\s+/g, '-');
-    formData.append(attrKey, normalizedValue);
-    formData.append(`variation[${attrKey}]`, normalizedValue);
-  });
-
-  // ✅ AJAX endpoint
-  let ajaxUrl = '/?wc-ajax=add_to_cart';
-  if (typeof wc_add_to_cart_params !== 'undefined' && wc_add_to_cart_params.wc_ajax_url) {
-    ajaxUrl = wc_add_to_cart_params.wc_ajax_url.replace('%%endpoint%%', 'add_to_cart');
-  } else {
-    formData.append('action', 'woocommerce_add_to_cart');
-    ajaxUrl = '/wp-admin/admin-ajax.php';
-  }
-
-  console.log('🧾 AJAX URL:', ajaxUrl);
-  console.log('📦 Form Data:', Object.fromEntries([...formData.entries()]));
-
-  // ✅ Send AJAX request
-  fetch(ajaxUrl, {
+  
+  // Submit via AJAX
+  fetch(formAction, {
     method: 'POST',
     body: formData,
     credentials: 'same-origin',
   })
-    .then((response) => {
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      return response.text();
-    })
-    .then((text) => {
-      try {
-        return JSON.parse(text);
-      } catch (e) {
-        console.warn('Non-JSON response, assuming success');
-        return { success: true };
-      }
-    })
-    .then((data) => {
-      console.log('📦 WooCommerce Response:', data);
-
-      if (data.success === false) {
-        showCartMessage('Error: ' + (data.data || 'Unknown error'), 'error');
-        window.addToCartProcessing = false;
-        reEnableAddToCartButton();
-        return;
-      }
-
-      // ✅ Update fragments if returned
-      if (data.fragments) {
-        Object.entries(data.fragments).forEach(([selector, html]) => {
-          const el = document.querySelector(selector);
-          if (el) el.innerHTML = html;
-        });
-      }
-
-      // ✅ Trigger WooCommerce-native event only (no CustomEvent)
-      if (typeof jQuery !== 'undefined') {
-        jQuery(document.body).trigger('added_to_cart', [
-          data.fragments,
-          data.cart_hash,
-          jQuery('.add-to-cart-btn'),
-        ]);
-      }
-
-      // ✅ Success UI animation
-      if (button) {
-        const original = button.innerHTML;
-        button.innerHTML = '✅ Added!';
-        button.style.background = '#10b981';
-        setTimeout(() => {
-          button.innerHTML = original;
-          button.style.background = '';
-          button.disabled = false;
-          button.style.pointerEvents = 'auto';
-        }, 2000);
-      }
-
-      // ✅ Open Cart Drawer (or refresh)
-      setTimeout(() => {
-        if (typeof window.openCartDrawer === 'function') {
-          window.openCartDrawer(true);
-        } else {
-          const trigger =
-            document.querySelector('.cart-trigger, .navbar-bag, [data-cart-url]');
-          if (trigger) trigger.click();
-        }
-
-        // Optional refresh hooks
-        if (typeof window.loadCartContent === 'function') {
-          setTimeout(() => window.loadCartContent(true), 100);
-        }
-        if (typeof window.updateBagCount === 'function') {
-          setTimeout(() => window.updateBagCount(), 200);
-        }
-
-        window.addToCartProcessing = false;
-      }, 500);
-    })
-    .catch((err) => {
-      console.error('❌ Add to cart error:', err);
-      showCartMessage('❌ Error adding product to cart', 'error');
-      window.addToCartProcessing = false;
+  .then(response => {
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return response.text();
+  })
+  .then(text => {
+    try {
+      return JSON.parse(text);
+    } catch (e) {
+      console.warn('Non-JSON response, assuming success');
+      return { success: true };
+    }
+  })
+  .then(data => {
+    console.log('📦 WooCommerce AJAX Response:', data);
+    
+    if (data.success === false) {
+      showCartMessage('Error: ' + (data.data || 'Unknown error'), 'error');
       reEnableAddToCartButton();
-    });
+      return;
+    }
+    
+    // Success! Update fragments and show success message
+    if (data.fragments) {
+      Object.entries(data.fragments).forEach(([selector, html]) => {
+        const el = document.querySelector(selector);
+        if (el) el.innerHTML = html;
+      });
+    }
+    
+    // Trigger WooCommerce events
+    if (typeof jQuery !== 'undefined') {
+      jQuery(document.body).trigger('added_to_cart', [
+        data.fragments,
+        data.cart_hash,
+        jQuery('.add-to-cart-btn'),
+      ]);
+    }
+    
+    // Show success animation
+    if (button) {
+      const original = button.innerHTML;
+      button.innerHTML = '✅ Added!';
+      button.style.background = '#10b981';
+      setTimeout(() => {
+        button.innerHTML = original;
+        button.style.background = '';
+        button.disabled = false;
+        button.style.pointerEvents = 'auto';
+      }, 2000);
+    }
+    
+    // Open cart drawer or redirect
+    setTimeout(() => {
+      if (typeof window.openCartDrawer === 'function') {
+        window.openCartDrawer(true);
+      } else {
+        const trigger = document.querySelector('.cart-trigger, .navbar-bag, [data-cart-url]');
+        if (trigger) trigger.click();
+      }
+      
+      // Optional refresh hooks
+      if (typeof window.loadCartContent === 'function') {
+        setTimeout(() => window.loadCartContent(true), 100);
+      }
+      if (typeof window.updateBagCount === 'function') {
+        setTimeout(() => window.updateBagCount(), 200);
+      }
+    }, 500);
+  })
+  .catch(err => {
+    console.error('❌ AJAX Add to cart error:', err);
+    showCartMessage('❌ Error adding product to cart', 'error');
+    reEnableAddToCartButton();
+  });
 }
 
 

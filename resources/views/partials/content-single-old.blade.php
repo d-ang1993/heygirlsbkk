@@ -265,6 +265,8 @@
   <script>
     window.productVariations = @json($variations_data ?? []);
     window.productAddToCartUrl = '{{ $product ? $product->add_to_cart_url() : '' }}';
+    
+    window.productAttributes = @json($availableAttributes);
   </script>
 @endif
       
@@ -274,7 +276,7 @@
       
       // Variations data from PHP
       const variations = window.productVariations || [];
-      
+      const attributes = window.productAttributes || [];
       // Color selection
       colorDots.forEach(dot => {
         dot.addEventListener('click', function() {

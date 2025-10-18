@@ -420,6 +420,32 @@ function enqueue_woocommerce_ajax_scripts() {
  */
 add_action('wp_enqueue_scripts', 'xircus_enqueue_woocommerce_ajax_scripts');
 
+// ✅ Add product attributes to JavaScript for all product pages
+add_action('wp_footer', 'add_product_attributes_to_js');
+function add_product_attributes_to_js() {
+    if (function_exists('is_product') && is_product()) {
+        global $product;
+        
+        if ($product && $product->is_type('variable')) {
+            $attributes = $product->get_variation_attributes();
+            $availableAttributes = [];
+            
+            if (isset($attributes) && is_array($attributes)) {
+                foreach ($attributes as $attrName => $attrValues) {
+                    // Remove 'pa_' prefix if it exists for cleaner attribute name
+                    $cleanName = str_replace('pa_', '', $attrName);
+                    $availableAttributes[] = $cleanName;
+                }
+            }
+            
+            echo '<script>';
+            echo 'console.log("🚀 Setting attributes from functions.php:", ' . json_encode($availableAttributes) . ');';
+            echo 'window.productAttributes = ' . json_encode($availableAttributes) . ';';
+            echo '</script>';
+        }
+    }
+}
+
 function xircus_enqueue_woocommerce_ajax_scripts() {
     // Only load on WooCommerce-related pages
     if (function_exists('is_woocommerce') && class_exists('WooCommerce')) {

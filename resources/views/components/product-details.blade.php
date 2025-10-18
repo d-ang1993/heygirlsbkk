@@ -90,6 +90,18 @@
   <!-- Product Form -->
       
   @include('components.product-form')
+  
+  <!-- WooCommerce Native Add to Cart Form -->
+  @if($product_type === 'variable')
+    <div class="woocommerce-native-form" style="display: none;">
+      @php 
+        global $product;
+        if ($product && $product->is_type('variable')) {
+          woocommerce_template_single_add_to_cart();
+        }
+      @endphp
+    </div>
+  @endif
 
   <!-- Product Features -->
   <div class="product-features">

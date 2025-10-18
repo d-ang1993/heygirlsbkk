@@ -6,6 +6,16 @@
     $variations = $product->get_available_variations();
     $attributes = $product->get_variation_attributes();
     
+    // ✅ Extract dynamic attribute names for JavaScript
+    $availableAttributes = [];
+    if (isset($attributes) && is_array($attributes)) {
+      foreach ($attributes as $attrName => $attrValues) {
+        // Remove 'pa_' prefix if it exists for cleaner attribute name
+        $cleanName = str_replace('pa_', '', $attrName);
+        $availableAttributes[] = $cleanName;
+      }
+    }
+    
     // Group variations by attribute
     $color_variations = [];
     $size_variations = [];
@@ -46,7 +56,7 @@
   
   <!-- Debug Script -->
   <script>
-    console.log("Product ID:", {!! $product->get_id() !!});
+    console.log("Product ID HELLO:", {!! $product->get_id() !!});
     console.log("Product Type:", "{!! $product_type !!}");
     console.log("All Variations:", {!! json_encode($variations) !!});
     console.log("All Attributes:", {!! json_encode($attributes) !!});
@@ -346,6 +356,4 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Make variations data available to JavaScript
-window.productVariations = {!! json_encode($variations_data ?? []) !!};
 </script>
