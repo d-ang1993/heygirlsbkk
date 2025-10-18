@@ -373,7 +373,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
   
         // ✅ Update wishlist button with current variation
-        const variationId = selectedVariation.variation_id || selectedVariation.id || selectedVariation.variationId;
+        const variationId = selectedVariation.id || selectedVariation.variation_id || selectedVariation.variationId;
         updateWishlistButton(variationId);
   
       } else {

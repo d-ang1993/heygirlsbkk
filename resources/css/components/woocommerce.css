@@ -1,3 +1,145 @@
+/* Archive Header and Controls */
+.archive-header {
+  background: #ffffff;
+  border-bottom: 1px solid #f0f0f0;
+  padding: 2rem 0;
+  margin-bottom: 3rem;
+}
+
+.archive-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.breadcrumb-separator {
+  margin: 0 0.5rem;
+  color: #999;
+  font-weight: 300;
+}
+
+.breadcrumb-current {
+  color: #000;
+  font-weight: 500;
+}
+
+/* WooCommerce Default Elements Styling */
+.woocommerce-breadcrumb {
+  background: #ffffff;
+  border-bottom: 1px solid #f0f0f0;
+  padding: 1.5rem 0;
+  margin-bottom: 2rem;
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.woocommerce-breadcrumb a {
+  color: #666;
+  text-decoration: none;
+  transition: color 0.2s ease;
+  font-weight: 400;
+}
+
+.woocommerce-breadcrumb a:hover {
+  color: #000;
+  text-decoration: none;
+}
+
+.woocommerce-breadcrumb::before {
+  content: '';
+  display: none;
+}
+
+.woocommerce-breadcrumb::after {
+  content: '';
+  display: none;
+}
+
+.woocommerce-notices-wrapper {
+  margin-bottom: 1.5rem;
+}
+
+.woocommerce-result-count {
+  font-size: 0.875rem;
+  color: #333;
+  font-weight: 500;
+  margin: 0 0 1.5rem 0;
+  padding: 0;
+}
+
+.woocommerce-ordering {
+  margin-bottom: 1.5rem;
+}
+
+.woocommerce-ordering select {
+  appearance: none;
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 0.75rem 2.5rem 0.75rem 1rem;
+  font-size: 0.875rem;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 180px;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.75rem center;
+  background-repeat: no-repeat;
+  background-size: 1rem;
+}
+
+.woocommerce-ordering select:hover {
+  border-color: #d0d0d0;
+}
+
+.woocommerce-ordering select:focus {
+  outline: none;
+  border-color: #000;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive Design for WooCommerce Elements */
+@media (max-width: 768px) {
+  .woocommerce-breadcrumb {
+    padding: 1rem 0;
+    margin-bottom: 1.5rem;
+    font-size: 0.8rem;
+  }
+  
+  .woocommerce-result-count {
+    font-size: 0.8rem;
+    margin-bottom: 1rem;
+  }
+  
+  .woocommerce-ordering {
+    margin-bottom: 1rem;
+  }
+  
+  .woocommerce-ordering select {
+    width: 100%;
+    min-width: auto;
+    font-size: 0.8rem;
+    padding: 0.625rem 2rem 0.625rem 0.875rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .woocommerce-breadcrumb {
+    font-size: 0.75rem;
+  }
+  
+  .woocommerce-result-count {
+    font-size: 0.75rem;
+  }
+  
+  .woocommerce-ordering select {
+    font-size: 0.75rem;
+  }
+}
+
 /* WooCommerce Forms - Clean Modern Design */
 #customer_login {
   max-width: 1000px;
