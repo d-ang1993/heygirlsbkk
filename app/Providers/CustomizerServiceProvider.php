@@ -14,12 +14,172 @@ class CustomizerServiceProvider extends ServiceProvider
 
     public function boot()
     {
-        // Register Customizer options
+        // Register Section Ordering
         \add_action('customize_register', function($wp_customize) {
+            // Section Ordering Section
+            $wp_customize->add_section('section_ordering', [
+                'title' => __('Section Ordering', 'sage'),
+                'priority' => 5, // Very top
+                'description' => __('Drag and drop to reorder sections on your homepage', 'sage'),
+            ]);
+
+            // Section Order Setting
+            $wp_customize->add_setting('homepage_section_order', [
+                'default' => 'hero,new_drops,featured_products,new_arrival',
+                'transport' => 'refresh',
+                'sanitize_callback' => [$this, 'sanitize_section_order'],
+            ]);
+
+            $wp_customize->add_control(new \WP_Customize_Control($wp_customize, 'homepage_section_order', [
+                'type' => 'hidden',
+                'label' => __('Homepage Section Order', 'sage'),
+                'section' => 'section_ordering',
+                'settings' => 'homepage_section_order',
+            ]));
+
+            // Add custom JavaScript for drag and drop
+            \add_action('customize_controls_enqueue_scripts', function() {
+                wp_enqueue_script('jquery-ui-sortable');
+                wp_add_inline_script('customize-controls', '
+                    (function($) {
+                        // Wait for customizer to be ready
+                        wp.customize.bind("ready", function() {
+                            console.log("Section Ordering: Initializing...");
+                            
+                            // Define sections with their display names
+                            var sections = {
+                                "hero": "Homepage Hero",
+                                "new_drops": "New Drops Carousel", 
+                                "featured_products": "Featured Products",
+                                "new_arrival": "New Arrival"
+                            };
+                            
+                            // Function to create the sortable list
+                            function createSortableList() {
+                                // Try multiple selectors to find the section
+                                var $sectionOrderingSection = $("#accordion-section-section_ordering .accordion-section-content, " +
+                                                               "#accordion-section-section_ordering .accordion-section, " +
+                                                               ".accordion-section[data-section=\"section_ordering\"] .accordion-section-content, " +
+                                                               ".accordion-section[data-section=\"section_ordering\"]");
+                                
+                                if ($sectionOrderingSection.length === 0) {
+                                    console.log("Section Ordering: Section not found, retrying...");
+                                    console.log("Section Ordering: Available sections:", $(".accordion-section").map(function() { return $(this).attr("data-section"); }).get());
+                                    
+                                    // Try to find any section that contains "section_ordering" in the text
+                                    var $fallbackSection = $(".accordion-section").filter(function() {
+                                        return $(this).text().toLowerCase().indexOf("section ordering") !== -1;
+                                    });
+                                    
+                                    if ($fallbackSection.length > 0) {
+                                        console.log("Section Ordering: Found fallback section");
+                                        $sectionOrderingSection = $fallbackSection.find(".accordion-section-content").length > 0 ? 
+                                            $fallbackSection.find(".accordion-section-content") : $fallbackSection;
+                                    } else {
+                                        setTimeout(createSortableList, 1000);
+                                        return;
+                                    }
+                                }
+                                
+                                console.log("Section Ordering: Section found, creating list");
+                                
+                                // Remove existing list if any
+                                $("#section-ordering-list").remove();
+                                
+                                // Create sortable list
+                                var $sectionOrdering = $("<div id=\"section-ordering-list\"></div>");
+                                $sectionOrderingSection.append($sectionOrdering);
+                                
+                                // Get current order
+                                var currentOrder = wp.customize("homepage_section_order").get();
+                                console.log("Section Ordering: Current order:", currentOrder);
+                                
+                                var orderArray = currentOrder ? currentOrder.split(",") : Object.keys(sections);
+                                
+                                // Create sortable list items
+                                orderArray.forEach(function(sectionId) {
+                                    if (sections[sectionId]) {
+                                        $sectionOrdering.append(
+                                            "<div class=\"section-order-item\" data-section=\"" + sectionId + "\">" +
+                                            "<span class=\"dashicons dashicons-menu\"></span> " + sections[sectionId] +
+                                            "</div>"
+                                        );
+                                    }
+                                });
+                                
+                                // Make sortable
+                                $sectionOrdering.sortable({
+                                    placeholder: "section-order-placeholder",
+                                    update: function(event, ui) {
+                                        var newOrder = [];
+                                        $sectionOrdering.find(".section-order-item").each(function() {
+                                            newOrder.push($(this).data("section"));
+                                        });
+                                        console.log("Section Ordering: New order:", newOrder.join(","));
+                                        wp.customize("homepage_section_order").set(newOrder.join(","));
+                                    }
+                                });
+                                
+                                console.log("Section Ordering: Sortable list created successfully");
+                            }
+                            
+                            // Create the list
+                            createSortableList();
+                        });
+                        
+                        // Add CSS
+                        $("<style>")
+                            .prop("type", "text/css")
+                            .html("#section-ordering-list { margin: 10px 0; }" +
+                                  ".section-order-item { " +
+                                  "  background: #fff; " +
+                                  "  border: 1px solid #ddd; " +
+                                  "  padding: 10px 15px; " +
+                                  "  margin: 5px 0; " +
+                                  "  cursor: move; " +
+                                  "  border-radius: 4px; " +
+                                  "  display: flex; " +
+                                  "  align-items: center; " +
+                                  "}" +
+                                  ".section-order-item:hover { " +
+                                  "  background: #f9f9f9; " +
+                                  "  border-color: #999; " +
+                                  "}" +
+                                  ".section-order-item .dashicons { " +
+                                  "  margin-right: 8px; " +
+                                  "  color: #666; " +
+                                  "}" +
+                                  ".section-order-placeholder { " +
+                                  "  background: #f0f0f0; " +
+                                  "  border: 2px dashed #ccc; " +
+                                  "  height: 40px; " +
+                                  "  margin: 5px 0; " +
+                                  "  border-radius: 4px; " +
+                                  "}")
+                            .appendTo("head");
+                            
+                    })(jQuery);
+                ');
+            });
+        });
+
+        // Get section order for priorities (shared across all customizer sections)
+        $sectionOrder = get_theme_mod('homepage_section_order', 'hero,new_drops,featured_products,new_arrival');
+        $sections = explode(',', $sectionOrder);
+        $priorities = [];
+        
+        // Assign priorities based on order (starting from 20)
+        foreach ($sections as $index => $section) {
+            $priorities[$section] = 20 + ($index * 5);
+        }
+
+        // Register Customizer options
+        \add_action('customize_register', function($wp_customize) use ($priorities) {
+            
             // Section
             $wp_customize->add_section('hero_section', [
                 'title'    => __('Homepage Hero', 'sage'),
-                'priority' => 25,
+                'priority' => $priorities['hero'] ?? 25,
             ]);
 
             // Enable/disable
@@ -216,11 +376,243 @@ class CustomizerServiceProvider extends ServiceProvider
             ]);
         });
 
-        // Featured Products Section
+        // New Drops Carousel Section
         \add_action('customize_register', function($wp_customize) {
+            $wp_customize->add_section('new_drops_section', [
+                'title' => __('New Drops Carousel', 'sage'),
+                'priority' => $priorities['new_drops'] ?? 26,
+            ]);
+
+            // Enable/disable New Drops
+            $wp_customize->add_setting('new_drops_enable', [
+                'default' => false,
+                'transport' => 'refresh',
+            ]);
+            $wp_customize->add_control('new_drops_enable', [
+                'type'    => 'checkbox',
+                'label'   => __('Enable New Drops Carousel', 'sage'),
+                'section' => 'new_drops_section',
+            ]);
+
+            // Section Title
+            $wp_customize->add_setting('new_drops_title', [
+                'default' => 'NEW DROPS',
+                'transport' => 'postMessage',
+            ]);
+            $wp_customize->add_control('new_drops_title', [
+                'type'    => 'text',
+                'label'   => __('Section Title', 'sage'),
+                'section' => 'new_drops_section',
+            ]);
+
+            // Section Subtitle
+            $wp_customize->add_setting('new_drops_subtitle', [
+                'default' => 'Fresh styles just dropped',
+                'transport' => 'postMessage',
+            ]);
+            $wp_customize->add_control('new_drops_subtitle', [
+                'type'    => 'text',
+                'label'   => __('Section Subtitle', 'sage'),
+                'section' => 'new_drops_section',
+            ]);
+
+            // Number of slides
+            $wp_customize->add_setting('new_drops_count', [
+                'default' => 3,
+                'transport' => 'refresh',
+            ]);
+            $wp_customize->add_control('new_drops_count', [
+                'type'        => 'number',
+                'label'       => __('Number of Slides', 'sage'),
+                'section'     => 'new_drops_section',
+                'input_attrs' => ['min' => 1, 'max' => 10, 'step' => 1],
+            ]);
+
+            // Auto-play
+            $wp_customize->add_setting('new_drops_autoplay', [
+                'default' => true,
+                'transport' => 'refresh',
+            ]);
+            $wp_customize->add_control('new_drops_autoplay', [
+                'type'    => 'checkbox',
+                'label'   => __('Auto-play carousel', 'sage'),
+                'section' => 'new_drops_section',
+            ]);
+
+            // Auto-play speed
+            $wp_customize->add_setting('new_drops_autoplay_speed', [
+                'default' => 5000,
+                'transport' => 'refresh',
+            ]);
+            $wp_customize->add_control('new_drops_autoplay_speed', [
+                'type'        => 'number',
+                'label'       => __('Auto-play Speed (milliseconds)', 'sage'),
+                'section'     => 'new_drops_section',
+                'input_attrs' => ['min' => 2000, 'max' => 10000, 'step' => 500],
+            ]);
+
+            // Carousel height
+            $wp_customize->add_setting('new_drops_height', [
+                'default' => '400px',
+                'transport' => 'postMessage',
+            ]);
+            $wp_customize->add_control('new_drops_height', [
+                'type'    => 'text',
+                'label'   => __('Carousel Height (e.g. 400px or 50vh)', 'sage'),
+                'section' => 'new_drops_section',
+            ]);
+
+            // Image opacity
+            $wp_customize->add_setting('new_drops_image_opacity', [
+                'default' => 1,
+                'transport' => 'postMessage',
+            ]);
+            $wp_customize->add_control('new_drops_image_opacity', [
+                'type'        => 'number',
+                'label'       => __('Image Opacity (0–1)', 'sage'),
+                'section'     => 'new_drops_section',
+                'input_attrs' => ['min' => 0, 'max' => 1, 'step' => 0.05],
+            ]);
+
+            // Title gradient start color
+            $wp_customize->add_setting('new_drops_title_gradient_start', [
+                'default' => '#000000',
+                'transport' => 'postMessage',
+            ]);
+            $wp_customize->add_control(new \WP_Customize_Color_Control($wp_customize, 'new_drops_title_gradient_start', [
+                'label'    => __('Title Gradient Start Color', 'sage'),
+                'section'  => 'new_drops_section',
+                'settings' => 'new_drops_title_gradient_start',
+            ]));
+
+            // Title gradient end color
+            $wp_customize->add_setting('new_drops_title_gradient_end', [
+                'default' => '#000000',
+                'transport' => 'postMessage',
+            ]);
+            $wp_customize->add_control(new \WP_Customize_Color_Control($wp_customize, 'new_drops_title_gradient_end', [
+                'label'    => __('Title Gradient End Color', 'sage'),
+                'section'  => 'new_drops_section',
+                'settings' => 'new_drops_title_gradient_end',
+            ]));
+
+            // Section top margin
+            $wp_customize->add_setting('new_drops_margin_top', [
+                'default' => '60',
+                'transport' => 'postMessage',
+            ]);
+            $wp_customize->add_control('new_drops_margin_top', [
+                'type'        => 'number',
+                'label'       => __('Top Margin (pixels)', 'sage'),
+                'section'     => 'new_drops_section',
+                'input_attrs' => ['min' => 0, 'max' => 200, 'step' => 5],
+            ]);
+
+            // Section bottom margin
+            $wp_customize->add_setting('new_drops_margin_bottom', [
+                'default' => '60',
+                'transport' => 'postMessage',
+            ]);
+            $wp_customize->add_control('new_drops_margin_bottom', [
+                'type'        => 'number',
+                'label'       => __('Bottom Margin (pixels)', 'sage'),
+                'section'     => 'new_drops_section',
+                'input_attrs' => ['min' => 0, 'max' => 200, 'step' => 5],
+            ]);
+
+            // Header bottom margin
+            $wp_customize->add_setting('new_drops_header_margin', [
+                'default' => '40',
+                'transport' => 'postMessage',
+            ]);
+            $wp_customize->add_control('new_drops_header_margin', [
+                'type'        => 'number',
+                'label'       => __('Header Bottom Margin (pixels)', 'sage'),
+                'section'     => 'new_drops_section',
+                'input_attrs' => ['min' => 0, 'max' => 100, 'step' => 5],
+            ]);
+
+            // Add settings for each slide
+            for ($i = 1; $i <= 10; $i++) {
+                // Slide Image
+                $wp_customize->add_setting("new_drops_slide_{$i}_image", [
+                    'transport' => 'refresh',
+                ]);
+                $wp_customize->add_control(new \WP_Customize_Image_Control($wp_customize, "new_drops_slide_{$i}_image", [
+                    'label'    => sprintf(__('Slide %d Image', 'sage'), $i),
+                    'section'  => 'new_drops_section',
+                    'settings' => "new_drops_slide_{$i}_image",
+                ]));
+
+                // Slide URL
+                $wp_customize->add_setting("new_drops_slide_{$i}_url", [
+                    'default' => '',
+                    'transport' => 'refresh',
+                    'sanitize_callback' => 'esc_url_raw',
+                ]);
+                $wp_customize->add_control("new_drops_slide_{$i}_url", [
+                    'type'    => 'url',
+                    'label'   => sprintf(__('Slide %d URL', 'sage'), $i),
+                    'section' => 'new_drops_section',
+                ]);
+
+                // Button Text
+                $wp_customize->add_setting("new_drops_slide_{$i}_button_text", [
+                    'default' => 'SHOP NOW',
+                    'transport' => 'postMessage',
+                ]);
+                $wp_customize->add_control("new_drops_slide_{$i}_button_text", [
+                    'type'    => 'text',
+                    'label'   => sprintf(__('Slide %d Button Text', 'sage'), $i),
+                    'section' => 'new_drops_section',
+                ]);
+
+                // Button URL
+                $wp_customize->add_setting("new_drops_slide_{$i}_button_url", [
+                    'default' => '',
+                    'transport' => 'refresh',
+                    'sanitize_callback' => 'esc_url_raw',
+                ]);
+                $wp_customize->add_control("new_drops_slide_{$i}_button_url", [
+                    'type'    => 'url',
+                    'label'   => sprintf(__('Slide %d Button URL', 'sage'), $i),
+                    'section' => 'new_drops_section',
+                ]);
+
+                // Button Position
+                $wp_customize->add_setting("new_drops_slide_{$i}_button_position", [
+                    'default' => 'center',
+                    'transport' => 'postMessage',
+                ]);
+                $wp_customize->add_control("new_drops_slide_{$i}_button_position", [
+                    'type'    => 'select',
+                    'label'   => sprintf(__('Slide %d Button Position', 'sage'), $i),
+                    'section' => 'new_drops_section',
+                    'choices' => [
+                        'top' => 'Top',
+                        'center' => 'Center',
+                        'bottom' => 'Bottom',
+                    ],
+                ]);
+
+                // Show Button
+                $wp_customize->add_setting("new_drops_slide_{$i}_show_button", [
+                    'default' => true,
+                    'transport' => 'postMessage',
+                ]);
+                $wp_customize->add_control("new_drops_slide_{$i}_show_button", [
+                    'type'    => 'checkbox',
+                    'label'   => sprintf(__('Show Button on Slide %d', 'sage'), $i),
+                    'section' => 'new_drops_section',
+                ]);
+            }
+        });
+
+        // Featured Products Section
+        \add_action('customize_register', function($wp_customize) use ($priorities) {
             $wp_customize->add_section('featured_products', [
                 'title' => __('Featured Products', 'sage'),
-                'priority' => 30,
+                'priority' => $priorities['featured_products'] ?? 30,
             ]);
 
             // Featured Products Enable
@@ -295,10 +687,10 @@ class CustomizerServiceProvider extends ServiceProvider
         });
 
         // New Arrival Section
-        \add_action('customize_register', function($wp_customize) {
+        \add_action('customize_register', function($wp_customize) use ($priorities) {
             $wp_customize->add_section('new_arrival_section', [
                 'title' => __('New Arrival', 'sage'),
-                'priority' => 30,
+                'priority' => $priorities['new_arrival'] ?? 30,
             ]);
 
             // Enable/disable
@@ -363,10 +755,10 @@ class CustomizerServiceProvider extends ServiceProvider
         });
 
         // Footer Section
-        \add_action('customize_register', function($wp_customize) {
+        \add_action('customize_register', function($wp_customize) use ($priorities) {
             $wp_customize->add_section('footer_section', [
                 'title' => __('Footer', 'sage'),
-                'priority' => 35,
+                'priority' => $priorities['footer'] ?? 35,
             ]);
 
             // Enable/disable footer
@@ -580,6 +972,32 @@ class CustomizerServiceProvider extends ServiceProvider
         }
         
         return $categories;
+    }
+
+    /**
+     * Sanitize section order
+     */
+    public function sanitize_section_order($input)
+    {
+        $allowed_sections = ['hero', 'new_drops', 'featured_products', 'new_arrival'];
+        $sections = explode(',', $input);
+        $sanitized = [];
+        
+        foreach ($sections as $section) {
+            $section = trim($section);
+            if (in_array($section, $allowed_sections)) {
+                $sanitized[] = $section;
+            }
+        }
+        
+        // Ensure all sections are included
+        foreach ($allowed_sections as $section) {
+            if (!in_array($section, $sanitized)) {
+                $sanitized[] = $section;
+            }
+        }
+        
+        return implode(',', $sanitized);
     }
 }
 

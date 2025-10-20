@@ -318,8 +318,8 @@ if (!$shop_menu) {
                 </div>
             </div>
             <div class="cart-actions">
-                <a href="#" class="btn btn-secondary view-cart-btn">View Cart</a>
-                <a href="#" class="btn btn-primary checkout-btn">Checkout</a>
+                <a href="/cart/" class="btn btn-secondary view-cart-btn">View Cart</a>
+                <a href="/checkout/" class="btn btn-primary checkout-btn">Checkout</a>
             </div>
         </div>
     </div>

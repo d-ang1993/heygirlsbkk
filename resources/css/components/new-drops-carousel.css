@@ -1,0 +1,418 @@
+/**
+ * New Drops Carousel Component
+ * Fashion-focused carousel with flexible button positioning
+ */
+
+/* ========================================
+   MAIN CAROUSEL CONTAINER
+   ======================================== */
+
+.new-drops-carousel {
+  /* Padding is now controlled by inline styles from customizer */
+  background: var(--color-white);
+  width: 100%;
+}
+
+.new-drops-carousel .container {
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+/* ========================================
+   HEADER SECTION
+   ======================================== */
+
+.new-drops-header {
+  text-align: center;
+  /* Margin-bottom is now controlled by inline styles from customizer */
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0 20px;
+}
+
+.new-drops-title {
+  font-size: clamp(28px, 4vw, 48px);
+  font-weight: 800;
+  color: var(--color-black);
+  margin: 0 0 12px 0;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  background: linear-gradient(135deg, var(--title-gradient-start, var(--color-primary-dark)), var(--title-gradient-end, var(--color-secondary)));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.new-drops-subtitle {
+  font-size: 16px;
+  color: var(--color-gray);
+  margin: 0;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+}
+
+/* ========================================
+   CAROUSEL CONTAINER
+   ======================================== */
+
+.new-drops-carousel-container {
+  position: relative;
+  height: var(--carousel-height, 400px);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  background: var(--color-white);
+}
+
+.new-drops-slides {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* ========================================
+   INDIVIDUAL SLIDES
+   ======================================== */
+
+.new-drops-slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 0.6s ease-in-out, transform 0.6s ease-in-out;
+  transform: scale(1.02);
+}
+
+.new-drops-slide.active {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.new-drops-slide-link {
+  display: block;
+  width: 100%;
+  height: 100%;
+  text-decoration: none;
+  position: relative;
+}
+
+.new-drops-slide-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease-in-out;
+  opacity: var(--image-opacity, 1);
+}
+
+.new-drops-slide:hover .new-drops-slide-image {
+  transform: scale(1.05);
+}
+
+/* ========================================
+   BUTTON POSITIONING
+   ======================================== */
+
+.new-drops-button-container {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  padding: 20px;
+}
+
+.new-drops-button-top {
+  top: 20%;
+}
+
+.new-drops-button-center {
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.new-drops-button-bottom {
+  bottom: 20%;
+}
+
+.new-drops-button {
+  background: var(--color-primary-dark);
+  color: var(--color-white);
+  padding: 14px 32px;
+  border-radius: 9999px;
+  font-weight: 700;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border: 2px solid var(--color-primary-dark);
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 16px rgba(242, 113, 186, 0.3);
+}
+
+.new-drops-button:hover {
+  background: var(--color-primary-darker);
+  border-color: var(--color-primary-darker);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(242, 113, 186, 0.4);
+  color: var(--color-white);
+  text-decoration: none;
+}
+
+/* ========================================
+   NAVIGATION ARROWS
+   ======================================== */
+
+.new-drops-navigation {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 20px;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.new-drops-arrow {
+  width: 50px;
+  height: 50px;
+  background: rgba(255, 255, 255, 0.95);
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  pointer-events: auto;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  color: var(--color-black);
+}
+
+.new-drops-arrow:hover {
+  background: var(--color-white);
+  transform: scale(1.1);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
+}
+
+.new-drops-arrow svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ========================================
+   DOTS INDICATOR
+   ======================================== */
+
+.new-drops-dots {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 20;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 8px 16px;
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+}
+
+.new-drops-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.new-drops-dot:hover {
+  background: rgba(255, 255, 255, 0.7);
+  transform: scale(1.3);
+}
+
+.new-drops-dot.active {
+  background: #fff;
+  width: 20px;
+  border-radius: 3px;
+  transform: none;
+  overflow: hidden;
+}
+
+/* Progress bar animation - exact copy from product cards */
+.new-drops-dot.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: rgba(255, 192, 203, 0.8); /* Pink color */
+  width: 100%;
+  border-radius: inherit;
+  animation: newDropsProgressFill var(--carousel-duration, 5000ms) linear forwards;
+}
+
+@keyframes newDropsProgressFill {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
+
+@media (max-width: 768px) {
+  .new-drops-carousel {
+    padding: 40px 0;
+  }
+  
+  .new-drops-header {
+    margin-bottom: 30px;
+  }
+  
+  .new-drops-title {
+    font-size: 24px;
+    letter-spacing: 1px;
+  }
+  
+  .new-drops-subtitle {
+    font-size: 14px;
+  }
+  
+  .new-drops-carousel-container {
+    height: 300px;
+    border-radius: 8px;
+  }
+  
+  .new-drops-button {
+    padding: 12px 24px;
+    font-size: 12px;
+  }
+  
+  .new-drops-button-container {
+    padding: 15px;
+  }
+  
+  .new-drops-arrow {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .new-drops-arrow svg {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .new-drops-dots {
+    bottom: 15px;
+    gap: 8px;
+  }
+  
+  .new-drops-dot {
+    width: 10px;
+    height: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .new-drops-carousel-container {
+    height: 250px;
+  }
+  
+  .new-drops-button {
+    padding: 10px 20px;
+    font-size: 11px;
+  }
+  
+  .new-drops-navigation {
+    padding: 0 10px;
+  }
+  
+  .new-drops-arrow {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+/* ========================================
+   ACCESSIBILITY
+   ======================================== */
+
+.new-drops-arrow:focus,
+.new-drops-dot:focus,
+.new-drops-button:focus {
+  outline: 2px solid var(--color-primary-dark);
+  outline-offset: 2px;
+}
+
+/* ========================================
+   LOADING STATE
+   ======================================== */
+
+.new-drops-carousel-container.loading {
+  background: var(--color-gray-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.new-drops-carousel-container.loading::after {
+  content: '';
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--color-gray-light);
+  border-top: 3px solid var(--color-primary-dark);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ========================================
+   SPECIAL EFFECTS
+   ======================================== */
+
+.new-drops-slide::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(247, 169, 208, 0.1) 0%,
+    rgba(169, 247, 208, 0.1) 100%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 1;
+}
+
+.new-drops-slide:hover::before {
+  opacity: 1;
+}
+
+.new-drops-button-container {
+  z-index: 2;
+}

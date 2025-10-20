@@ -561,20 +561,53 @@ document.addEventListener('DOMContentLoaded', function() {
                 img.src = images[index];
                 img.style.opacity = '1';
                 
-                // Update indicators - this will restart the CSS animation
-                indicators.forEach((indicator, i) => {
-                    indicator.classList.toggle('active', i === index);
+                // First, remove active from all indicators
+                indicators.forEach(indicator => {
+                    indicator.classList.remove('active');
+                });
+                
+                // Force reflow
+                void indicators[0].offsetWidth;
+                
+                // Then add active to the current one using requestAnimationFrame
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        if (indicators[index]) {
+                            indicators[index].classList.add('active');
+                        }
+                    });
                 });
             }, 250);
         }
         
         function startCarousel() {
-            if (intervalId) return;
+            // Always clear any existing interval first
+            if (intervalId) {
+                clearInterval(intervalId);
+                intervalId = null;
+            }
             
-            intervalId = setInterval(() => {
-                const nextIndex = (currentIndex + 1) % images.length;
-                showImage(nextIndex);
-            }, cycleDuration);
+            // Reset to first image when starting
+            if (currentIndex !== 0) {
+                currentIndex = 0;
+                img.src = images[0];
+            }
+            
+            // Remove all active classes first
+            indicators.forEach(indicator => indicator.classList.remove('active'));
+            
+            // Use timeout to ensure animation resets
+            setTimeout(() => {
+                if (indicators[0]) {
+                    indicators[0].classList.add('active');
+                }
+                
+                // Start interval after initial setup
+                intervalId = setInterval(() => {
+                    const nextIndex = (currentIndex + 1) % images.length;
+                    showImage(nextIndex);
+                }, cycleDuration);
+            }, 50);
         }
         
         function stopCarousel() {

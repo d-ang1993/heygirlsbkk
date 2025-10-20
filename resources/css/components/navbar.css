@@ -1,7 +1,7 @@
 /* Navbar Styles */
 .main-navbar {
-  background: #fff;
-  border-bottom: 1px solid #e5e5e5;
+  background: var(--color-primary);
+  /* border-bottom: 1px solid #e5e5e5; */
   position: relative;
   z-index: 1000;
 }
@@ -241,7 +241,7 @@
   width: 32px;
   height: 32px;
   border: 3px solid #e5e7eb;
-  border-top: 3px solid #f271ba;
+  border-top: 3px solid var(--color-primary-dark);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 1rem;
@@ -446,15 +446,15 @@
 }
 
 .btn-primary {
-  background: #f271ba;
-  color: #ffffff;
-  border: 1px solid #f271ba;
+  background: var(--color-primary-dark);
+  color: var(--color-white);
+  border: 1px solid var(--color-primary-dark);
 }
 
 .btn-primary:hover {
-  background: #e252a2;
-  border-color: #e252a2;
-  color: #ffffff;
+  background: var(--color-primary-darker);
+  border-color: var(--color-primary-darker);
+  color: var(--color-white);
   text-decoration: none;
 }
 
@@ -506,7 +506,7 @@
 .dropdown-section-title {
   font-size: 12px;
   font-weight: 700;
-  background: linear-gradient(135deg, #f46fbb, #ff6b9d, #ff8fab);
+  background: linear-gradient(135deg, var(--color-primary-dark), #ff6b9d, var(--color-primary));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

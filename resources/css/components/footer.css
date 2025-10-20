@@ -1,6 +1,6 @@
 /* Footer Styles */
 .site-footer {
-  background: #fff;
+  background: var(--color-primary);
   padding: 60px 0;
 }
 

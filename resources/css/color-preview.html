@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HeyGirls BKK - Color System Preview</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f9fafb;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 40px;
+      font-size: 32px;
+    }
+
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
+      margin-bottom: 60px;
+    }
+
+    .color-card {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .color-swatch {
+      height: 150px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 24px;
+      font-weight: 600;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .color-info {
+      padding: 20px;
+    }
+
+    .color-name {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .color-hex {
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 12px;
+    }
+
+    .color-usage {
+      font-size: 13px;
+      color: #888;
+      line-height: 1.6;
+    }
+
+    .primary { background: #f7a9d0; }
+    .primary-dark { background: #f271ba; }
+    .primary-darker { background: #e252a2; }
+    .secondary { background: #a9f7d0; color: #000; text-shadow: none; }
+    .secondary-dark { background: #7ee5b8; color: #000; text-shadow: none; }
+    .secondary-darker { background: #5cd4a3; color: #000; text-shadow: none; }
+
+    .examples {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+    }
+
+    .examples h2 {
+      margin-bottom: 30px;
+      font-size: 24px;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border-radius: 9999px;
+      font-weight: 600;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+      background: #f271ba;
+      color: white;
+      border: 1px solid #f271ba;
+    }
+
+    .btn-primary:hover {
+      background: #e252a2;
+      border-color: #e252a2;
+    }
+
+    .btn-secondary {
+      background: #a9f7d0;
+      color: black;
+      border: 1px solid #a9f7d0;
+    }
+
+    .btn-secondary:hover {
+      background: #7ee5b8;
+      border-color: #7ee5b8;
+    }
+
+    .navbar-demo {
+      background: #f7a9d0;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 18px;
+      color: #000;
+    }
+
+    .footer-demo {
+      background: #f7a9d0;
+      padding: 40px;
+      border-radius: 8px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 18px;
+      color: #000;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 5px;
+    }
+
+    .badge-new {
+      background: #a9f7d0;
+      color: #000;
+    }
+
+    .badge-sale {
+      background: #f271ba;
+      color: white;
+    }
+
+    .card-examples {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-top: 30px;
+    }
+
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .card.accent-primary {
+      border-left: 4px solid #f271ba;
+    }
+
+    .card.accent-secondary {
+      border-left: 4px solid #a9f7d0;
+    }
+
+    .card.border-primary {
+      border: 2px solid #f271ba;
+    }
+
+    .card.border-secondary {
+      border: 2px solid #a9f7d0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎨 HeyGirls BKK Color System</h1>
+
+    <!-- Color Palette -->
+    <div class="color-grid">
+      <!-- Primary Colors -->
+      <div class="color-card">
+        <div class="color-swatch primary">Pink</div>
+        <div class="color-info">
+          <div class="color-name">Primary</div>
+          <div class="color-hex">#f7a9d0</div>
+          <div class="color-usage">Main brand color. Used for navbar, footer, and primary elements.</div>
+        </div>
+      </div>
+
+      <div class="color-card">
+        <div class="color-swatch primary-dark">Pink Dark</div>
+        <div class="color-info">
+          <div class="color-name">Primary Dark</div>
+          <div class="color-hex">#f271ba</div>
+          <div class="color-usage">Hover states for primary elements and primary buttons.</div>
+        </div>
+      </div>
+
+      <div class="color-card">
+        <div class="color-swatch primary-darker">Pink Darker</div>
+        <div class="color-info">
+          <div class="color-name">Primary Darker</div>
+          <div class="color-hex">#e252a2</div>
+          <div class="color-usage">Active/pressed states for interactive elements.</div>
+        </div>
+      </div>
+
+      <!-- Secondary Colors -->
+      <div class="color-card">
+        <div class="color-swatch secondary">Mint</div>
+        <div class="color-info">
+          <div class="color-name">Secondary</div>
+          <div class="color-hex">#a9f7d0</div>
+          <div class="color-usage">Accent color. Used for secondary buttons, highlights, and badges.</div>
+        </div>
+      </div>
+
+      <div class="color-card">
+        <div class="color-swatch secondary-dark">Mint Dark</div>
+        <div class="color-info">
+          <div class="color-name">Secondary Dark</div>
+          <div class="color-hex">#7ee5b8</div>
+          <div class="color-usage">Hover states for secondary elements.</div>
+        </div>
+      </div>
+
+      <div class="color-card">
+        <div class="color-swatch secondary-darker">Mint Darker</div>
+        <div class="color-info">
+          <div class="color-name">Secondary Darker</div>
+          <div class="color-hex">#5cd4a3</div>
+          <div class="color-usage">Active/pressed states for secondary elements.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Example -->
+    <div class="examples">
+      <h2>Navigation & Footer</h2>
+      <div class="navbar-demo">
+        ← This is your Navbar (Primary Color) →
+      </div>
+      <div class="footer-demo">
+        ← This is your Footer (Primary Color) →
+      </div>
+    </div>
+
+    <!-- Button Examples -->
+    <div class="examples">
+      <h2>Buttons</h2>
+      <div class="button-row">
+        <button class="btn btn-primary">Primary Button</button>
+        <button class="btn btn-secondary">Secondary Button</button>
+      </div>
+      <p style="color: #666; font-size: 14px; margin-top: 10px;">
+        <strong>Primary buttons:</strong> Use for main actions (Add to Cart, Buy Now, Subscribe)<br>
+        <strong>Secondary buttons:</strong> Use for supporting actions (Learn More, View Details, Continue Shopping)
+      </p>
+    </div>
+
+    <!-- Badges Example -->
+    <div class="examples">
+      <h2>Badges & Tags</h2>
+      <div>
+        <span class="badge badge-new">New</span>
+        <span class="badge badge-new">Featured</span>
+        <span class="badge badge-sale">Sale</span>
+        <span class="badge badge-sale">Limited</span>
+      </div>
+      <p style="color: #666; font-size: 14px; margin-top: 20px;">
+        <strong>Mint badges:</strong> Informational (New, Featured)<br>
+        <strong>Pink badges:</strong> Action-oriented (Sale, Limited Time)
+      </p>
+    </div>
+
+    <!-- Card Examples -->
+    <div class="examples">
+      <h2>Card Accents</h2>
+      <div class="card-examples">
+        <div class="card accent-primary">
+          <strong>Primary Accent</strong>
+          <p style="margin-top: 10px; color: #666; font-size: 14px;">
+            Card with primary accent border for featured content
+          </p>
+        </div>
+        <div class="card accent-secondary">
+          <strong>Secondary Accent</strong>
+          <p style="margin-top: 10px; color: #666; font-size: 14px;">
+            Card with secondary accent border for highlighted info
+          </p>
+        </div>
+        <div class="card border-primary">
+          <strong>Primary Border</strong>
+          <p style="margin-top: 10px; color: #666; font-size: 14px;">
+            Card with full primary border
+          </p>
+        </div>
+        <div class="card border-secondary">
+          <strong>Secondary Border</strong>
+          <p style="margin-top: 10px; color: #666; font-size: 14px;">
+            Card with full secondary border
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Color Pairing Tips -->
+    <div class="examples">
+      <h2>💡 Quick Tips</h2>
+      <ul style="line-height: 2; color: #666;">
+        <li><strong>Pink (Primary):</strong> Dominant color - navbar, footer, primary buttons, main CTAs</li>
+        <li><strong>Mint (Secondary):</strong> Supporting color - accents, secondary buttons, highlights, badges</li>
+        <li><strong>Don't mix equally:</strong> Let one color dominate each section</li>
+        <li><strong>Use white space:</strong> Don't overuse colors - let them breathe</li>
+        <li><strong>Black text works great:</strong> Both colors have good contrast with black text</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>
+

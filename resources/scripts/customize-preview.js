@@ -71,4 +71,53 @@
         });
     });
 
+    // New Drops Carousel live preview
+    wp.customize('new_drops_title', function(value) {
+        value.bind(function(newval) {
+            $('.new-drops-title').text(newval);
+        });
+    });
+
+    wp.customize('new_drops_subtitle', function(value) {
+        value.bind(function(newval) {
+            $('.new-drops-subtitle').text(newval);
+        });
+    });
+
+    wp.customize('new_drops_height', function(value) {
+        value.bind(function(newval) {
+            $('.new-drops-carousel-container').css('height', newval);
+        });
+    });
+
+    // Button text and position live preview
+    for (var i = 1; i <= 10; i++) {
+        (function(slideIndex) {
+            wp.customize('new_drops_slide_' + slideIndex + '_button_text', function(value) {
+                value.bind(function(newval) {
+                    $('.new-drops-slide[data-slide="' + (slideIndex - 1) + '"] .new-drops-button').text(newval);
+                });
+            });
+
+            wp.customize('new_drops_slide_' + slideIndex + '_button_position', function(value) {
+                value.bind(function(newval) {
+                    var buttonContainer = $('.new-drops-slide[data-slide="' + (slideIndex - 1) + '"] .new-drops-button-container');
+                    buttonContainer.removeClass('new-drops-button-top new-drops-button-center new-drops-button-bottom')
+                                  .addClass('new-drops-button-' + newval);
+                });
+            });
+
+            wp.customize('new_drops_slide_' + slideIndex + '_show_button', function(value) {
+                value.bind(function(newval) {
+                    var buttonContainer = $('.new-drops-slide[data-slide="' + (slideIndex - 1) + '"] .new-drops-button-container');
+                    if (newval) {
+                        buttonContainer.show();
+                    } else {
+                        buttonContainer.hide();
+                    }
+                });
+            });
+        })(i);
+    }
+
 })(jQuery);

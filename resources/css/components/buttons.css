@@ -4,21 +4,39 @@
  */
 
 .btn.btn-primary {
-  background: #000;
-  color: #fff;
+  background: var(--color-primary-dark);
+  color: var(--color-white);
   padding: .85rem 1.35rem;
   border-radius: 9999px;
   display: inline-block;
+  border: 1px solid var(--color-primary-dark);
+  transition: all 0.3s ease;
 }
 
 .btn.btn-primary:hover {
-  opacity: .85;
+  background: var(--color-primary-darker);
+  border-color: var(--color-primary-darker);
+}
+
+.btn.btn-secondary {
+  background: var(--color-secondary);
+  color: var(--color-black);
+  padding: .85rem 1.35rem;
+  border-radius: 9999px;
+  display: inline-block;
+  border: 1px solid var(--color-secondary);
+  transition: all 0.3s ease;
+}
+
+.btn.btn-secondary:hover {
+  background: var(--color-secondary-dark);
+  border-color: var(--color-secondary-dark);
 }
 
 .newsletter-button {
   padding: 12px 30px;
-  background: #fff;
-  color: #000;
+  background: var(--color-white);
+  color: var(--color-black);
   border: none;
   border-radius: 25px;
   font-weight: 600;
@@ -27,7 +45,7 @@
 }
 
 .newsletter-button:hover {
-  background: #f0f0f0;
+  background: var(--color-gray-light);
   transform: translateY(-2px);
 }
 

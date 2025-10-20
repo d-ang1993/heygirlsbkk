@@ -6,6 +6,40 @@
 @import "tailwindcss";
 
 :root {
-  --hero-height: 60vh;
+  /* ========================================
+     BRAND COLORS
+     ======================================== */
+  
+  /* PRIMARY COLOR - Pink (#f7a9d0)
+   * Use for: Navbar, Footer, Primary buttons, Main brand elements
+   * This is the dominant color of your brand */
+  --color-primary: #f7a9d0;           /* Soft Pink - Main brand color */
+  --color-primary-dark: #f271ba;      /* Darker Pink - Hover states */
+  --color-primary-darker: #e252a2;    /* Even Darker Pink - Active states */
+  
+  /* SECONDARY COLOR - Mint (#a9f7d0)
+   * Use for: Accent elements, Alternative buttons, Highlights, Call-outs
+   * This complements the primary pink beautifully
+   * Examples: 
+   * - Secondary buttons (e.g., "Learn More", "View Details")
+   * - Accent borders or backgrounds
+   * - Highlighting special content or badges
+   * - Alternative CTAs that need to stand out from primary pink */
+  --color-secondary: #a9f7d0;         /* Soft Mint - Complementary color */
+  --color-secondary-dark: #7ee5b8;    /* Darker Mint - Hover states */
+  --color-secondary-darker: #5cd4a3;  /* Even Darker Mint - Active states */
+  
+  /* NEUTRAL COLORS
+   * Use for: Text, backgrounds, borders */
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-gray-light: #f3f4f6;
+  --color-gray: #6b7280;
+  --color-gray-dark: #374151;
+  
+  /* ========================================
+     LAYOUT
+     ======================================== */
+  /* --hero-height: 60vh; */
 }
 

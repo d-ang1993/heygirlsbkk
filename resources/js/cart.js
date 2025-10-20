@@ -346,6 +346,34 @@ document.addEventListener('DOMContentLoaded', function () {
       cartContent.innerHTML = '<div class="cart-error"><p>Error loading cart. Please try again.</p></div>';
     }
   
+    // Set up cart drawer button event listeners
+    function setupCartDrawerButtons() {
+      // View Cart button
+      const viewCartBtn = document.querySelector('.view-cart-btn');
+      if (viewCartBtn) {
+        viewCartBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          // Redirect to WooCommerce cart page
+          window.location.href = '/cart/';
+        });
+      }
+      
+      // Checkout button
+      const checkoutBtn = document.querySelector('.checkout-btn');
+      if (checkoutBtn) {
+        checkoutBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          // Redirect to WooCommerce checkout page
+          window.location.href = '/checkout/';
+        });
+      }
+    }
+  
+    // Initialize cart drawer buttons when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+      setupCartDrawerButtons();
+    });
+  
     // Expose
     window.openCartDrawer = openCartDrawer;
     window.closeCartDrawer = closeCartDrawer;

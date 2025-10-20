@@ -27,6 +27,24 @@
 
 <!-- Product Images Carousel -->
 <div class="product-images-carousel">
+    <!-- Thumbnail Sidebar (if multiple images) -->
+    @if(count($all_images) > 1)
+        <div class="thumbnail-sidebar">
+            @foreach($all_images as $index => $image)
+                <div class="thumbnail-container {{ $index === 0 ? 'active' : '' }}" onclick="selectImage({{ $index }})">
+                    <img 
+                        src="{{ $image }}" 
+                        alt="{{ $product_name }} - Image {{ $index + 1 }}" 
+                        class="thumbnail-image"
+                        loading="lazy"
+                        width="60"
+                        height="60"
+                    />
+                </div>
+            @endforeach
+        </div>
+    @endif
+    
     <div class="main-image-container">
         <div class="main-image" id="main-image">
             <img 
@@ -55,15 +73,6 @@
             @endif
         </div>
     </div>
-    
-    <!-- Image Dots (if multiple images) -->
-    @if(count($all_images) > 1)
-        <div class="image-dots">
-            @foreach($all_images as $index => $image)
-                <span class="dot {{ $index === 0 ? 'active' : '' }}" onclick="selectImage({{ $index }})"></span>
-            @endforeach
-        </div>
-    @endif
 </div>
 
 <script>
@@ -98,10 +107,10 @@ function updateImage() {
         mainImg.src = images[currentImageIndex];
     }
     
-    // Update dots
-    const dots = document.querySelectorAll('.dot');
-    dots.forEach((dot, index) => {
-        dot.classList.toggle('active', index === currentImageIndex);
+    // Update thumbnail states
+    const thumbnails = document.querySelectorAll('.thumbnail-container');
+    thumbnails.forEach((thumbnail, index) => {
+        thumbnail.classList.toggle('active', index === currentImageIndex);
     });
 }
 

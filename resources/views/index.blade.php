@@ -1,13 +1,25 @@
 @extends('layouts.app')
 
 @section('content')
-  @include('partials.hero')
+@php
+// Get the custom section order (removed footer since it's in the main layout)
+$sectionOrder = get_theme_mod('homepage_section_order', 'hero,new_drops,featured_products,new_arrival');
+$sections = explode(',', $sectionOrder);
 
-  <!-- Featured Products Section -->
-  @include('partials.featured-products')
+// Define section mappings (removed footer)
+$sectionMap = [
+    'hero' => 'partials.hero',
+    'new_drops' => 'partials.new-drops-carousel', 
+    'featured_products' => 'partials.featured-products',
+    'new_arrival' => 'partials.new-arrival'
+];
+@endphp
 
-  <!-- New Arrival Section -->
-  @include('partials.new-arrival')
+@foreach($sections as $section)
+  @if(isset($sectionMap[$section]))
+    @include($sectionMap[$section])
+  @endif
+@endforeach
 
   <!-- BEST SELLER Section -->
   @php
