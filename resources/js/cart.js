@@ -14,12 +14,28 @@ document.addEventListener('DOMContentLoaded', function () {
   
       if (typeof updateBagCount === 'function') setTimeout(() => updateBagCount(), 100);
   
+      // Always open cart drawer after adding to cart (except on mobile)
       const cartDrawer = document.getElementById('cart-drawer');
-      if (cartDrawer && cartDrawer.classList.contains('active')) {
-        console.log('🛒 Cart drawer open — refreshing...');
+      const isMobile = window.innerWidth <= 768;
+      
+      if (cartDrawer && !cartDrawer.classList.contains('active') && !isMobile) {
+        console.log('🛒 Opening cart drawer after add to cart...');
+        setTimeout(() => {
+          if (typeof openCartDrawer === 'function') openCartDrawer(true);
+        }, 300);
+      } else if (cartDrawer && cartDrawer.classList.contains('active')) {
+        console.log('🛒 Cart drawer already open — refreshing...');
         setTimeout(() => {
           if (typeof loadCartContent === 'function') loadCartContent(true, Date.now());
         }, 200);
+      } else {
+        // Cart drawer is closed - clear cache so next time it opens it shows fresh data
+        console.log('🛒 Cart drawer closed — clearing cache for next open');
+        if (typeof loadCartContent === 'function') {
+          // Clear cache by forcing a refresh with invalid cache
+          cartCache = null;
+          cacheTimestamp = 0;
+        }
       }
     });
   
@@ -38,6 +54,13 @@ document.addEventListener('DOMContentLoaded', function () {
         setTimeout(() => {
           if (typeof loadCartContent === 'function') loadCartContent(true, Date.now());
         }, 100);
+      } else {
+        // Cart drawer is closed - clear cache so next time it opens it shows fresh data
+        console.log('🛒 WooCommerce cart updated — clearing cache for next open');
+        if (typeof loadCartContent === 'function') {
+          cartCache = null;
+          cacheTimestamp = 0;
+        }
       }
     });
   
@@ -47,6 +70,13 @@ document.addEventListener('DOMContentLoaded', function () {
         setTimeout(() => {
           if (typeof loadCartContent === 'function') loadCartContent(true, Date.now());
         }, 100);
+      } else {
+        // Cart drawer is closed - clear cache so next time it opens it shows fresh data
+        console.log('🛒 Custom cart updated — clearing cache for next open');
+        if (typeof loadCartContent === 'function') {
+          cartCache = null;
+          cacheTimestamp = 0;
+        }
       }
     });
   });
@@ -223,19 +253,24 @@ document.addEventListener('DOMContentLoaded', function () {
         setTimeout(() => {
           const subtotalElement = document.querySelector('.cart-subtotal-amount');
           const totalElement = document.querySelector('.cart-total-amount');
-  
+
           const subtotalValue = cartData?.subtotal || '';
           const totalValue = cartData?.total || cartData?.subtotal || '';
-  
+
           console.log('💰 Totals Update Triggered');
+          console.log('Cart Data:', cartData);
           console.log('Subtotal Raw:', subtotalValue);
           console.log('Total Raw:', totalValue);
-  
+          console.log('Subtotal Element:', subtotalElement);
+          console.log('Total Element:', totalElement);
+
           if (subtotalElement) {
             subtotalElement.innerHTML = decodeHTMLEntities(subtotalValue);
             console.log('✅ Subtotal Updated:', subtotalElement.innerHTML);
+          } else {
+            console.warn('⚠️ subtotalElement not found');
           }
-  
+
           if (totalElement) {
             totalElement.innerHTML = decodeHTMLEntities(totalValue);
             console.log('✅ Total Updated:', totalElement.innerHTML);

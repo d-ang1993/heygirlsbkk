@@ -1,4 +1,4 @@
-@php
+<?php
 $navbar_enable = get_theme_mod('navbar_enable', true);
 $navbar_logo = get_theme_mod('navbar_logo', 'HEYGIRLSBKK');
 
@@ -37,35 +37,35 @@ if (!$shop_menu) {
         }
     }
 }
-@endphp
+?>
 
-@if($navbar_enable)
+<?php if($navbar_enable): ?>
 <nav class="main-navbar">
     <div class="navbar-container">
         <!-- Top Bar -->
         <div class="navbar-top">
             <div class="navbar-location">THAILAND</div>
             <div class="navbar-account">
-                @if(is_user_logged_in())
-                    {{-- User is logged in - show My Account --}}
-                    <a href="{{ esc_url(wc_get_page_permalink('myaccount')) }}" class="navbar-link">MY ACCOUNT</a>
+                <?php if(is_user_logged_in()): ?>
+                    
+                    <a href="<?php echo e(esc_url(wc_get_page_permalink('myaccount'))); ?>" class="navbar-link">MY ACCOUNT</a>
                     <span class="navbar-separator">|</span>
-                    <a href="{{ esc_url(wp_logout_url(home_url())) }}" class="navbar-link">LOGOUT</a>
-                @else
-                    {{-- User is not logged in - show Sign In/Sign Up --}}
-                    <a href="{{ esc_url(add_query_arg('action', 'login', wc_get_page_permalink('myaccount'))) }}" class="navbar-link">SIGN IN</a>
+                    <a href="<?php echo e(esc_url(wp_logout_url(home_url()))); ?>" class="navbar-link">LOGOUT</a>
+                <?php else: ?>
+                    
+                    <a href="<?php echo e(esc_url(add_query_arg('action', 'login', wc_get_page_permalink('myaccount')))); ?>" class="navbar-link">SIGN IN</a>
                     <span class="navbar-separator">|</span>
-                    <a href="{{ esc_url(add_query_arg('action', 'register', wc_get_page_permalink('myaccount'))) }}" class="navbar-link">SIGN UP</a>
-                @endif
+                    <a href="<?php echo e(esc_url(add_query_arg('action', 'register', wc_get_page_permalink('myaccount')))); ?>" class="navbar-link">SIGN UP</a>
+                <?php endif; ?>
             </div>
         </div>
 
         <!-- Main Navigation -->
         <div class="navbar-main">
             <div class="navbar-left">
-                {{-- Always show SHOP link first --}}
-                @if($shop_menu && !empty($shop_menu))
-                    @php
+                
+                <?php if($shop_menu && !empty($shop_menu)): ?>
+                    <?php
                     $has_shop_in_primary = false;
                     if ($primary_menu) {
                         foreach ($primary_menu as $item) {
@@ -75,51 +75,53 @@ if (!$shop_menu) {
                             }
                         }
                     }
-                    @endphp
+                    ?>
                     
-                    @if($has_shop_in_primary)
-                        {{-- Show SHOP from primary menu if it exists --}}
-                        @foreach($primary_menu as $item)
-                            @if($item->menu_item_parent == 0 && strtoupper($item->title) === 'SHOP')
-                                <a href="{{ $item->url }}" class="navbar-link navbar-shop" data-dropdown="shop">
-                                    {{ strtoupper($item->title) }}
+                    <?php if($has_shop_in_primary): ?>
+                        
+                        <?php $__currentLoopData = $primary_menu; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <?php if($item->menu_item_parent == 0 && strtoupper($item->title) === 'SHOP'): ?>
+                                <a href="<?php echo e($item->url); ?>" class="navbar-link navbar-shop" data-dropdown="shop">
+                                    <?php echo e(strtoupper($item->title)); ?>
+
                                     <svg class="dropdown-arrow" width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
                                         <path d="M6 8L2 4h8l-4 4z"/>
                                     </svg>
                                 </a>
-                                @break
-                            @endif
-                        @endforeach
-                    @else
-                        {{-- Show default SHOP link --}}
+                                <?php break; ?>
+                            <?php endif; ?>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                    <?php else: ?>
+                        
                         <a href="#" class="navbar-link navbar-shop" data-dropdown="shop">
                             SHOP
                             <svg class="dropdown-arrow" width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
                                 <path d="M6 8L2 4h8l-4 4z"/>
                             </svg>
                         </a>
-                    @endif
-                @endif
+                    <?php endif; ?>
+                <?php endif; ?>
                 
-                {{-- Show other primary menu items (excluding SHOP) --}}
-                @if($primary_menu && !empty($primary_menu))
-                    @foreach($primary_menu as $item)
-                        @if($item->menu_item_parent == 0 && strtoupper($item->title) !== 'SHOP')
-                            <a href="{{ $item->url }}" class="navbar-link">
-                                {{ strtoupper($item->title) }}
+                
+                <?php if($primary_menu && !empty($primary_menu)): ?>
+                    <?php $__currentLoopData = $primary_menu; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <?php if($item->menu_item_parent == 0 && strtoupper($item->title) !== 'SHOP'): ?>
+                            <a href="<?php echo e($item->url); ?>" class="navbar-link">
+                                <?php echo e(strtoupper($item->title)); ?>
+
                             </a>
-                        @endif
-                    @endforeach
-                @endif
+                        <?php endif; ?>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                <?php endif; ?>
             </div>
 
             <div class="navbar-center">
-                <a href="{{ home_url() }}" class="navbar-logo">{{ $navbar_logo }}</a>
+                <a href="<?php echo e(home_url()); ?>" class="navbar-logo"><?php echo e($navbar_logo); ?></a>
             </div>
 
             <div class="navbar-right">
                 <div class="navbar-search-container">
-                    <form class="navbar-search" method="get" action="{{ home_url('/') }}">
+                    <form class="navbar-search" method="get" action="<?php echo e(home_url('/')); ?>">
                         <input type="text" 
                         placeholder="FIND SOMETHING" 
                         class="search-input" 
@@ -128,7 +130,7 @@ if (!$shop_menu) {
                         autocorrect="off"
                         autocapitalize="off"
                         spellcheck="false"
-                        value="{{ get_search_query() }}" oninput="this.style.width = Math.max(120, this.value.length * 8 + 20) + 'px'">
+                        value="<?php echo e(get_search_query()); ?>" oninput="this.style.width = Math.max(120, this.value.length * 8 + 20) + 'px'">
                         <button type="submit" class="search-label">SEARCH</button>
                     </form>
                     
@@ -146,20 +148,20 @@ if (!$shop_menu) {
                         </div>
                     </div>
                 </div>
-                <a href="#" class="navbar-link navbar-bag cart-trigger" data-cart-url="{{ wc_get_cart_url() }}">
-                    BAG(<span class="bag-count">{{ WC()->cart->get_cart_contents_count() }}</span>)
+                <a href="#" class="navbar-link navbar-bag cart-trigger" data-cart-url="<?php echo e(wc_get_cart_url()); ?>">
+                    BAG(<span class="bag-count"><?php echo e(WC()->cart->get_cart_contents_count()); ?></span>)
                 </a>
             </div>
         </div>
 
         <!-- Dropdown Menu -->
-        @if($shop_menu && !empty($shop_menu))
+        <?php if($shop_menu && !empty($shop_menu)): ?>
         <div class="navbar-dropdown" id="shop-dropdown">
             <div class="dropdown-container">
                 <!-- General Pages -->
                 <div class="dropdown-section">
                     <div class="dropdown-section-title">GENERAL</div>
-                    @php
+                    <?php
                     // Get all menu items that are pages
                     $page_items = [];
                     foreach ($shop_menu as $item) {
@@ -167,18 +169,19 @@ if (!$shop_menu) {
                             $page_items[] = $item;
                         }
                     }
-                    @endphp
-                    @foreach($page_items as $item)
-                        <a href="{{ $item->url }}" class="dropdown-category">
-                            {{ strtoupper($item->title) }}
+                    ?>
+                    <?php $__currentLoopData = $page_items; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <a href="<?php echo e($item->url); ?>" class="dropdown-category">
+                            <?php echo e(strtoupper($item->title)); ?>
+
                         </a>
-                    @endforeach
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </div>
 
                 <!-- Collections/Seasons -->
                 <div class="dropdown-section">
                     <div class="dropdown-section-title">COLLECTIONS</div>
-                    @php
+                    <?php
                     // Get the "Collections" product category
                     $collections_parent_cat = get_term_by('name', 'Collections', 'product_cat');
                     $collection_items = [];
@@ -198,18 +201,19 @@ if (!$shop_menu) {
                             }
                         }
                     }
-                    @endphp
-                    @foreach($collection_items as $item)
-                        <a href="{{ $item->url }}" class="dropdown-category">
-                            {{ strtoupper($item->title) }}
+                    ?>
+                    <?php $__currentLoopData = $collection_items; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <a href="<?php echo e($item->url); ?>" class="dropdown-category">
+                            <?php echo e(strtoupper($item->title)); ?>
+
                         </a>
-                    @endforeach
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </div>
 
                 <!-- Categories -->
                 <div class="dropdown-section">
                     <div class="dropdown-section-title">CATEGORIES</div>
-                    @php
+                    <?php
                     // Get all menu items that are linked to tags only
                     $category_items = [];
                     foreach ($shop_menu as $item) {
@@ -217,18 +221,19 @@ if (!$shop_menu) {
                             $category_items[] = $item;
                         }
                     }
-                    @endphp
-                    @foreach($category_items as $item)
-                        <a href="{{ $item->url }}" class="dropdown-category {{ strtoupper($item->title) === 'SALE' ? 'dropdown-sale' : '' }}">
-                            {{ strtoupper($item->title) }}
+                    ?>
+                    <?php $__currentLoopData = $category_items; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <a href="<?php echo e($item->url); ?>" class="dropdown-category <?php echo e(strtoupper($item->title) === 'SALE' ? 'dropdown-sale' : ''); ?>">
+                            <?php echo e(strtoupper($item->title)); ?>
+
                         </a>
-                    @endforeach
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </div>
 
                 <!-- Accessories -->
                 <div class="dropdown-section">
                     <div class="dropdown-section-title">ACCESSORIES</div>
-                    @php
+                    <?php
                     // Get the "Accessories" product category
                     $accessories_parent_cat = get_term_by('name', 'Accessories', 'product_cat');
                     $accessory_items = [];
@@ -256,21 +261,22 @@ if (!$shop_menu) {
                             );
                         }
                     }
-                    @endphp
-                    @foreach($accessory_items as $item)
-                        <a href="{{ $item->url }}" class="dropdown-category">
-                            {{ strtoupper($item->title) }}
+                    ?>
+                    <?php $__currentLoopData = $accessory_items; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <a href="<?php echo e($item->url); ?>" class="dropdown-category">
+                            <?php echo e(strtoupper($item->title)); ?>
+
                         </a>
-                    @endforeach
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </div>
             </div>
         </div>
-        @endif
+        <?php endif; ?>
     </div>
 </nav>
 
 <!-- Cart Drawer -->
-@if(!is_cart())
+<?php if(!is_cart()): ?>
 <div class="cart-drawer" id="cart-drawer">
     <div class="cart-drawer-overlay"></div>
     <div class="cart-drawer-content">
@@ -325,6 +331,6 @@ if (!$shop_menu) {
         </div>
     </div>
 </div>
-@endif
+<?php endif; ?>
 
-@endif
+<?php endif; ?><?php /**PATH /Users/dang/Local Sites/heygirlsbkk/app/public/wp-content/themes/heygirlsbkk/resources/views/components/navbar.blade.php ENDPATH**/ ?>

@@ -527,15 +527,27 @@ function handle_get_cart_contents() {
         );
     }
     
+    $cart_subtotal = strip_tags($cart->get_cart_subtotal());
+    $cart_total = strip_tags($cart->get_cart_total());
+    
+    // If total is empty or same as subtotal, use subtotal as total
+    if (empty($cart_total) || $cart_total === $cart_subtotal) {
+        $cart_total = $cart_subtotal;
+    }
+    
     $response_data = array(
         'items' => $cart_items,
-        'subtotal' => strip_tags($cart->get_cart_subtotal()),
-        'total' => strip_tags($cart->get_cart_total()),
+        'subtotal' => $cart_subtotal,
+        'total' => $cart_total,
         'count' => $cart->get_cart_contents_count()
     );
     
     // Debug: Log response data
     error_log('Cart response data: ' . print_r($response_data, true));
+    error_log('Cart subtotal: ' . $cart->get_cart_subtotal());
+    error_log('Cart total: ' . $cart->get_cart_total());
+    error_log('Cart subtotal (numeric): ' . $cart->get_subtotal());
+    error_log('Cart total (numeric): ' . $cart->get_total('edit'));
     
     wp_send_json_success($response_data);
 }
@@ -755,3 +767,72 @@ add_action('woocommerce_add_to_cart', function() {
         WC()->session->save_data();
     }
 });
+
+remove_action('woocommerce_before_cart_table', 'woocommerce_cart_totals_coupon_form');
+
+/**
+ * 🔇 Completely disable all WooCommerce system notices
+ */
+add_filter('woocommerce_add_notice', '__return_false');
+add_filter('woocommerce_add_error', '__return_false');
+add_filter('woocommerce_add_success', '__return_false');
+add_filter('woocommerce_add_message', '__return_false');
+
+/**
+ * Prevent WooCommerce from printing any existing notices
+ */
+remove_action('woocommerce_before_shop_loop', 'wc_print_notices', 10);
+remove_action('woocommerce_before_single_product', 'wc_print_notices', 10);
+remove_action('woocommerce_before_cart', 'wc_print_notices', 10);
+remove_action('woocommerce_before_checkout_form', 'wc_print_notices', 10);
+remove_action('woocommerce_before_account_navigation', 'wc_print_notices', 10);
+remove_action('woocommerce_before_my_account', 'wc_print_notices', 10);
+
+/**
+ * Override WooCommerce cart template to use Blade template
+ */
+add_filter('woocommerce_locate_template', function ($template, $template_name, $template_path) {
+    // Override cart templates
+    if ($template_name === 'cart/cart.php' || $template_name === 'cart.php') {
+        $blade_template = get_stylesheet_directory() . '/resources/views/woocommerce/cart.blade.php';
+        
+        if (file_exists($blade_template)) {
+            return $blade_template;
+        }
+    }
+    
+    return $template;
+}, 10, 3);
+
+/**
+ * Handle cart page specifically
+ */
+add_filter('template_include', function ($template) {
+    // Only use WooCommerce function, not URL detection
+    if (function_exists('is_cart') && is_cart()) {
+        $blade_template = get_stylesheet_directory() . '/resources/views/woocommerce/cart.blade.php';
+        
+        if (file_exists($blade_template)) {
+            return $blade_template;
+        }
+    }
+    
+    // Handle other Blade templates
+    if (str_ends_with($template, '.blade.php')) {
+        // Convert full path to Sage view name
+        $view = str_replace(
+            [get_stylesheet_directory() . '/resources/views/', '.blade.php'],
+            '',
+            $template
+        );
+        
+        try {
+            echo \Roots\view($view)->render();
+            exit; // Prevent WooCommerce from double-loading
+        } catch (Exception $e) {
+            // Silent fail - let WordPress handle the template
+        }
+    }
+    
+    return $template;
+}, 99);

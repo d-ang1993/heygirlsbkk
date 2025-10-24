@@ -342,13 +342,6 @@
   border-color: #ddd;
 }
 
-.clear-selection {
-  color: #666;
-  text-decoration: underline;
-  font-size: 0.9rem;
-  margin-top: 10px;
-  display: inline-block;
-}
 
 .quantity-selector {
   margin-bottom: 20px;
@@ -667,10 +660,19 @@
     gap: 20px;
   }
   
-  /* Mobile layout - hide thumbnails */
+  /* Mobile layout - full width image with dots */
   .product-images-carousel {
     flex-direction: column;
-    gap: 15px;
+    gap: 0;
+    margin: 0 -20px; /* Extend to full width */
+    width: 100vw; /* Full screen width */
+    position: relative;
+    left: 50%;
+    right: 50%;
+    margin-left: -50vw;
+    margin-right: -50vw;
+    margin-top: -40px; /* Remove top padding from single-product-page */
+    padding-top: 0;
   }
   
   .thumbnail-sidebar {
@@ -679,5 +681,105 @@
   
   .main-image-container {
     align-self: stretch;
+    margin: 0;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin-top: 0;
+    padding-top: 0;
+  }
+  
+  .main-image {
+    border-radius: 0; /* Remove border radius for full width */
+    height: 60vh; /* 60% viewport height */
+    width: 100vw; /* Full screen width */
+    margin: 0;
+    max-width: none;
+    min-width: 100vw;
+  }
+  
+  /* Hide arrows on mobile */
+  .carousel-arrow {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+  }
+  
+  /* Add dots for mobile - positioned at bottom center of main image */
+  .main-image-container .image-dots {
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    position: absolute;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    width: auto;
+  }
+  
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(4px);
+  }
+  
+  .dot:hover {
+    background: rgba(255, 255, 255, 0.8);
+    transform: scale(1.2);
+  }
+  
+  .dot.active {
+    background: #f271ba;
+    border-color: #f271ba;
+    transform: scale(1.3);
+  }
+  
+  /* Force dots to be centered */
+  .main-image-container .image-dots {
+    text-align: center;
+  }
+  
+  .main-image-container .image-dots .dot {
+    display: inline-block;
+    margin: 0 4px;
+  }
+}
+
+/* Additional mobile-specific rules */
+@media (max-width: 480px) {
+  .product-images-carousel {
+    margin: 0 -20px !important;
+    width: 100vw !important;
+  }
+  
+  .main-image {
+    height: 60vh !important;
+    width: 100vw !important;
+    border-radius: 0 !important;
+  }
+  
+  .carousel-arrow {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+  
+  .main-image-container .image-dots {
+    display: flex !important;
+    position: absolute !important;
+    bottom: 15px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    z-index: 10 !important;
   }
 }

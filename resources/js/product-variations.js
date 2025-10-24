@@ -86,24 +86,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
   
-  // Clear selection functionality
-  const clearSelection = document.querySelector('.clear-selection');
-  if (clearSelection) {
-    clearSelection.addEventListener('click', function(e) {
-      e.preventDefault();
-      
-      // Clear size selection
-      sizeButtons.forEach(b => b.classList.remove('selected'));
-      selectedSize = null;
-      selectedVariation = null;
-      
-      // Reset all availability states
-      resetAvailability();
-      
-      // Reset displays
-      updateProductDisplay();
-    });
-  }
   
   // Quantity controls
   const quantityValue = document.querySelector('.quantity-value');
@@ -461,9 +443,8 @@ function updateNativeForm(form) {
       } else if (key.startsWith('pa_')) {
         attrKey = `attribute_${key}`;
       } else {
-        // Convert 'sizes' to 'size' for the attribute key
-        const normalizedKey = key === 'sizes' ? 'size' : key;
-        attrKey = `attribute_pa_${normalizedKey}`;
+        // Use the key as-is for the attribute key
+        attrKey = `attribute_pa_${key}`;
       }
 
       // Find and update the attribute input

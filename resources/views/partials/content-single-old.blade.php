@@ -320,29 +320,6 @@
         });
       });
       
-      // Clear selection functionality
-      const clearSelection = document.querySelector('.clear-selection');
-      if (clearSelection) {
-        clearSelection.addEventListener('click', function(e) {
-          e.preventDefault();
-          
-          // Clear all selections
-          colorDots.forEach(d => d.classList.remove('selected'));
-          sizeButtons.forEach(b => b.classList.remove('selected'));
-          selectedColor = null;
-          selectedSize = null;
-          selectedVariation = null;
-          
-          // Reset all availability states
-          resetAvailability();
-          
-          // Reset product image
-          resetProductImage();
-          
-          // Reset displays
-          updateProductDisplay();
-        });
-      }
       
       // Quantity controls
       if (minusBtn && plusBtn && quantityInput) {

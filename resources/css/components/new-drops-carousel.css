@@ -109,9 +109,10 @@
   opacity: var(--image-opacity, 1);
 }
 
-.new-drops-slide:hover .new-drops-slide-image {
+/* Removed hover scale effect to prevent carousel movement */
+/* .new-drops-slide:hover .new-drops-slide-image {
   transform: scale(1.05);
-}
+} */
 
 /* ========================================
    BUTTON POSITIONING
@@ -409,9 +410,10 @@
   z-index: 1;
 }
 
-.new-drops-slide:hover::before {
+/* Removed hover overlay effect to prevent carousel movement */
+/* .new-drops-slide:hover::before {
   opacity: 1;
-}
+} */
 
 .new-drops-button-container {
   z-index: 2;

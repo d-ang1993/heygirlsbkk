@@ -1,6 +1,6 @@
 <!-- Product Variations -->
-@if($product_type === 'variable')
-  @php
+<?php if($product_type === 'variable'): ?>
+  <?php
     // Use the variations_data passed from the parent component, or fallback to getting it directly
     $product = wc_get_product($product->get_id() ?? $product);
     $variations = $product->get_available_variations();
@@ -52,19 +52,19 @@
       }
     }
     
-  @endphp
+  ?>
   
   <!-- Debug Script -->
   <script>
-    console.log("Product ID HELLO:", {!! $product->get_id() !!});
-    console.log("Product Type:", "{!! $product_type !!}");
-    console.log("All Variations:", {!! json_encode($variations) !!});
-    console.log("All Attributes:", {!! json_encode($attributes) !!});
-    console.log("Color Variations:", {!! json_encode($color_variations) !!});
-    console.log("Size Variations:", {!! json_encode($size_variations) !!});
-    console.log("Product is variable:", {!! $product->is_type('variable') ? 'true' : 'false' !!});
-    console.log("Has attributes:", {!! $product->has_attributes() ? 'true' : 'false' !!});
-    console.log("Variations data passed:", {!! json_encode($variations_data ?? []) !!});
+    console.log("Product ID HELLO:", <?php echo $product->get_id(); ?>);
+    console.log("Product Type:", "<?php echo $product_type; ?>");
+    console.log("All Variations:", <?php echo json_encode($variations); ?>);
+    console.log("All Attributes:", <?php echo json_encode($attributes); ?>);
+    console.log("Color Variations:", <?php echo json_encode($color_variations); ?>);
+    console.log("Size Variations:", <?php echo json_encode($size_variations); ?>);
+    console.log("Product is variable:", <?php echo $product->is_type('variable') ? 'true' : 'false'; ?>);
+    console.log("Has attributes:", <?php echo $product->has_attributes() ? 'true' : 'false'; ?>);
+    console.log("Variations data passed:", <?php echo json_encode($variations_data ?? []); ?>);
   </script>
   
   <!-- Single Color Styling -->
@@ -112,13 +112,13 @@
   </style>
   
   <!-- Color Variations -->
-  @if(!empty($color_variations))
+  <?php if(!empty($color_variations)): ?>
     <div class="color-selection">
       <!-- <label class="variation-label">Color</label> -->
       <div class="selected-color-display" id="selected-color-display">
         <span class="selected-color-label">Color: <span id="selected-color-name" 
-          @if(count($color_variations) === 1)
-            @php
+          <?php if(count($color_variations) === 1): ?>
+            <?php
               $single_color_key = array_keys($color_variations)[0];
               $single_color_name = str_replace(['-', '_'], ' ', $single_color_key);
               $single_color_name = ucwords($single_color_name);
@@ -132,21 +132,22 @@
                   $single_color_value = $color_meta;
                 }
               }
-            @endphp
-            style="color: {{ $single_color_value }};"
-            data-color="{{ $single_color_value }}"
-          @endif
+            ?>
+            style="color: <?php echo e($single_color_value); ?>;"
+            data-color="<?php echo e($single_color_value); ?>"
+          <?php endif; ?>
         >
-          @if(count($color_variations) === 1)
-            {{ $single_color_name }}
-          @else
+          <?php if(count($color_variations) === 1): ?>
+            <?php echo e($single_color_name); ?>
+
+          <?php else: ?>
             Select a color
-          @endif
+          <?php endif; ?>
         </span></span>
       </div>
-      <div class="color-dots {{ count($color_variations) === 1 ? 'single-color' : '' }}">
-        @foreach($color_variations as $color_key => $variation)
-          @php
+      <div class="color-dots <?php echo e(count($color_variations) === 1 ? 'single-color' : ''); ?>">
+        <?php $__currentLoopData = $color_variations; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $color_key => $variation): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+          <?php
             $color_name = str_replace(['-', '_'], ' ', $color_key);
             $color_name = ucwords($color_name);
             
@@ -180,25 +181,25 @@
                 }
               }
             }
-          @endphp
-          <button class="color-dot {{ !$color_has_stock ? 'out-of-stock' : '' }} {{ count($color_variations) === 1 ? 'single-color-selected' : '' }}" 
-                  style="background-color: {{ $dot_color }};"
-                  title="{{ $color_name }}"
-                  data-color="{{ $color_key }}"
-                  data-color-name="{{ $color_name }}"
-                  data-variation-id="{{ $variation['variation_id'] }}">
-            @if(!$color_has_stock)
+          ?>
+          <button class="color-dot <?php echo e(!$color_has_stock ? 'out-of-stock' : ''); ?> <?php echo e(count($color_variations) === 1 ? 'single-color-selected' : ''); ?>" 
+                  style="background-color: <?php echo e($dot_color); ?>;"
+                  title="<?php echo e($color_name); ?>"
+                  data-color="<?php echo e($color_key); ?>"
+                  data-color-name="<?php echo e($color_name); ?>"
+                  data-variation-id="<?php echo e($variation['variation_id']); ?>">
+            <?php if(!$color_has_stock): ?>
               <span class="out-of-stock-x">×</span>
-            @endif
+            <?php endif; ?>
           </button>
-        @endforeach
+        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
       </div>
     </div>
-  @endif
+  <?php endif; ?>
   
   <!-- Size Component -->
-  @if(!empty($sizes))
-    @php
+  <?php if(!empty($sizes)): ?>
+    <?php
       // Define size order
       $size_order = ['xs', 's', 'm', 'l', 'xl', 'xxl', 'xxxl'];
       
@@ -220,12 +221,12 @@
           $sorted_sizes[] = $size;
         }
       }
-    @endphp
+    ?>
     <div class="size-selection">
       <label class="variation-label">Size</label>
       <div class="size-buttons">
-        @foreach($sorted_sizes as $size)
-          @php
+        <?php $__currentLoopData = $sorted_sizes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $size): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+          <?php
             $size_name = str_replace(['-', '_'], ' ', $size);
             $size_name = strtoupper($size_name);
             
@@ -258,39 +259,40 @@
                 }
               }
             }
-          @endphp
-          <button class="size-button {{ !$size_in_stock ? 'out-of-stock' : '' }}"
-                  data-size="{{ $size }}">
-            {{ $size_name }}
+          ?>
+          <button class="size-button <?php echo e(!$size_in_stock ? 'out-of-stock' : ''); ?>"
+                  data-size="<?php echo e($size); ?>">
+            <?php echo e($size_name); ?>
+
           </button>
-        @endforeach
+        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
       </div>
     </div>
-  @else
+  <?php else: ?>
     <!-- Debug info for sizes -->
-    @if(current_user_can('manage_options'))
+    <?php if(current_user_can('manage_options')): ?>
       <div style="background: #f0f0f0; padding: 10px; margin: 10px 0; border: 1px solid #ccc; font-size: 12px;">
         <strong>Size Debug Info:</strong><br>
-        Sizes found: {{ count($sizes) }}<br>
-        Sizes array: {{ json_encode($sizes) }}<br>
-        Product type: {{ $product_type }}<br>
-        @if($product_type === 'variable')
-          Variations count: {{ count($variations_data) }}<br>
-          @if(!empty($variations_data))
-            All variations data: {{ json_encode($variations_data) }}<br>
-          @endif
-          @php
+        Sizes found: <?php echo e(count($sizes)); ?><br>
+        Sizes array: <?php echo e(json_encode($sizes)); ?><br>
+        Product type: <?php echo e($product_type); ?><br>
+        <?php if($product_type === 'variable'): ?>
+          Variations count: <?php echo e(count($variations_data)); ?><br>
+          <?php if(!empty($variations_data)): ?>
+            All variations data: <?php echo e(json_encode($variations_data)); ?><br>
+          <?php endif; ?>
+          <?php
             $raw_variations = $product->get_available_variations();
-          @endphp
-          Raw variations count: {{ count($raw_variations) }}<br>
-          @if(!empty($raw_variations))
-            First raw variation: {{ json_encode($raw_variations[0] ?? []) }}<br>
-          @endif
-        @endif
+          ?>
+          Raw variations count: <?php echo e(count($raw_variations)); ?><br>
+          <?php if(!empty($raw_variations)): ?>
+            First raw variation: <?php echo e(json_encode($raw_variations[0] ?? [])); ?><br>
+          <?php endif; ?>
+        <?php endif; ?>
       </div>
-    @endif
-  @endif
-@endif
+    <?php endif; ?>
+  <?php endif; ?>
+<?php endif; ?>
 
 <script>
 // Color Selection Functionality
@@ -416,4 +418,4 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-</script>
+</script><?php /**PATH /Users/dang/Local Sites/heygirlsbkk/app/public/wp-content/themes/heygirlsbkk/resources/views/components/product-variations.blade.php ENDPATH**/ ?>

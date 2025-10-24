@@ -1,4 +1,4 @@
-@php
+<?php
     // Get the current WooCommerce product if none provided
     $product = $product ?? wc_get_product();
     
@@ -23,33 +23,33 @@
     if (empty($all_images)) {
         $all_images = [wc_placeholder_img_src('woocommerce_single')];
     }
-@endphp
+?>
 
 <!-- Product Images Carousel -->
 <div class="product-images-carousel">
     <!-- Thumbnail Sidebar (if multiple images) -->
-    @if(count($all_images) > 1)
+    <?php if(count($all_images) > 1): ?>
         <div class="thumbnail-sidebar">
-            @foreach($all_images as $index => $image)
-                <div class="thumbnail-container {{ $index === 0 ? 'active' : '' }}" data-image-index="{{ $index }}">
+            <?php $__currentLoopData = $all_images; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $image): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <div class="thumbnail-container <?php echo e($index === 0 ? 'active' : ''); ?>" data-image-index="<?php echo e($index); ?>">
                     <img 
-                        src="{{ $image }}" 
-                        alt="{{ $product_name }} - Image {{ $index + 1 }}" 
+                        src="<?php echo e($image); ?>" 
+                        alt="<?php echo e($product_name); ?> - Image <?php echo e($index + 1); ?>" 
                         class="thumbnail-image"
                         loading="lazy"
                         width="60"
                         height="60"
                     />
                 </div>
-            @endforeach
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
         </div>
-    @endif
+    <?php endif; ?>
     
     <div class="main-image-container">
         <div class="main-image" id="main-image">
             <img 
-                src="{{ $all_images[0] }}" 
-                alt="{{ $product_name }}" 
+                src="<?php echo e($all_images[0]); ?>" 
+                alt="<?php echo e($product_name); ?>" 
                 class="product-main-image"
                 id="main-product-image"
                 loading="eager"
@@ -59,7 +59,7 @@
             />
             
             <!-- Navigation Arrows (if multiple images) -->
-            @if(count($all_images) > 1)
+            <?php if(count($all_images) > 1): ?>
                 <button class="carousel-arrow carousel-arrow--prev" data-direction="-1">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="15,18 9,12 15,6"></polyline>
@@ -70,24 +70,24 @@
                         <polyline points="9,18 15,12 9,6"></polyline>
                     </svg>
                 </button>
-            @endif
+            <?php endif; ?>
         </div>
         
         <!-- Image Dots (for mobile) - inside main image container -->
-        @if(count($all_images) > 1)
+        <?php if(count($all_images) > 1): ?>
             <div class="image-dots">
-                @foreach($all_images as $index => $image)
-                    <span class="dot {{ $index === 0 ? 'active' : '' }}" onclick="selectImage({{ $index }})"></span>
-                @endforeach
+                <?php $__currentLoopData = $all_images; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $image): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <span class="dot <?php echo e($index === 0 ? 'active' : ''); ?>" onclick="selectImage(<?php echo e($index); ?>)"></span>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </div>
-        @endif
+        <?php endif; ?>
     </div>
 </div>
 
 <script>
 // Product Images Carousel - Optimized for immediate response
 let currentImageIndex = 0;
-const images = @json($all_images);
+const images = <?php echo json_encode($all_images, 15, 512) ?>;
 
 function changeImage(direction) {
     if (images.length <= 1) return;
@@ -233,4 +233,4 @@ function handleSwipe() {
         }
     }
 }
-</script>
+</script><?php /**PATH /Users/dang/Local Sites/heygirlsbkk/app/public/wp-content/themes/heygirlsbkk/resources/views/components/product-images.blade.php ENDPATH**/ ?>

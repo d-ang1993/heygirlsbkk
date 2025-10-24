@@ -1,4 +1,4 @@
-@php
+<?php
 $show     = get_theme_mod('hero_enable', true);
 $heading  = get_theme_mod('hero_heading', 'NEW ARRIVAL');
 $sub      = get_theme_mod('hero_subheading', '');
@@ -63,25 +63,25 @@ if ($carouselEnable && $carouselCategory) {
         ]);
     }
 }
-@endphp
+?>
 
-@if($show)
-<section class="hero relative overflow-hidden" style="--hero-height: {{ $height }};">
-  @if($carouselEnable && !empty($carouselProducts))
+<?php if($show): ?>
+<section class="hero relative overflow-hidden" style="--hero-height: <?php echo e($height); ?>;">
+  <?php if($carouselEnable && !empty($carouselProducts)): ?>
     <!-- Product Carousel Background -->
     <div class="hero__carousel">
-      @foreach($carouselProducts as $index => $product)
-        <div class="hero__carousel-item {{ $index === 0 ? 'active' : '' }}" data-slide="{{ $index }}">
-          <a href="{{ $product->get_permalink() }}" class="hero__carousel-link" style="z-index: 5;">
-            <img src="{{ wp_get_attachment_image_url($product->get_image_id(), 'full') }}" 
-                 alt="{!! $product->get_name() !!}" 
+      <?php $__currentLoopData = $carouselProducts; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $product): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+        <div class="hero__carousel-item <?php echo e($index === 0 ? 'active' : ''); ?>" data-slide="<?php echo e($index); ?>">
+          <a href="<?php echo e($product->get_permalink()); ?>" class="hero__carousel-link" style="z-index: 5;">
+            <img src="<?php echo e(wp_get_attachment_image_url($product->get_image_id(), 'full')); ?>" 
+                 alt="<?php echo $product->get_name(); ?>" 
                  class="hero__carousel-image" />
           </a>
         </div>
-      @endforeach
+      <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
       
       <!-- Navigation Arrows -->
-      @if(count($carouselProducts) > 1)
+      <?php if(count($carouselProducts) > 1): ?>
         <div class="hero__carousel-arrows">
           <button class="hero__carousel-arrow hero__carousel-arrow--prev" onclick="changeHeroSlide(-1, event)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -94,18 +94,18 @@ if ($carouselEnable && $carouselCategory) {
             </svg>
           </button>
         </div>
-      @endif
+      <?php endif; ?>
     </div>
-  @else
+  <?php else: ?>
     <!-- Static Background -->
-    @if(!empty($bgUrl) && $bgUrl !== '')
+    <?php if(!empty($bgUrl) && $bgUrl !== ''): ?>
       <div class="hero__bg" style="
-        background-image: url('{{ $bgUrl }}');
-        background-position: {{ $bgPosition }};
-        background-size: {{ $bgSize }};
-        background-repeat: {{ $bgRepeat }};
-        background-attachment: {{ $bgAttachment }};
-        background-color: {{ $bgColor }};
+        background-image: url('<?php echo e($bgUrl); ?>');
+        background-position: <?php echo e($bgPosition); ?>;
+        background-size: <?php echo e($bgSize); ?>;
+        background-repeat: <?php echo e($bgRepeat); ?>;
+        background-attachment: <?php echo e($bgAttachment); ?>;
+        background-color: <?php echo e($bgColor); ?>;
         position: absolute; 
         top: 0; 
         left: 0; 
@@ -113,43 +113,43 @@ if ($carouselEnable && $carouselCategory) {
         height: 100%; 
         z-index: 1;
       "></div>
-    @else
+    <?php else: ?>
       <!-- Fallback background when no image is set -->
-      <div class="hero__bg hero__bg--fallback" style="background-color: {{ $bgColor }};"></div>
-    @endif
-  @endif
+      <div class="hero__bg hero__bg--fallback" style="background-color: <?php echo e($bgColor); ?>;"></div>
+    <?php endif; ?>
+  <?php endif; ?>
   
-  <div class="hero__overlay" style="--overlay-opacity: {{ $overlay }}; opacity: var(--overlay-opacity);"></div>
+  <div class="hero__overlay" style="--overlay-opacity: <?php echo e($overlay); ?>; opacity: var(--overlay-opacity);"></div>
 
   <div class="container">
-    <div class="hero__inner hero__inner--{{ $align }}">
-      <h1 class="hero__title">{!! $heading !!}</h1>
+    <div class="hero__inner hero__inner--<?php echo e($align); ?>">
+      <h1 class="hero__title"><?php echo $heading; ?></h1>
 
-      @if($sub)
-        <p class="hero__subtitle">{!! $sub !!}</p>
-      @endif
+      <?php if($sub): ?>
+        <p class="hero__subtitle"><?php echo $sub; ?></p>
+      <?php endif; ?>
 
-      @if($ctaText)
-        <a href="{{ $ctaUrl }}" class="btn btn-primary hero__cta">{!! $ctaText !!}</a>
-      @endif
+      <?php if($ctaText): ?>
+        <a href="<?php echo e($ctaUrl); ?>" class="btn btn-primary hero__cta"><?php echo $ctaText; ?></a>
+      <?php endif; ?>
     </div>
   </div>
 
-  @if($carouselEnable && !empty($carouselProducts) && count($carouselProducts) > 1)
+  <?php if($carouselEnable && !empty($carouselProducts) && count($carouselProducts) > 1): ?>
     <!-- Carousel Navigation -->
     <div class="hero__carousel-nav">
-      @foreach($carouselProducts as $index => $product)
-        <button class="hero__carousel-dot {{ $index === 0 ? 'active' : '' }}" data-slide="{{ $index }}" onclick="selectHeroSlide({{ $index }})"></button>
-      @endforeach
+      <?php $__currentLoopData = $carouselProducts; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $product): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+        <button class="hero__carousel-dot <?php echo e($index === 0 ? 'active' : ''); ?>" data-slide="<?php echo e($index); ?>" onclick="selectHeroSlide(<?php echo e($index); ?>)"></button>
+      <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
     </div>
-  @endif
+  <?php endif; ?>
 
-  @if($carouselEnable && !empty($carouselProducts) && count($carouselProducts) > 1)
+  <?php if($carouselEnable && !empty($carouselProducts) && count($carouselProducts) > 1): ?>
     <!-- Carousel JavaScript -->
     <script>
     // Hero Carousel - Enhanced functionality from hero-banner.blade.php
     let currentHeroSlide = 0;
-    const totalHeroSlides = {{ count($carouselProducts) }};
+    const totalHeroSlides = <?php echo e(count($carouselProducts)); ?>;
     let heroAutoPlayInterval;
 
     // Enhanced showSlide function (adapted from hero-banner.blade.php)
@@ -290,7 +290,8 @@ if ($carouselEnable && $carouselCategory) {
         setTimeout(initHeroCarousel, 100);
     }
     </script>
-  @endif
+  <?php endif; ?>
 </section>
 
-@endif
+<?php endif; ?>
+<?php /**PATH /Users/dang/Local Sites/heygirlsbkk/app/public/wp-content/themes/heygirlsbkk/resources/views/partials/hero.blade.php ENDPATH**/ ?>

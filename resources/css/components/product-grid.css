@@ -1,4 +1,13 @@
 /* Product Grid Styles - NEW ARRIVAL Style */
+
+/* Hiragino Sans GB Font for Product Grid */
+@font-face {
+  font-family: 'Hiragino Sans GB';
+  src: url('../../public/fonts/hiragino-sans-gb.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
 .product-grid-section {
   padding: 40px 0;
   background: #fff;
@@ -13,7 +22,7 @@
 .new-arrival-section .container {
   max-width: 1600px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 30px;
 }
 
 .section-header {
@@ -28,6 +37,7 @@
   font-weight: 700;
   color: #000;
   margin: 0;
+  font-family: 'Hiragino Sans GB', 'Helvetica Neue', Arial, sans-serif;
 }
 
 .view-all-link {
@@ -167,6 +177,7 @@
   display: flex;
   align-items: center;
   justify-content: center; /* Centered alignment */
+  font-family: 'Hiragino Sans GB', 'Helvetica Neue', Arial, sans-serif;
 }
 
 /* Product price alignment from bottom */
@@ -182,6 +193,7 @@
   justify-content: center;
   flex-direction: column;
   gap: 1px; /* Tighter gap between price lines */
+  font-family: 'Hiragino Sans GB', 'Helvetica Neue', Arial, sans-serif;
 }
 
 /* Color swatches - reserve space even when not present */
@@ -254,12 +266,14 @@
   font-size: 11px; /* Much smaller text like in the image */
   font-weight: 600;
   color: #000;
+  font-family: 'Hiragino Sans GB', 'Helvetica Neue', Arial, sans-serif;
 }
 
 .price-regular {
   font-size: 9px;
   color: #999;
   text-decoration: line-through;
+  font-family: 'Hiragino Sans GB', 'Helvetica Neue', Arial, sans-serif;
 }
 
 @media (max-width: 768px) {

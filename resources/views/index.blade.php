@@ -17,7 +17,28 @@ $sectionMap = [
 
 @foreach($sections as $section)
   @if(isset($sectionMap[$section]))
-    @include($sectionMap[$section])
+    @if($section === 'hero')
+      @include($sectionMap[$section], [
+        'show' => get_theme_mod('hero_enable', true),
+        'heading' => get_theme_mod('hero_heading', 'NEW ARRIVAL'),
+        'subheading' => get_theme_mod('hero_subheading', 'Korean/Japanese fashion drops • 24h launch'),
+        'ctaText' => get_theme_mod('hero_cta_text', 'Shop Now'),
+        'ctaUrl' => get_theme_mod('hero_cta_url', '/shop'),
+        'bgImage' => get_theme_mod('hero_bg_image'),
+        'bgPosition' => get_theme_mod('hero_bg_position', 'center center'),
+        'bgSize' => get_theme_mod('hero_bg_size', 'cover'),
+        'bgRepeat' => get_theme_mod('hero_bg_repeat', 'no-repeat'),
+        'bgColor' => get_theme_mod('hero_bg_color', '#f8f9fa'),
+        'bgAttachment' => get_theme_mod('hero_bg_attachment', 'scroll'),
+        'align' => get_theme_mod('hero_align', 'center'),
+        'height' => get_theme_mod('hero_height', '60vh'),
+        'overlay' => get_theme_mod('hero_overlay', 0.35),
+        'carouselEnable' => get_theme_mod('hero_carousel_enable', false),
+        'carouselProducts' => []
+      ])
+    @else
+      @include($sectionMap[$section])
+    @endif
   @endif
 @endforeach
 
