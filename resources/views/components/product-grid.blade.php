@@ -46,15 +46,15 @@
                 
                 <div class="product-card" data-product-id="{{ $product->get_id() }}">
                     <div class="product-image {{ $has_multiple_images ? 'has-carousel' : '' }}" 
-                         data-images='@json(array_map(function($id) { return wp_get_attachment_image_url($id, "product-grid"); }, $image_ids))'>
+                         data-images='@json(array_map(function($id) { return wp_get_attachment_image_url($id, "large"); }, $image_ids))'>
                         <a href="{{ $product->get_permalink() }}">
                             <img class="product-main-image" 
-                                 src="{{ wp_get_attachment_image_url($product->get_image_id(), 'product-grid') }}" 
+                                 src="{{ wp_get_attachment_image_url($product->get_image_id(), 'large') }}" 
                                  alt="{{ $product->get_name() }}" 
                                  loading="lazy"
                                  decoding="async"
-                                 width="500"
-                                 height="500" />
+                                 width="800"
+                                 height="800" />
                         </a>
                         
                         @if($has_multiple_images)

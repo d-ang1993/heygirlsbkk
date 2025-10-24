@@ -92,6 +92,9 @@
   height: 450px; /* Increased height for taller cards */
   overflow: hidden;
   background: #f8f9fa;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 .product-image img {
@@ -99,6 +102,13 @@
   height: 100%;
   object-fit: cover;
   transition: transform 0.3s ease;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  image-rendering: optimize-contrast;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
 }
 
 .product-card:hover .product-image img {
@@ -287,10 +297,38 @@
   
   .product-image {
     height: 350px;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+  
+  .product-image img {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    image-rendering: optimize-contrast;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
   }
   
   .section-title {
     font-size: 1.5rem;
+    font-family: 'Hiragino Sans GB', 'Helvetica Neue', Arial, sans-serif;
+  }
+  
+  .product-info .product-title {
+    font-family: 'Hiragino Sans GB', 'Helvetica Neue', Arial, sans-serif;
+  }
+  
+  .product-price {
+    font-family: 'Hiragino Sans GB', 'Helvetica Neue', Arial, sans-serif;
+  }
+  
+  .price-current,
+  .price-sale {
+    font-family: 'Hiragino Sans GB', 'Helvetica Neue', Arial, sans-serif;
+  }
+  
+  .price-regular {
+    font-family: 'Hiragino Sans GB', 'Helvetica Neue', Arial, sans-serif;
   }
 }
 .hero__carousel-dot{width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,0.6);background:transparent;cursor:pointer;transition:all 0.3s ease;position:relative}
@@ -320,5 +358,26 @@
   .hero__carousel-arrow{width:35px;height:35px}
   .hero__carousel-arrow svg{width:14px;height:14px}
   .hero__carousel-nav{bottom:15px}
+  
+  .section-title {
+    font-family: 'Hiragino Sans GB', 'Helvetica Neue', Arial, sans-serif;
+  }
+  
+  .product-info .product-title {
+    font-family: 'Hiragino Sans GB', 'Helvetica Neue', Arial, sans-serif;
+  }
+  
+  .product-price {
+    font-family: 'Hiragino Sans GB', 'Helvetica Neue', Arial, sans-serif;
+  }
+  
+  .price-current,
+  .price-sale {
+    font-family: 'Hiragino Sans GB', 'Helvetica Neue', Arial, sans-serif;
+  }
+  
+  .price-regular {
+    font-family: 'Hiragino Sans GB', 'Helvetica Neue', Arial, sans-serif;
+  }
 }
 

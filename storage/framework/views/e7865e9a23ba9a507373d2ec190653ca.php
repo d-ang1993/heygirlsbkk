@@ -81,15 +81,15 @@ unset($__defined_vars, $__key, $__value); ?>
                 
                 <div class="product-card" data-product-id="<?php echo e($product->get_id()); ?>">
                     <div class="product-image <?php echo e($has_multiple_images ? 'has-carousel' : ''); ?>" 
-                         data-images='<?php echo json_encode(array_map(function($id) { return wp_get_attachment_image_url($id, "product-grid"); }, $image_ids)) ?>'>
+                         data-images='<?php echo json_encode(array_map(function($id) { return wp_get_attachment_image_url($id, "large"); }, $image_ids)) ?>'>
                         <a href="<?php echo e($product->get_permalink()); ?>">
                             <img class="product-main-image" 
-                                 src="<?php echo e(wp_get_attachment_image_url($product->get_image_id(), 'product-grid')); ?>" 
+                                 src="<?php echo e(wp_get_attachment_image_url($product->get_image_id(), 'large')); ?>" 
                                  alt="<?php echo e($product->get_name()); ?>" 
                                  loading="lazy"
                                  decoding="async"
-                                 width="500"
-                                 height="500" />
+                                 width="800"
+                                 height="800" />
                         </a>
                         
                         <?php if($has_multiple_images): ?>
