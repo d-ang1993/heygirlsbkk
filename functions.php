@@ -527,27 +527,15 @@ function handle_get_cart_contents() {
         );
     }
     
-    $cart_subtotal = strip_tags($cart->get_cart_subtotal());
-    $cart_total = strip_tags($cart->get_cart_total());
-    
-    // If total is empty or same as subtotal, use subtotal as total
-    if (empty($cart_total) || $cart_total === $cart_subtotal) {
-        $cart_total = $cart_subtotal;
-    }
-    
     $response_data = array(
         'items' => $cart_items,
-        'subtotal' => $cart_subtotal,
-        'total' => $cart_total,
+        'subtotal' => strip_tags($cart->get_cart_subtotal()),
+        'total' => strip_tags($cart->get_cart_total()),
         'count' => $cart->get_cart_contents_count()
     );
     
     // Debug: Log response data
     error_log('Cart response data: ' . print_r($response_data, true));
-    error_log('Cart subtotal: ' . $cart->get_cart_subtotal());
-    error_log('Cart total: ' . $cart->get_cart_total());
-    error_log('Cart subtotal (numeric): ' . $cart->get_subtotal());
-    error_log('Cart total (numeric): ' . $cart->get_total('edit'));
     
     wp_send_json_success($response_data);
 }
