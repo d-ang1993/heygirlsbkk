@@ -56,7 +56,7 @@
     border-color: #e5e7eb;
   }
   
-  /* ========================
+     /* ========================
      Product Images
      ======================== */
    .related-product-card img {
@@ -66,10 +66,17 @@
      border-bottom: 1px solid #f2f2f2;
      background: #f8f9fa;
      transition: transform 0.3s ease;
+     image-rendering: -webkit-optimize-contrast;
+     image-rendering: crisp-edges;
+     image-rendering: optimize-contrast;
+     -webkit-backface-visibility: hidden;
+     backface-visibility: hidden;
+     transform: translateZ(0);
+     will-change: transform;
    }
   
   .related-product-card:hover img {
-    transform: scale(1.02);
+    transform: scale(1.02) translateZ(0);
   }
   
   /* ========================
@@ -363,6 +370,8 @@
    
      .related-product-card img {
        height: 350px;
+       -webkit-transform: translateZ(0);
+       transform: translateZ(0);
      }
   
     .related-carousel-arrow {
@@ -388,6 +397,8 @@
 
      .related-product-card img {
        height: 300px;
+       -webkit-transform: translateZ(0);
+       transform: translateZ(0);
      }
   
     .related-products h2 {
