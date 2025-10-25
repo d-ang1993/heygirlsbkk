@@ -200,24 +200,45 @@ document.addEventListener('DOMContentLoaded', function () {
         cartEmpty.style.display = 'none';
         cartFooter.style.display = 'block';
   
-        cartItems.innerHTML = cartData.items.map(item => `
+        cartItems.innerHTML = cartData.items.map(item => {
+          // Parse variation data to extract color and size
+          let color = '';
+          let size = '';
+          
+          if (item.variation) {
+            // Try to extract color and size from variation string
+            const variationMatch = item.variation.match(/Color:?\s*([^,<]+)/i);
+            if (variationMatch) color = variationMatch[1].trim();
+            
+            const sizeMatch = item.variation.match(/Size:?\s*([^,<]+)/i);
+            if (sizeMatch) size = sizeMatch[1].trim();
+          }
+          
+          return `
           <div class="cart-item" data-cart-item-key="${item.cart_item_key}">
             <div class="cart-item-image">
-              <img src="${item.image}" alt="${item.name}" loading="lazy">
+              <img src="${item.image}" alt="${item.productName || item.name}" loading="lazy">
             </div>
             <div class="cart-item-details">
-              <div class="cart-item-name">${item.name}</div>
-              ${item.variation ? `<div class="cart-item-variation">${item.variation}</div>` : ''}
-              <div class="cart-item-price">${item.price}</div>
-              <div class="cart-item-quantity">
-                <button class="quantity-btn minus" data-cart-item-key="${item.cart_item_key}">-</button>
-                <input type="number" class="quantity-input" value="${item.quantity}" min="1" data-cart-item-key="${item.cart_item_key}">
-                <button class="quantity-btn plus" data-cart-item-key="${item.cart_item_key}">+</button>
+              <div class="cart-item-top">
+                <div class="cart-item-info">
+                  <div class="cart-item-name">${item.productName || item.name}</div>
+                  ${color ? `<div class="cart-item-variation">${color}</div>` : ''}
+                  ${size ? `<div class="cart-item-variation">${size}</div>` : ''}
+                </div>
+                <div class="cart-item-price">${item.price}</div>
               </div>
-              <button class="cart-item-remove" data-cart-item-key="${item.cart_item_key}">Remove</button>
+              <div class="cart-item-bottom">
+                <div class="cart-item-quantity">
+                  <button class="quantity-btn minus" data-cart-item-key="${item.cart_item_key}">-</button>
+                  <input type="number" class="quantity-input" value="${item.quantity}" min="1" data-cart-item-key="${item.cart_item_key}">
+                  <button class="quantity-btn plus" data-cart-item-key="${item.cart_item_key}">+</button>
+                </div>
+                <button class="cart-item-remove" data-cart-item-key="${item.cart_item_key}">Remove</button>
+              </div>
             </div>
           </div>
-        `).join('');
+        `}).join('');
   
         // ✅ FIXED: Reliable subtotal + total updates
         setTimeout(() => {

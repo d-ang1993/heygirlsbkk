@@ -97,7 +97,7 @@
 }
 
 .navbar-logo {
-  font-family: 'Times New Roman', serif;
+  /* font-family: 'Times New Roman', serif; */
   font-size: 24px;
   font-weight: 400;
   color: #000;
@@ -332,7 +332,6 @@
   font-size: 14px;
   font-weight: 400;
   color: #000;
-  font-family: sans-serif;
   text-decoration: underline;
   min-width: 16px;
   text-align: center;

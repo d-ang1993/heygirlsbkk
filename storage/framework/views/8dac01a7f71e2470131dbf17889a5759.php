@@ -55,8 +55,16 @@
       <?php endif; ?>
       
       
-      <?php echo do_shortcode('[ti_wishlists_addtowishlist product_id="' . $product_id . '" variation_id="0"]'); ?>
+      
+      <?php if($product_type === 'variable'): ?>
+        
+        <?php echo do_shortcode('[ti_wishlists_addtowishlist product_id="' . $product_id . '" variation_id="0"]'); ?>
 
+      <?php else: ?>
+        
+        <?php echo do_shortcode('[ti_wishlists_addtowishlist product_id="' . $product_id . '"]'); ?>
+
+      <?php endif; ?>
     </div>
   <?php else: ?>
     <div class="product-unavailable">
@@ -64,4 +72,5 @@
     </div>
   <?php endif; ?>
 </div>
+
 <?php /**PATH /Users/dang/Local Sites/heygirlsbkk/app/public/wp-content/themes/heygirlsbkk/resources/views/components/product-form.blade.php ENDPATH**/ ?>

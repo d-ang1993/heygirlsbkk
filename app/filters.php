@@ -122,3 +122,21 @@ add_filter('body_class', function ($classes) {
     
     return $classes;
 });
+/**
+ * TI Wishlist page template override
+ */
+add_filter('template_include', function ($template) {
+    // Check if we're on the wishlist page
+    if (is_page('wishlist') || (function_exists('tinv_url_wishlist_default') && is_page(tinv_url_wishlist_default()))) {
+        $wishlist_template = locate_template(['resources/views/woocommerce/wishlist.blade.php']);
+        
+        if ($wishlist_template) {
+            return $wishlist_template;
+        }
+    }
+    
+    return $template;
+}, 99);
+
+
+

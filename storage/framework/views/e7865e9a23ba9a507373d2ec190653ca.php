@@ -81,15 +81,18 @@ unset($__defined_vars, $__key, $__value); ?>
                 
                 <div class="product-card" data-product-id="<?php echo e($product->get_id()); ?>">
                     <div class="product-image <?php echo e($has_multiple_images ? 'has-carousel' : ''); ?>" 
-                         data-images='<?php echo json_encode(array_map(function($id) { return wp_get_attachment_image_url($id, "large"); }, $image_ids)) ?>'>
+                         data-images='<?php echo json_encode(array_map(function($id) { return wp_get_attachment_image_url($id, "product-carousel"); }, $image_ids)) ?>'>
                         <a href="<?php echo e($product->get_permalink()); ?>">
                             <img class="product-main-image" 
-                                 src="<?php echo e(wp_get_attachment_image_url($product->get_image_id(), 'large')); ?>" 
+                                 src="<?php echo e(wp_get_attachment_image_url($product->get_image_id(), 'product-grid') ?: wc_placeholder_img_src('product-grid')); ?>" 
                                  alt="<?php echo e($product->get_name()); ?>" 
                                  loading="lazy"
                                  decoding="async"
-                                 width="800"
-                                 height="800" />
+                                 width="400"
+                                 height="400"
+                                 style="background-color: #f8f9fa;"
+                                 onload="this.style.opacity=1"
+                                 onerror="this.src='<?php echo e(wc_placeholder_img_src('product-grid')); ?>'" />
                         </a>
                         
                         <?php if($has_multiple_images): ?>
@@ -574,6 +577,28 @@ unset($__defined_vars, $__key, $__value); ?>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const productCards = document.querySelectorAll('.product-card');
+    
+    // Optimize image loading with Intersection Observer
+    const imageObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const img = entry.target;
+                if (img.dataset.src) {
+                    img.src = img.dataset.src;
+                    img.removeAttribute('data-src');
+                    observer.unobserve(img);
+                }
+            }
+        });
+    }, {
+        rootMargin: '50px 0px',
+        threshold: 0.1
+    });
+    
+    // Observe all product images
+    document.querySelectorAll('.product-main-image').forEach(img => {
+        imageObserver.observe(img);
+    });
     
     productCards.forEach(card => {
         const productImage = card.querySelector('.product-image.has-carousel');

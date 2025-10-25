@@ -350,6 +350,13 @@ add_action('init', function () {
             echo '<link rel="preload" as="image" href="' . get_template_directory_uri() . '/resources/images/logo.png">';
         }
     });
+
+    /**
+     * Preload critical font to prevent FOUT/FOIT.
+     */
+    add_action('wp_head', function () {
+        echo '<link rel="preload" as="font" type="font/otf" href="' . get_template_directory_uri() . '/public/fonts/hiragino-sans-gb.otf" crossorigin="anonymous">';
+    }, 1); // Priority 1 to load early in <head>
 });
 
 /**

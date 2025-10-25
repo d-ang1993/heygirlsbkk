@@ -96,6 +96,9 @@ document.addEventListener('DOMContentLoaded', function() {
 // Import Product Variations JavaScript
 import './product-variations.js';
 
+// Import Wishlist Integration
+import './wishlist-integration.js';
+
 // Import Related Products Carousel
 import './related-products-carousel.js';
 

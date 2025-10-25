@@ -354,9 +354,11 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         }
   
-        // ✅ Update wishlist button with current variation
+        // ✅ Update wishlist button with current variation using the wishlist integration module
         const variationId = selectedVariation.id || selectedVariation.variation_id || selectedVariation.variationId;
-        updateWishlistButton(variationId);
+        if (window.wishlistIntegration && window.wishlistIntegration.initializeWishlistForVariation) {
+          window.wishlistIntegration.initializeWishlistForVariation(variationId);
+        }
   
       } else {
         // ❌ Invalid combination
@@ -599,60 +601,7 @@ function reEnableAddToCartButton() {
     }, 3000);
   }
   
-  // Update wishlist button for variable products
-  function updateWishlistButton(variationId) {
-    console.log('updateWishlistButton called with variation ID:', variationId);
-    
-    // Try multiple selectors to find the wishlist button
-    const wishlistButton = document.querySelector('.tinvwl_add_to_wishlist_button, [data-tinv-wl-list], .tinv-wl-button, .tinvwl-button');
-    console.log('Wishlist button found:', wishlistButton);
-    
-    if (wishlistButton && variationId) {
-      // Enable the button
-      wishlistButton.classList.remove('disabled');
-      wishlistButton.setAttribute('data-variation-id', variationId);
-      wishlistButton.setAttribute('data-tinv-wl-productvariation', variationId);
-      wishlistButton.style.opacity = '1';
-      wishlistButton.style.pointerEvents = 'auto';
-      
-      console.log('Wishlist button enabled for variation:', variationId);
-      console.log('Wishlist button attributes:', {
-        'data-variation-id': wishlistButton.getAttribute('data-variation-id'),
-        'data-tinv-wl-productvariation': wishlistButton.getAttribute('data-tinv-wl-productvariation'),
-        'class': wishlistButton.className,
-        'opacity': wishlistButton.style.opacity
-      });
-    } else {
-      console.log('Wishlist button not found or no variation ID');
-      console.log('Available buttons:', document.querySelectorAll('button, a').length);
-      console.log('All button classes:', Array.from(document.querySelectorAll('button, a')).map(btn => btn.className));
-    }
-  }
-
-  // Initialize wishlist button state
-  function initializeWishlistButton() {
-    const wishlistButton = document.querySelector('.tinvwl_add_to_wishlist_button');
-    if (wishlistButton) {
-      // Disable initially for variable products
-      wishlistButton.classList.add('disabled');
-      wishlistButton.setAttribute('data-variation-id', '0');
-      wishlistButton.style.opacity = '0.5';
-      wishlistButton.style.pointerEvents = 'none';
-      
-      // Add click prevention
-      wishlistButton.addEventListener('click', function(e) {
-        const vid = this.getAttribute('data-variation-id');
-        if (!vid || vid === '0') {
-          e.preventDefault();
-          e.stopPropagation();
-          alert('Please select product options first.');
-          return false;
-        }
-      });
-      
-      console.log('Wishlist button initialized and disabled');
-    }
-  }
+  // Wishlist functionality has been moved to wishlist-integration.js
   
   // ✅ Initialize single color products by auto-selecting the color
   function initializeSingleColorProducts() {
@@ -683,9 +632,6 @@ function reEnableAddToCartButton() {
   
   // Check initial stock availability for single color products
   checkInitialStockAvailability();
-  
-  // Initialize wishlist button
-  setTimeout(initializeWishlistButton, 500);
 });
 
 // Check initial stock availability for single color products
@@ -735,87 +681,4 @@ function checkInitialStockAvailability() {
   }
 }
 
-// TI Wishlist integration for variable products
-document.addEventListener('DOMContentLoaded', function() {
-  console.log('TI Wishlist integration starting...');
-  
-  // Wait for the page to fully load
-  setTimeout(function() {
-    var form = document.querySelector('form.variations_form, form[data-product_variations], .variations_form');
-    var wishlistBtn = document.querySelector('.tinvwl_add_to_wishlist_button, [data-tinv-wl-list], .tinv-wl-button, .tinvwl-button, .tinvwl_add_to_wishlist');
-    
-    console.log('Form found:', form ? 1 : 0);
-    console.log('Wishlist button found:', wishlistBtn ? 1 : 0);
-    console.log('Wishlist button HTML:', wishlistBtn);
-    
-    // Check if it's a variable product by looking at the wishlist button data
-    var isVariableProduct = wishlistBtn && wishlistBtn.getAttribute('data-tinv-wl-producttype') === 'variable';
-    console.log('Is variable product:', isVariableProduct);
-    
-    // Check if we're on a variable product page
-    if ((isVariableProduct || form) && wishlistBtn) {
-      console.log('Setting up wishlist for variable product');
-      
-      // Disable by default
-      wishlistBtn.classList.add('disabled');
-      wishlistBtn.setAttribute('data-variation-id', 0);
-      wishlistBtn.style.opacity = '0.5';
-      wishlistBtn.style.pointerEvents = 'none';
-
-      // When a valid variation is found (WooCommerce event)
-      if (form) {
-        form.addEventListener('found_variation', function(event) {
-          console.log('WooCommerce variation found:', event.detail);
-          var variation = event.detail;
-          if (variation && variation.variation_id) {
-            wishlistBtn.classList.remove('disabled');
-            wishlistBtn.setAttribute('data-variation-id', variation.variation_id);
-            wishlistBtn.setAttribute('data-tinv-wl-productvariation', variation.variation_id);
-            wishlistBtn.style.opacity = '1';
-            wishlistBtn.style.pointerEvents = 'auto';
-            console.log('Wishlist button enabled for variation:', variation.variation_id);
-          }
-        });
-      }
-      
-      // Also listen for custom variation selection (your existing logic)
-      document.addEventListener('click', function(e) {
-        if ((e.target.classList.contains('color-dot') && e.target.classList.contains('selected')) ||
-            (e.target.classList.contains('size-button') && e.target.classList.contains('selected'))) {
-          console.log('Custom variation selection detected');
-          // Check if we have a selected variation from your existing logic
-          setTimeout(function() {
-            var selectedVariation = window.selectedVariation;
-            if (selectedVariation && selectedVariation.variation_id) {
-              console.log('Custom variation found:', selectedVariation);
-              wishlistBtn.classList.remove('disabled');
-              wishlistBtn.setAttribute('data-variation-id', selectedVariation.variation_id);
-              wishlistBtn.setAttribute('data-tinv-wl-productvariation', selectedVariation.variation_id);
-              wishlistBtn.style.opacity = '1';
-              wishlistBtn.style.pointerEvents = 'auto';
-              console.log('Wishlist button enabled for custom variation:', selectedVariation.variation_id);
-            }
-          }, 100);
-        }
-      });
-
-      // Block wishlist add if no variation selected
-      wishlistBtn.addEventListener('click', function(e) {
-        var vid = this.getAttribute('data-variation-id');
-        console.log('Wishlist clicked, variation ID:', vid);
-        if (!vid || vid == 0) {
-          e.preventDefault();
-          e.stopPropagation();
-          alert('Please select product options first.');
-          return false;
-        }
-      });
-    } else if (wishlistBtn) {
-      console.log('Simple product - wishlist enabled immediately');
-    } else {
-      var allButtons = document.querySelectorAll('button, a');
-      console.log('No wishlist button found. Available buttons:', allButtons.length);
-      console.log('All buttons:', Array.from(allButtons).map(function(btn) { return btn.className; }));
-    }
-  }, 1000); // Wait 1 second for shortcode to render
-});
+// TI Wishlist integration has been moved to wishlist-integration.js

@@ -517,9 +517,14 @@ function handle_get_cart_contents() {
             $variation = implode(', ', $variation_attributes);
         }
         
+        // Get parent product for productName
+        $parent_product = $product->is_type('variation') ? wc_get_product($product->get_parent_id()) : $product;
+        $product_name = $parent_product ? $parent_product->get_name() : $product->get_name();
+        
         $cart_items[] = array(
             'cart_item_key' => $cart_item_key,
-            'name' => $product->get_name(),
+            'name' => $product->get_name(), // Full name with variation
+            'productName' => $product_name, // Just the product name
             'variation' => $variation,
             'quantity' => $cart_item['quantity'],
             'price' => strip_tags(wc_price($product->get_price() * $cart_item['quantity'])),
@@ -824,3 +829,15 @@ add_filter('template_include', function ($template) {
     
     return $template;
 }, 99);
+
+// Add custom image sizes for better performance
+add_action('after_setup_theme', function() {
+    // Product grid thumbnail - optimized for grid display
+    add_image_size('product-grid', 400, 400, true);
+    
+    // Product carousel thumbnail - smaller for carousel indicators
+    add_image_size('product-carousel', 200, 200, true);
+    
+    // Product hero image - larger for hero sections
+    add_image_size('product-hero', 800, 800, true);
+});

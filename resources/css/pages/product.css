@@ -2,7 +2,6 @@
 .single-product-page { 
   padding: 20px 0; 
   background: #fff; 
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 .container { 
   max-width: 1200px; 
@@ -344,7 +343,6 @@
   letter-spacing: 1px;
   color: #000;
   text-transform: uppercase;
-  font-family: sans-serif;
 }
 .quantity-controls { 
   display: flex; 
@@ -365,7 +363,6 @@
   font-size: 18px; 
   font-weight: 400; 
   color: #000;
-  font-family: sans-serif;
   padding: 0;
 }
 .quantity-btn:hover { 
@@ -375,7 +372,6 @@
   font-size: 14px;
   font-weight: 400;
   color: #000;
-  font-family: sans-serif;
   text-decoration: underline;
   min-width: 16px;
   text-align: center;
@@ -598,4 +594,31 @@
 }
 .hero__carousel-arrow svg{width:20px;height:20px;color:#333}
 .hero__carousel-arrow:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+
+/* Wishlist button styles */
+.tinvwl_add_to_wishlist_button {
+  transition: none !important; /* Remove transition for instant rendering */
+  position: relative;
+}
+
+/* When in wishlist - show filled TI heart icon only */
+.tinvwl_add_to_wishlist_button.in-wishlist .tinvwl_add_to_wishlist-text {
+  display: none !important;
+}
+
+.tinvwl_add_to_wishlist_button.in-wishlist .tinvwl-icon-heart,
+.tinvwl_add_to_wishlist_button.in-wishlist svg {
+  fill: #ff6b9d !important;
+  color: #ff6b9d !important;
+}
+
+/* When NOT in wishlist - show "Add to Wishlist" text only, hide icon */
+.tinvwl_add_to_wishlist_button:not(.in-wishlist) .tinvwl-icon-heart,
+.tinvwl_add_to_wishlist_button:not(.in-wishlist) svg {
+  display: none !important;
+}
+
+.tinvwl_add_to_wishlist_button:not(.in-wishlist) .tinvwl_add_to_wishlist-text {
+  display: inline !important;
+}
 

@@ -54,8 +54,15 @@
         </form>
       @endif
       
+      
       {{-- TI WooCommerce Wishlist button --}}
-      {!! do_shortcode('[ti_wishlists_addtowishlist product_id="' . $product_id . '" variation_id="0"]') !!}
+      @if($product_type === 'variable')
+        {{-- For variable products, initially disabled - will be enabled by JS when variation is selected --}}
+        {!! do_shortcode('[ti_wishlists_addtowishlist product_id="' . $product_id . '" variation_id="0"]') !!}
+      @else
+        {{-- For simple products, enabled immediately --}}
+        {!! do_shortcode('[ti_wishlists_addtowishlist product_id="' . $product_id . '"]') !!}
+      @endif
     </div>
   @else
     <div class="product-unavailable">
@@ -63,3 +70,4 @@
     </div>
   @endif
 </div>
+

@@ -32,10 +32,7 @@ if ($bgId) {
     }
 }
 
-// Background customization options
-$bgPosition = get_theme_mod('hero_bg_position', 'center center');
-$bgSize = get_theme_mod('hero_bg_size', 'cover');
-$bgRepeat = get_theme_mod('hero_bg_repeat', 'no-repeat');
+// Background customization options - using fixed defaults
 $bgColor = get_theme_mod('hero_bg_color', '#f8f9fa');
 $bgAttachment = get_theme_mod('hero_bg_attachment', 'scroll');
 
@@ -99,23 +96,10 @@ if ($carouselEnable && $carouselCategory) {
   <?php else: ?>
     <!-- Static Background -->
     <?php if(!empty($bgUrl) && $bgUrl !== ''): ?>
-      <div class="hero__bg" style="
-        background-image: url('<?php echo e($bgUrl); ?>');
-        background-position: <?php echo e($bgPosition); ?>;
-        background-size: <?php echo e($bgSize); ?>;
-        background-repeat: <?php echo e($bgRepeat); ?>;
-        background-attachment: <?php echo e($bgAttachment); ?>;
-        background-color: <?php echo e($bgColor); ?>;
-        position: absolute; 
-        top: 0; 
-        left: 0; 
-        width: 100%; 
-        height: 100%; 
-        z-index: 1;
-      "></div>
+      <div class="hero__bg" style="background-image: url('<?php echo e(esc_url($bgUrl)); ?>'); background-attachment: <?php echo e(esc_attr($bgAttachment)); ?>; background-color: <?php echo e(esc_attr($bgColor)); ?>;"></div>
     <?php else: ?>
       <!-- Fallback background when no image is set -->
-      <div class="hero__bg hero__bg--fallback" style="background-color: <?php echo e($bgColor); ?>;"></div>
+      <div class="hero__bg hero__bg--fallback" style="background-color: <?php echo e(esc_attr($bgColor)); ?>;"></div>
     <?php endif; ?>
   <?php endif; ?>
   
