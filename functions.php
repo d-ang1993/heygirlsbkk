@@ -832,7 +832,7 @@ add_filter('template_include', function ($template) {
 
 // Add custom image sizes for better performance
 add_action('after_setup_theme', function() {
-    // Product grid thumbnail - optimized for grid display
+    // Product grid thumbnail - optimized for grid display fix this?? 
     add_image_size('product-grid', 400, 400, true);
     
     // Product carousel thumbnail - smaller for carousel indicators
