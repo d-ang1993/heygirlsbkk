@@ -51,14 +51,14 @@ $sectionMap = [
   
   <?php if (isset($component)) { $__componentOriginala87666a6c7dfd023b4375fc379bf394c = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginala87666a6c7dfd023b4375fc379bf394c = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.product-grid','data' => ['title' => 'BEST SELLER','products' => $best_products,'columns' => 4,'viewAllUrl' => ''.e(add_query_arg('orderby', 'popularity', wc_get_page_permalink('shop'))).'']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.product-grid','data' => ['title' => 'BEST SELLER','products' => $best_products,'columns' => 4,'priorityLoadCount' => 4,'viewAllUrl' => ''.e(add_query_arg('orderby', 'popularity', wc_get_page_permalink('shop'))).'']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('product-grid'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['title' => 'BEST SELLER','products' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($best_products),'columns' => 4,'viewAllUrl' => ''.e(add_query_arg('orderby', 'popularity', wc_get_page_permalink('shop'))).'']); ?>
+<?php $component->withAttributes(['title' => 'BEST SELLER','products' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($best_products),'columns' => 4,'priorityLoadCount' => 4,'viewAllUrl' => ''.e(add_query_arg('orderby', 'popularity', wc_get_page_permalink('shop'))).'']); ?>
 <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginala87666a6c7dfd023b4375fc379bf394c)): ?>

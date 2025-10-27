@@ -72,7 +72,10 @@ if ($carouselEnable && $carouselCategory) {
           <a href="<?php echo e($product->get_permalink()); ?>" class="hero__carousel-link" style="z-index: 5;">
             <img src="<?php echo e(wp_get_attachment_image_url($product->get_image_id(), 'full')); ?>" 
                  alt="<?php echo $product->get_name(); ?>" 
-                 class="hero__carousel-image" />
+                 class="hero__carousel-image"
+                 loading="<?php echo e($index === 0 ? 'eager' : 'lazy'); ?>"
+                 fetchpriority="<?php echo e($index === 0 ? 'high' : 'auto'); ?>"
+                 decoding="async" />
           </a>
         </div>
       <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>

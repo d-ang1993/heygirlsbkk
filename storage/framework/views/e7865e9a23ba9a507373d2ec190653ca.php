@@ -7,7 +7,8 @@ $__propNames = \Illuminate\View\ComponentAttributeBag::extractPropNames(([
     'columns' => 4,
     'showDiscount' => true,
     'showQuickView' => true,
-    'viewAllUrl' => null
+    'viewAllUrl' => null,
+    'priorityLoadCount' => 0  // Number of products to eagerly load
 ]));
 
 foreach ($attributes->all() as $__key => $__value) {
@@ -29,7 +30,8 @@ foreach (array_filter(([
     'columns' => 4,
     'showDiscount' => true,
     'showQuickView' => true,
-    'viewAllUrl' => null
+    'viewAllUrl' => null,
+    'priorityLoadCount' => 0  // Number of products to eagerly load
 ]), 'is_string', ARRAY_FILTER_USE_KEY) as $__key => $__value) {
     $$__key = $$__key ?? $__value;
 }
@@ -86,7 +88,8 @@ unset($__defined_vars, $__key, $__value); ?>
                             <img class="product-main-image" 
                                  src="<?php echo e(wp_get_attachment_image_url($product->get_image_id(), 'product-grid') ?: wc_placeholder_img_src('product-grid')); ?>" 
                                  alt="<?php echo e($product->get_name()); ?>" 
-                                 loading="lazy"
+                                 loading="<?php echo e($loop->index < $priorityLoadCount ? 'eager' : 'lazy'); ?>"
+                                 fetchpriority="<?php echo e($loop->index < $priorityLoadCount ? 'high' : 'auto'); ?>"
                                  decoding="async"
                                  width="400"
                                  height="400"
@@ -653,7 +656,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 img.src = images[0];
             }
             
-            // Remove all active classes first
+            // Remove all active classes first.
             indicators.forEach(indicator => indicator.classList.remove('active'));
             
             // Use timeout to ensure animation resets

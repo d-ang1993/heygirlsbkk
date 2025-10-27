@@ -72,7 +72,10 @@ if ($carouselEnable && $carouselCategory) {
           <a href="{{ $product->get_permalink() }}" class="hero__carousel-link" style="z-index: 5;">
             <img src="{{ wp_get_attachment_image_url($product->get_image_id(), 'full') }}" 
                  alt="{!! $product->get_name() !!}" 
-                 class="hero__carousel-image" />
+                 class="hero__carousel-image"
+                 loading="{{ $index === 0 ? 'eager' : 'lazy' }}"
+                 fetchpriority="{{ $index === 0 ? 'high' : 'auto' }}"
+                 decoding="async" />
           </a>
         </div>
       @endforeach

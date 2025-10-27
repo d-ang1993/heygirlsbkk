@@ -4,7 +4,8 @@
     'columns' => 4,
     'showDiscount' => true,
     'showQuickView' => true,
-    'viewAllUrl' => null
+    'viewAllUrl' => null,
+    'priorityLoadCount' => 0  // Number of products to eagerly load
 ])
 
 @php
@@ -51,7 +52,8 @@
                             <img class="product-main-image" 
                                  src="{{ wp_get_attachment_image_url($product->get_image_id(), 'product-grid') ?: wc_placeholder_img_src('product-grid') }}" 
                                  alt="{{ $product->get_name() }}" 
-                                 loading="lazy"
+                                 loading="{{ $loop->index < $priorityLoadCount ? 'eager' : 'lazy' }}"
+                                 fetchpriority="{{ $loop->index < $priorityLoadCount ? 'high' : 'auto' }}"
                                  decoding="async"
                                  width="400"
                                  height="400"
@@ -618,7 +620,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 img.src = images[0];
             }
             
-            // Remove all active classes first
+            // Remove all active classes first.
             indicators.forEach(indicator => indicator.classList.remove('active'));
             
             // Use timeout to ensure animation resets
