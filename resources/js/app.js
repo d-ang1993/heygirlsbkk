@@ -102,6 +102,9 @@ import './wishlist-integration.js';
 // Import Related Products Carousel
 import './related-products-carousel.js';
 
+// Import Product Grid functionality
+import './product-grid.js';
+
 // New Drops Carousel using reusable ProgressCarousel component
 class NewDropsCarousel extends ProgressCarousel {
   constructor(options) {

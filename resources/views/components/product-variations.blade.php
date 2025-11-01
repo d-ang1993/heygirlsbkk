@@ -72,7 +72,7 @@
     .color-dots.single-color .color-dot.single-color-selected {
       border: 2px solid #000 !important;
       transform: scale(1.1);
-      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      /* box-shadow: 0 0 10px rgba(0,0,0,0.3); */
     }
     .color-dots.single-color .color-dot {
       cursor: default;
@@ -84,22 +84,18 @@
     /* Enhanced color text styling with gradient */
     #selected-color-name {
       font-weight: 700 !important;
-      letter-spacing: 0.5px;
-      background: linear-gradient(45deg, var(--text-color, #333), #000);
+      letter-spacing: 0.8px;
+      font-size: 1.1em;
+      transition: all 0.3s ease;
+      background: linear-gradient(120deg, var(--text-color, #333), #000);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      /* Fallback for browsers that don't support background-clip */
-      color: var(--text-color, #333);
-      /* Add underline only to the color name */
-      text-decoration: underline;
-      text-decoration-color: var(--text-color, #333);
-      text-underline-offset: 2px;
     }
     
-    /* Ensure gradient works properly */
+    /* Ensure gradient works properly when class is applied */
     #selected-color-name.gradient-text {
-      background: linear-gradient(45deg, var(--text-color, #333), #000);
+      background: linear-gradient(120deg, var(--text-color, #333), #000);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;

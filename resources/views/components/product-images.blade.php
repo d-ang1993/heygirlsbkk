@@ -77,7 +77,7 @@
         @if(count($all_images) > 1)
             <div class="image-dots">
                 @foreach($all_images as $index => $image)
-                    <span class="dot {{ $index === 0 ? 'active' : '' }}" onclick="selectImage({{ $index }})"></span>
+                    <span class="dot {{ $index === 0 ? 'active' : '' }}" data-image-index="{{ $index }}"></span>
                 @endforeach
             </div>
         @endif
@@ -162,7 +162,7 @@ document.addEventListener('DOMContentLoaded', function() {
         dots.forEach((dot) => {
             dot.addEventListener('click', function(e) {
                 e.preventDefault();
-                const index = parseInt(this.getAttribute('onclick').match(/\d+/)[0]);
+                const index = parseInt(this.getAttribute('data-image-index'));
                 selectImage(index);
             });
         });
@@ -193,7 +193,7 @@ if (document.readyState !== 'loading') {
     dots.forEach((dot) => {
         dot.addEventListener('click', function(e) {
             e.preventDefault();
-            const index = parseInt(this.getAttribute('onclick').match(/\d+/)[0]);
+            const index = parseInt(this.getAttribute('data-image-index'));
             selectImage(index);
         });
     });

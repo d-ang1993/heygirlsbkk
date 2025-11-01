@@ -77,7 +77,7 @@
         <?php if(count($all_images) > 1): ?>
             <div class="image-dots">
                 <?php $__currentLoopData = $all_images; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $image): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                    <span class="dot <?php echo e($index === 0 ? 'active' : ''); ?>" onclick="selectImage(<?php echo e($index); ?>)"></span>
+                    <span class="dot <?php echo e($index === 0 ? 'active' : ''); ?>" data-image-index="<?php echo e($index); ?>"></span>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </div>
         <?php endif; ?>
@@ -162,7 +162,7 @@ document.addEventListener('DOMContentLoaded', function() {
         dots.forEach((dot) => {
             dot.addEventListener('click', function(e) {
                 e.preventDefault();
-                const index = parseInt(this.getAttribute('onclick').match(/\d+/)[0]);
+                const index = parseInt(this.getAttribute('data-image-index'));
                 selectImage(index);
             });
         });
@@ -193,7 +193,7 @@ if (document.readyState !== 'loading') {
     dots.forEach((dot) => {
         dot.addEventListener('click', function(e) {
             e.preventDefault();
-            const index = parseInt(this.getAttribute('onclick').match(/\d+/)[0]);
+            const index = parseInt(this.getAttribute('data-image-index'));
             selectImage(index);
         });
     });

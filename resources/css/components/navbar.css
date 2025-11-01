@@ -1,6 +1,6 @@
 /* Navbar Styles */
 .main-navbar {
-  background: var(--color-primary);
+  /* background: var(--color-primary); */
   /* border-bottom: 1px solid #e5e5e5; */
   position: relative;
   z-index: 1000;

@@ -766,10 +766,10 @@ remove_action('woocommerce_before_cart_table', 'woocommerce_cart_totals_coupon_f
 /**
  * 🔇 Completely disable all WooCommerce system notices
  */
-add_filter('woocommerce_add_notice', '__return_false');
-add_filter('woocommerce_add_error', '__return_false');
-add_filter('woocommerce_add_success', '__return_false');
-add_filter('woocommerce_add_message', '__return_false');
+// add_filter('woocommerce_add_notice', '__return_false');
+// add_filter('woocommerce_add_error', '__return_false');
+// add_filter('woocommerce_add_success', '__return_false');
+// add_filter('woocommerce_add_message', '__return_false');
 
 /**
  * Prevent WooCommerce from printing any existing notices
@@ -830,14 +830,4 @@ add_filter('template_include', function ($template) {
     return $template;
 }, 99);
 
-// Add custom image sizes for better performance
-add_action('after_setup_theme', function() {
-    // Product grid thumbnail - optimized for grid display fix this?? 
-    add_image_size('product-grid', 400, 400, true);
-    
-    // Product carousel thumbnail - smaller for carousel indicators
-    add_image_size('product-carousel', 200, 200, true);
-    
-    // Product hero image - larger for hero sections
-    add_image_size('product-hero', 800, 800, true);
-});
+// Note: Custom image sizes are defined in app/setup.php to avoid conflicts

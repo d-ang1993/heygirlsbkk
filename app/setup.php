@@ -106,9 +106,10 @@ add_action('after_setup_theme', function () {
      * Add custom image sizes for product displays.
      */
     add_image_size('product-thumbnail', 400, 400, true);
-    add_image_size('product-grid', 500, 500, true);
-    add_image_size('product-hero', 800, 800, true);
-    add_image_size('product-large', 1200, 1200, false);
+    add_image_size('product-grid', 800, 800, true);
+    add_image_size('product-carousel', 400, 400, true);
+    add_image_size('product-hero', 1200, 1200, true);
+    add_image_size('product-large', 1600, 1600, false);
 
     /**
      * Enable responsive embed support.
@@ -321,7 +322,7 @@ add_action('init', function () {
 
         // Generate srcset for different sizes
         $srcset = [];
-        $sizes = ['thumbnail', 'medium', 'large', 'full'];
+        $sizes = ['thumbnail', 'medium', 'large', 'product-grid', 'product-thumbnail', 'product-hero', 'full'];
         
         foreach ($sizes as $size_name) {
             $src = wp_get_attachment_image_url($attachment->ID, $size_name);
