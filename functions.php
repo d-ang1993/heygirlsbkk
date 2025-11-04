@@ -598,6 +598,35 @@ function handle_remove_cart_item() {
 add_action('wp_ajax_woocommerce_get_cart_count', 'handle_get_cart_count');
 add_action('wp_ajax_nopriv_woocommerce_get_cart_count', 'handle_get_cart_count');
 
+/**
+ * Handle quick view AJAX request
+ */
+function handle_get_quick_view() {
+    $product_id = isset($_GET['product_id']) ? intval($_GET['product_id']) : 0;
+    
+    if (!$product_id) {
+        wp_send_json_error(['message' => 'Product ID is required']);
+        return;
+    }
+    
+    $product = wc_get_product($product_id);
+    
+    if (!$product) {
+        wp_send_json_error(['message' => 'Product not found']);
+        return;
+    }
+    
+    // Render the quick view component
+    try {
+        $html = \Roots\view('components.product-quick-view', ['product' => $product])->render();
+        wp_send_json_success(['html' => $html]);
+    } catch (Exception $e) {
+        wp_send_json_error(['message' => 'Error rendering quick view: ' . $e->getMessage()]);
+    }
+}
+add_action('wp_ajax_get_quick_view', 'handle_get_quick_view');
+add_action('wp_ajax_nopriv_get_quick_view', 'handle_get_quick_view');
+
 function handle_get_cart_count() {
     // Verify nonce (only for logged-in users)
     if (is_user_logged_in() && !wp_verify_nonce($_POST['nonce'], 'cart_drawer_nonce')) {
@@ -831,3 +860,32 @@ add_filter('template_include', function ($template) {
 }, 99);
 
 // Note: Custom image sizes are defined in app/setup.php to avoid conflicts
+add_action('wp_ajax_get_product_variations', 'xircus_get_product_variations');
+add_action('wp_ajax_nopriv_get_product_variations', 'xircus_get_product_variations');
+function xircus_get_product_variations() {
+    $product_id = absint($_GET['product_id'] ?? 0);
+    if (!$product_id) {
+        wp_send_json_error(['message' => 'Missing product_id']);
+    }
+
+    $product = wc_get_product($product_id);
+    if (!$product || !$product->is_type('variable')) {
+        wp_send_json_error(['message' => 'Invalid or non-variable product']);
+    }
+
+    $variations = [];
+    foreach ($product->get_available_variations() as $v) {
+        $variation_obj = wc_get_product($v['variation_id']);
+        $variations[] = array_merge($v, [
+            'sku' => $variation_obj->get_sku(),
+            'stock_status' => $variation_obj->get_stock_status(),
+            'attributes' => $variation_obj->get_attributes(),
+            'price' => $variation_obj->get_price(),
+            'regular_price' => $variation_obj->get_regular_price(),
+            'sale_price' => $variation_obj->get_sale_price(),
+            'image_url' => wp_get_attachment_image_url($variation_obj->get_image_id(), 'full'),
+        ]);
+    }
+
+    wp_send_json_success(['variations' => $variations]);
+}

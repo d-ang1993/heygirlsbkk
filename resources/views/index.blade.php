@@ -18,24 +18,23 @@ $sectionMap = [
 @foreach($sections as $section)
   @if(isset($sectionMap[$section]))
     @if($section === 'hero')
-      @include($sectionMap[$section], [
-        'show' => get_theme_mod('hero_enable', true),
-        'heading' => get_theme_mod('hero_heading', 'NEW ARRIVAL'),
-        'subheading' => get_theme_mod('hero_subheading', 'Korean/Japanese fashion drops • 24h launch'),
-        'ctaText' => get_theme_mod('hero_cta_text', 'Shop Now'),
-        'ctaUrl' => get_theme_mod('hero_cta_url', '/shop'),
-        'bgImage' => get_theme_mod('hero_bg_image'),
-        'bgPosition' => get_theme_mod('hero_bg_position', 'center center'),
-        'bgSize' => get_theme_mod('hero_bg_size', 'cover'),
-        'bgRepeat' => get_theme_mod('hero_bg_repeat', 'no-repeat'),
-        'bgColor' => get_theme_mod('hero_bg_color', '#f8f9fa'),
-        'bgAttachment' => get_theme_mod('hero_bg_attachment', 'scroll'),
-        'align' => get_theme_mod('hero_align', 'center'),
-        'height' => get_theme_mod('hero_height', '60vh'),
-        'overlay' => get_theme_mod('hero_overlay', 0.35),
-        'carouselEnable' => get_theme_mod('hero_carousel_enable', false),
-        'carouselProducts' => []
-      ])
+      {{-- Hero components: hero-new for desktop (>1023px), hero for mobile/tablet (<=1023px) --}}
+      <div class="hero-wrapper">
+        {{-- Desktop hero (>1023px) --}}
+        <div class="hero-desktop">
+          <x-hero-new 
+            :heading="get_theme_mod('hero_new_heading', get_theme_mod('hero_heading', 'Summer styles are finally here'))"
+            :subheading="get_theme_mod('hero_new_subheading', get_theme_mod('hero_subheading', 'This year, our new summer collection will shelter you from the harsh elements of a world that doesn\'t care if you live or die.'))"
+            :ctaText="get_theme_mod('hero_new_cta_text', get_theme_mod('hero_cta_text', 'Shop Collection'))"
+            :ctaUrl="get_theme_mod('hero_new_cta_url', get_theme_mod('hero_cta_url', '/shop'))"
+          />
+        </div>
+        
+        {{-- Mobile/Tablet hero (<=1023px) --}}
+        <div class="hero-mobile">
+          @include($sectionMap[$section])
+        </div>
+      </div>
     @else
       @include($sectionMap[$section])
     @endif

@@ -3,6 +3,32 @@
  * Hero banner with carousel functionality
  */
 
+/* Hero Wrapper - Responsive switching between hero-new (desktop) and hero (mobile) */
+.hero-wrapper {
+  position: relative;
+}
+
+/* Desktop hero (hero-new) - Show for screens > 1023px */
+.hero-desktop {
+  display: block;
+}
+
+/* Mobile hero (hero) - Hide for screens > 1023px */
+.hero-mobile {
+  display: none;
+}
+
+/* At 1023px and below, swap visibility */
+@media (max-width: 1023px) {
+  .hero-desktop {
+    display: none;
+  }
+  
+  .hero-mobile {
+    display: block;
+  }
+}
+
 /* Hero Section Styles */
 .hero {
   position: relative;

@@ -16,24 +16,37 @@ $sectionMap = [
 <?php $__currentLoopData = $sections; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $section): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
   <?php if(isset($sectionMap[$section])): ?>
     <?php if($section === 'hero'): ?>
-      <?php echo $__env->make($sectionMap[$section], [
-        'show' => get_theme_mod('hero_enable', true),
-        'heading' => get_theme_mod('hero_heading', 'NEW ARRIVAL'),
-        'subheading' => get_theme_mod('hero_subheading', 'Korean/Japanese fashion drops • 24h launch'),
-        'ctaText' => get_theme_mod('hero_cta_text', 'Shop Now'),
-        'ctaUrl' => get_theme_mod('hero_cta_url', '/shop'),
-        'bgImage' => get_theme_mod('hero_bg_image'),
-        'bgPosition' => get_theme_mod('hero_bg_position', 'center center'),
-        'bgSize' => get_theme_mod('hero_bg_size', 'cover'),
-        'bgRepeat' => get_theme_mod('hero_bg_repeat', 'no-repeat'),
-        'bgColor' => get_theme_mod('hero_bg_color', '#f8f9fa'),
-        'bgAttachment' => get_theme_mod('hero_bg_attachment', 'scroll'),
-        'align' => get_theme_mod('hero_align', 'center'),
-        'height' => get_theme_mod('hero_height', '60vh'),
-        'overlay' => get_theme_mod('hero_overlay', 0.35),
-        'carouselEnable' => get_theme_mod('hero_carousel_enable', false),
-        'carouselProducts' => []
-      ], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+      
+      <div class="hero-wrapper">
+        
+        <div class="hero-desktop">
+          <?php if (isset($component)) { $__componentOriginal6c51efbd14251b0c21cec090f87b1545 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal6c51efbd14251b0c21cec090f87b1545 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.hero-new','data' => ['heading' => get_theme_mod('hero_new_heading', get_theme_mod('hero_heading', 'Summer styles are finally here')),'subheading' => get_theme_mod('hero_new_subheading', get_theme_mod('hero_subheading', 'This year, our new summer collection will shelter you from the harsh elements of a world that doesn\'t care if you live or die.')),'ctaText' => get_theme_mod('hero_new_cta_text', get_theme_mod('hero_cta_text', 'Shop Collection')),'ctaUrl' => get_theme_mod('hero_new_cta_url', get_theme_mod('hero_cta_url', '/shop'))]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('hero-new'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['heading' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(get_theme_mod('hero_new_heading', get_theme_mod('hero_heading', 'Summer styles are finally here'))),'subheading' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(get_theme_mod('hero_new_subheading', get_theme_mod('hero_subheading', 'This year, our new summer collection will shelter you from the harsh elements of a world that doesn\'t care if you live or die.'))),'ctaText' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(get_theme_mod('hero_new_cta_text', get_theme_mod('hero_cta_text', 'Shop Collection'))),'ctaUrl' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(get_theme_mod('hero_new_cta_url', get_theme_mod('hero_cta_url', '/shop')))]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal6c51efbd14251b0c21cec090f87b1545)): ?>
+<?php $attributes = $__attributesOriginal6c51efbd14251b0c21cec090f87b1545; ?>
+<?php unset($__attributesOriginal6c51efbd14251b0c21cec090f87b1545); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal6c51efbd14251b0c21cec090f87b1545)): ?>
+<?php $component = $__componentOriginal6c51efbd14251b0c21cec090f87b1545; ?>
+<?php unset($__componentOriginal6c51efbd14251b0c21cec090f87b1545); ?>
+<?php endif; ?>
+        </div>
+        
+        
+        <div class="hero-mobile">
+          <?php echo $__env->make($sectionMap[$section], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+        </div>
+      </div>
     <?php else: ?>
       <?php echo $__env->make($sectionMap[$section], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
     <?php endif; ?>
