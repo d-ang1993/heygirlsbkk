@@ -20,14 +20,16 @@
 
 <section class="product-grid-section">
     <div class="container">
-        <div class="section-header">
-            <h2 class="section-title">{{ $title }}</h2>
-            @if($viewAllUrl)
-                <a href="{{ $viewAllUrl }}" class="view-all-link">View All →</a>
-            @else
-                <a href="{{ wc_get_page_permalink('shop') }}" class="view-all-link">View All →</a>
-            @endif
-        </div>
+        @if(!empty($title))
+            <div class="section-header">
+                <h2 class="section-title">{{ $title }}</h2>
+                @if($viewAllUrl)
+                    <a href="{{ $viewAllUrl }}" class="view-all-link">View All →</a>
+                @else
+                    <a href="{{ wc_get_page_permalink('shop') }}" class="view-all-link">View All →</a>
+                @endif
+            </div>
+        @endif
         
         <div class="product-grid product-grid--{{ $columns }}-cols">
             @foreach($products as $product)

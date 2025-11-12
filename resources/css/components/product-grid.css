@@ -187,7 +187,7 @@
   margin: 0;
   font-size: 15px; /* Slightly smaller for better proportion */
   font-weight: 700;
-  color: #dc2626;
+  color:#ff6b9d;
   text-align: center;
   min-height: 1.3em; /* Reduced height for tighter design */
   display: flex;
@@ -609,7 +609,7 @@
 
 .price-current,
 .price-sale {
-  font-size: 1.1rem;
+  /* font-size: 1.1rem; */
   font-weight: 600;
   color: #ff6b9d; /* Pink color */
 }
@@ -677,7 +677,6 @@
       padding: 15px;
   }
 }
-
 @media (max-width: 480px) {
   .product-grid {
       grid-template-columns: 1fr !important;

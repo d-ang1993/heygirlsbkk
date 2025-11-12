@@ -104,7 +104,7 @@
   @endif
 
   <!-- Product Features -->
-  <div class="product-features">
+  <!-- <div class="product-features">
     <div class="feature-item">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <polyline points="20,6 9,17 4,12"></polyline>
@@ -129,10 +129,10 @@
       </svg>
       <span>Free returns worldwide</span>
     </div>
-  </div>
+  </div> -->
 
   <!-- Size Guide -->
-  <div class="size-guide-section">
+  <!-- <div class="size-guide-section">
     <a href="#" class="size-guide-link">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
@@ -141,11 +141,11 @@
       </svg>
       Size Guide
     </a>
-  </div>
+  </div> -->
 
   <!-- Estimated Delivery -->
-  <div class="estimated-delivery">
+  <!-- <div class="estimated-delivery">
     <span>Estimated delivery: 3 days</span>
-  </div>
+  </div> -->
 
 </div>

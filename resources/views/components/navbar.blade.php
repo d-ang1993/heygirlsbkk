@@ -101,10 +101,10 @@ if (!$shop_menu) {
                     @endif
                 @endif
                 
-                {{-- Show other primary menu items (excluding SHOP) --}}
+                {{-- Show other primary menu items (excluding SHOP and MY ACCOUNT) --}}
                 @if($primary_menu && !empty($primary_menu))
                     @foreach($primary_menu as $item)
-                        @if($item->menu_item_parent == 0 && strtoupper($item->title) !== 'SHOP')
+                        @if($item->menu_item_parent == 0 && strtoupper($item->title) !== 'SHOP' && strtoupper($item->title) !== 'MY ACCOUNT')
                             <a href="{{ $item->url }}" class="navbar-link">
                                 {{ strtoupper($item->title) }}
                             </a>

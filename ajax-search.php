@@ -4,7 +4,7 @@
  * Handles live search requests and returns JSON results
  */
 
-// Include WordPress
+// Include WordPress 
 require_once('../../../wp-load.php');
 
 // Set content type to JSON

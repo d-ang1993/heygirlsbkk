@@ -34,7 +34,14 @@ class QuickView {
                 e.preventDefault();
                 e.stopPropagation();
                 e.stopImmediatePropagation();
-                this.handleAddToCart(e.target);
+                // Prevent scroll to top
+                const scrollY = window.scrollY;
+                this.handleAddToCart(e.target).then(() => {
+                    // Restore scroll position if it changed
+                    if (window.scrollY !== scrollY) {
+                        window.scrollTo(0, scrollY);
+                    }
+                });
                 return false;
             }
         });
@@ -510,56 +517,85 @@ class QuickView {
         const variations = window.quickView?.variations || window.quickViewVariations;
         const selected = this.selectedAttributes;
     
-        if (!variations || variations.length === 0 || Object.keys(selected).length === 0) {
-            console.warn('⚠️ No variations or attributes selected yet.');
+        if (!variations || variations.length === 0) {
+            console.warn('⚠️ No variations available.');
             return null;
         }
     
-        return variations.find(variation => {
-            // Get attributes from variation.attributes object
+        // Extract color and size from selected attributes
+        const selectedColor = selected.color || selected.attribute_pa_color || selected.attribute_color || '';
+        const selectedSize = selected.sizes || selected.size || selected.attribute_pa_size || selected.attribute_pa_sizes || selected.attribute_size || selected.attribute_sizes || '';
+    
+        if (!selectedColor || !selectedSize) {
+            console.warn('⚠️ Color and size must both be selected.');
+            console.log('Selected color:', selectedColor);
+            console.log('Selected size:', selectedSize);
+            return null;
+        }
+    
+        console.log('🔍 Finding matching variation...');
+        console.log('Selected color:', selectedColor);
+        console.log('Selected size:', selectedSize);
+        console.log('Available variations:', variations);
+    
+        const match = variations.find(variation => {
+            const variationId = variation.id || variation.variation_id;
+            console.log('Checking variation:', variationId);
+            
+            // Get all possible color values from variation
+            const variationColors = [];
+            const variationSizes = [];
+            
+            // Check direct properties first
+            if (variation.color) variationColors.push(variation.color);
+            if (variation.sizes) variationSizes.push(variation.sizes);
+            if (variation.size) variationSizes.push(variation.size);
+            
+            // Check attributes object - need to check ALL possible key formats
             const attrs = variation.attributes || {};
-    
-            return Object.entries(selected).every(([key, value]) => {
-                if (!value) return true; // Skip empty selections
-    
-                // 🔹 Normalize key to handle different attribute naming conventions
-                const normalizedKey = key
-                    .replace(/^attribute_pa_pa_/, 'attribute_pa_')
-                    .replace(/^attribute_pa_/, 'attribute_pa_')
-                    .replace(/^attribute_/, 'attribute_pa_')
-                    .replace(/^pa_/, 'attribute_pa_');
-    
-                // Potential match candidates - check variation.attributes for all possible keys
-                const candidates = [
-                    attrs[key],
-                    attrs[normalizedKey],
-                    attrs[`attribute_${key}`],
-                    attrs[`attribute_pa_${key}`],
-                    attrs[`attribute_pa_pa_${key}`], // Handle double pa_ prefix
-                ];
-    
-                // For color: check specific attribute keys
-                if (key.includes('color')) {
-                    candidates.push(
-                        attrs['attribute_pa_color'],
-                        attrs['attribute_pa_pa_color']
-                    );
+            
+            // Get all attribute keys that might contain color
+            Object.keys(attrs).forEach(key => {
+                if (key.toLowerCase().includes('color')) {
+                    variationColors.push(attrs[key]);
                 }
-                
-                // For size: check specific attribute keys
-                if (key.includes('size')) {
-                    candidates.push(
-                        attrs['attribute_pa_size'],
-                        attrs['attribute_pa_pa_size']
-                    );
+                if (key.toLowerCase().includes('size')) {
+                    variationSizes.push(attrs[key]);
                 }
-    
-                // 🔹 Normalize all candidates to lowercase for robust comparison
-                return candidates
-                    .filter(v => v !== undefined && v !== null)
-                    .some(v => String(v).toLowerCase() === String(value).toLowerCase());
             });
-        }) || null;
+            
+            console.log('Variation colors found:', variationColors);
+            console.log('Variation sizes found:', variationSizes);
+            
+            // Normalize and compare
+            const normalizedSelectedColor = String(selectedColor).toLowerCase().trim();
+            const normalizedSelectedSize = String(selectedSize).toLowerCase().trim();
+            
+            const colorMatch = variationColors.some(color => 
+                String(color).toLowerCase().trim() === normalizedSelectedColor
+            );
+            
+            const sizeMatch = variationSizes.some(size => 
+                String(size).toLowerCase().trim() === normalizedSelectedSize
+            );
+            
+            if (colorMatch && sizeMatch) {
+                console.log(`✅ Found matching variation ${variationId} - Color: ${colorMatch}, Size: ${sizeMatch}`);
+                return true;
+            } else {
+                console.log(`❌ Variation ${variationId} doesn't match - Color: ${colorMatch}, Size: ${sizeMatch}`);
+                return false;
+            }
+        });
+    
+        if (match) {
+            const variationId = match.id || match.variation_id;
+            console.log('✅ Returning variation ID:', variationId);
+            return match;
+        } else {
+            console.warn('❌ No matching variation found for color:', selectedColor, 'size:', selectedSize);
+            return null;
+        }
     }
     
 
@@ -575,6 +611,18 @@ class QuickView {
             form.preventDefault();
         }
         
+        // Save current scroll position to prevent scroll to top
+        const scrollY = window.scrollY;
+        const scrollX = window.scrollX;
+        
+        // Lock scroll position during AJAX
+        const lockScroll = () => {
+            window.scrollTo(scrollX, scrollY);
+        };
+        
+        // Set up scroll lock interval
+        const scrollLockInterval = setInterval(lockScroll, 10);
+        
         const addToCartBtn = form.querySelector('.quick-view-add-to-cart');
         const originalText = addToCartBtn.textContent;
         
@@ -586,6 +634,7 @@ class QuickView {
         console.log('Selected attributes:', this.selectedAttributes);
         
         if (!matchingVariation) {
+            clearInterval(scrollLockInterval);
             alert('Please select all required options');
             return;
         }
@@ -611,21 +660,28 @@ class QuickView {
             // Add AJAX action for WooCommerce (append to FormData, not URL)
             formData.append('wc-ajax', 'add_to_cart');
             
-            // Use current page URL instead of form action to prevent navigation/scroll
-            // Using form.action (cart URL) can cause unwanted scroll behavior
-            const formAction = window.location.href;
+            // Use form action URL (cart URL) for WooCommerce AJAX
+            // WooCommerce requires wc-ajax parameter to work with the cart URL
+            const formAction = form.action || window.location.href;
             
             // Log form data for debugging
             console.log('📦 Form Data:', Object.fromEntries([...formData.entries()]));
             console.log('🚀 Submitting AJAX request to:', formAction);
             
             // Use WooCommerce AJAX to add to cart
-            // Use preventScroll option to prevent scroll behavior
             const response = await fetch(formAction, {
                 method: 'POST',
                 body: formData,
                 credentials: 'same-origin',
                 redirect: 'manual', // Prevent any redirects that might cause scroll
+            });
+            
+            // Clear scroll lock after fetch completes
+            clearInterval(scrollLockInterval);
+            
+            // Restore scroll position immediately after fetch (in case it changed)
+            requestAnimationFrame(() => {
+                window.scrollTo(scrollX, scrollY);
             });
             
             if (!response.ok) {
@@ -661,15 +717,33 @@ class QuickView {
                     }
                 });
                 
-                // Trigger WooCommerce events
+                // Trigger WooCommerce events (prevent scroll during event)
                 if (typeof jQuery !== 'undefined') {
+                    // Save scroll position before triggering events
+                    const currentScrollY = window.scrollY;
+                    const currentScrollX = window.scrollX;
+                    
                     jQuery(document.body).trigger('added_to_cart', [
                         data.fragments,
                         data.cart_hash,
                         addToCartBtn,
                     ]);
+                    
+                    // Restore scroll position after events
+                    requestAnimationFrame(() => {
+                        if (window.scrollY !== currentScrollY || window.scrollX !== currentScrollX) {
+                            window.scrollTo(currentScrollX, currentScrollY);
+                        }
+                    });
                 }
             }
+            
+            // Ensure scroll position is maintained
+            requestAnimationFrame(() => {
+                if (window.scrollY !== scrollY || window.scrollX !== scrollX) {
+                    window.scrollTo(scrollX, scrollY);
+                }
+            });
             
             // Update bag count - multiple fallback methods
             // Method 1: Check if fragment updated it
@@ -706,11 +780,14 @@ class QuickView {
             }, 500);
             
         } catch (error) {
+            clearInterval(scrollLockInterval);
             console.error('❌ Add to cart error:', error);
             alert(error.message || 'Failed to add product to cart. Please try again.');
             addToCartBtn.disabled = false;
             addToCartBtn.textContent = originalText;
             addToCartBtn.style.background = '';
+            // Restore scroll position on error
+            window.scrollTo(scrollX, scrollY);
         }
     }
     

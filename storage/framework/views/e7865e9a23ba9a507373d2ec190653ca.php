@@ -56,14 +56,16 @@ unset($__defined_vars, $__key, $__value); ?>
 
 <section class="product-grid-section">
     <div class="container">
-        <div class="section-header">
-            <h2 class="section-title"><?php echo e($title); ?></h2>
-            <?php if($viewAllUrl): ?>
-                <a href="<?php echo e($viewAllUrl); ?>" class="view-all-link">View All →</a>
-            <?php else: ?>
-                <a href="<?php echo e(wc_get_page_permalink('shop')); ?>" class="view-all-link">View All →</a>
-            <?php endif; ?>
-        </div>
+        <?php if(!empty($title)): ?>
+            <div class="section-header">
+                <h2 class="section-title"><?php echo e($title); ?></h2>
+                <?php if($viewAllUrl): ?>
+                    <a href="<?php echo e($viewAllUrl); ?>" class="view-all-link">View All →</a>
+                <?php else: ?>
+                    <a href="<?php echo e(wc_get_page_permalink('shop')); ?>" class="view-all-link">View All →</a>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
         
         <div class="product-grid product-grid--<?php echo e($columns); ?>-cols">
             <?php $__currentLoopData = $products; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $product): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>

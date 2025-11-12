@@ -129,6 +129,11 @@
           "color": "oklch(21% .034 264.665)"
         },
         {
+          "name": "Gray (950)",
+          "slug": "gray-950",
+          "color": "oklch(13% .028 261.692)"
+        },
+        {
           "name": "Black",
           "slug": "black",
           "color": "#000"
@@ -185,9 +190,19 @@
           "size": "1rem"
         },
         {
+          "name": "lg",
+          "slug": "lg",
+          "size": "1.125rem"
+        },
+        {
           "name": "xl",
           "slug": "xl",
           "size": "1.25rem"
+        },
+        {
+          "name": "4xl",
+          "slug": "4xl",
+          "size": "2.25rem"
         }
       ]
     }

@@ -131,7 +131,6 @@ section.hero-new,
   text-align: center;
   transition: all 0.3s ease;
   font-size: 1rem;
-  margin-top: 2.5rem;
 }
 
 .hero-new__cta:hover {

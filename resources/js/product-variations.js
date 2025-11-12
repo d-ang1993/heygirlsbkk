@@ -476,7 +476,17 @@ function submitFormViaAjax(form) {
   
   // Show loading state
   const button = document.querySelector('.add-to-cart-btn');
+  const originalText = button ? button.textContent : 'ADD TO CART';
+  const originalBackground = button ? button.style.background || '' : '';
+  
   if (button) {
+    // Store original width to prevent size changes
+    if (!button.dataset.originalWidth) {
+      button.dataset.originalWidth = button.offsetWidth + 'px';
+    }
+    button.style.minWidth = button.dataset.originalWidth;
+    button.style.width = button.dataset.originalWidth;
+    
     button.disabled = true;
     button.textContent = 'Adding...';
     button.style.pointerEvents = 'none';
@@ -505,7 +515,7 @@ function submitFormViaAjax(form) {
     
     if (data.success === false) {
       showCartMessage('Error: ' + (data.data || 'Unknown error'), 'error');
-      reEnableAddToCartButton();
+      reEnableAddToCartButton(originalText, originalBackground);
       return;
     }
     
@@ -528,14 +538,18 @@ function submitFormViaAjax(form) {
     
     // Show success animation
     if (button) {
-      const original = button.innerHTML;
       button.innerHTML = '✅ Added!';
       button.style.background = '#10b981';
       setTimeout(() => {
-        button.innerHTML = original;
-        button.style.background = '';
+        button.textContent = originalText;
+        button.style.background = originalBackground;
         button.disabled = false;
         button.style.pointerEvents = 'auto';
+        // Keep the fixed width
+        if (button.dataset.originalWidth) {
+          button.style.minWidth = button.dataset.originalWidth;
+          button.style.width = button.dataset.originalWidth;
+        }
       }, 2000);
     }
     
@@ -560,20 +574,31 @@ function submitFormViaAjax(form) {
   .catch(err => {
     console.error('❌ AJAX Add to cart error:', err);
     showCartMessage('❌ Error adding product to cart', 'error');
-    reEnableAddToCartButton();
+    reEnableAddToCartButton(originalText, originalBackground);
   });
 }
 
 
 // Function to properly re-enable the add to cart button
-function reEnableAddToCartButton() {
+function reEnableAddToCartButton(originalText = 'ADD TO CART', originalBackground = '') {
   const button = document.querySelector('.add-to-cart-btn');
   if (!button) return;
+
+  // Restore fixed width if it was set
+  if (button.dataset.originalWidth) {
+    button.style.minWidth = button.dataset.originalWidth;
+    button.style.width = button.dataset.originalWidth;
+  }
 
   if (selectedVariation && selectedVariation.in_stock) {
     button.disabled = false;
     button.style.pointerEvents = 'auto';
-    button.textContent = 'ADD TO CART';
+    button.textContent = originalText || 'ADD TO CART';
+    if (originalBackground) {
+      button.style.background = originalBackground;
+    } else {
+      button.style.background = '';
+    }
     console.log('✅ Add to cart button re-enabled (no rebind)');
   } else {
     updateProductDisplay();

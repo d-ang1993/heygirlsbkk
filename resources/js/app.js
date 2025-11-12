@@ -9,12 +9,6 @@ import './live-search.js';
 // Import cart functionality
 import './cart.js';
 
-// Import Product Grid functionality
-import './product-grid.js';
-
-// Import Quick View functionality
-import './quick-view.js';
-
 // Import reusable ProgressCarousel component
 import { ProgressCarousel } from './progress-carousel.js';
 
@@ -110,6 +104,9 @@ import './related-products-carousel.js';
 
 // Import Product Grid functionality
 import './product-grid.js';
+
+// Import Quick View functionality
+import './quick-view.js';
 
 // New Drops Carousel using reusable ProgressCarousel component
 class NewDropsCarousel extends ProgressCarousel {

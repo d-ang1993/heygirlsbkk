@@ -134,9 +134,14 @@ function updateImage() {
     });
 }
 
-// Initialize immediately - no waiting for DOM ready
-document.addEventListener('DOMContentLoaded', function() {
-    // Thumbnail click handlers with immediate response
+// Initialize event listeners - only once
+let initialized = false;
+
+function initializeCarousel() {
+    if (initialized) return;
+    initialized = true;
+    
+    // Thumbnail click handlers
     const thumbnails = document.querySelectorAll('.thumbnail-container');
     thumbnails.forEach((thumbnail) => {
         thumbnail.addEventListener('click', function(e) {
@@ -147,56 +152,34 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-        // Arrow click handlers
-        const arrows = document.querySelectorAll('.carousel-arrow');
-        arrows.forEach((arrow) => {
-            arrow.addEventListener('click', function(e) {
-                e.preventDefault();
-                const direction = parseInt(this.getAttribute('data-direction'));
-                changeImage(direction);
-            });
-        });
-
-        // Dot click handlers
-        const dots = document.querySelectorAll('.dot');
-        dots.forEach((dot) => {
-            dot.addEventListener('click', function(e) {
-                e.preventDefault();
-                const index = parseInt(this.getAttribute('data-image-index'));
-                selectImage(index);
-            });
-        });
-});
-
-// Also try to initialize immediately if DOM is already ready
-if (document.readyState !== 'loading') {
-    const thumbnails = document.querySelectorAll('.thumbnail-container');
-    thumbnails.forEach((thumbnail) => {
-        thumbnail.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            const index = parseInt(this.getAttribute('data-image-index'));
-            selectImage(index);
-        });
-    });
-
+    // Arrow click handlers
     const arrows = document.querySelectorAll('.carousel-arrow');
     arrows.forEach((arrow) => {
         arrow.addEventListener('click', function(e) {
             e.preventDefault();
+            e.stopPropagation();
             const direction = parseInt(this.getAttribute('data-direction'));
             changeImage(direction);
         });
     });
 
+    // Dot click handlers
     const dots = document.querySelectorAll('.dot');
     dots.forEach((dot) => {
         dot.addEventListener('click', function(e) {
             e.preventDefault();
+            e.stopPropagation();
             const index = parseInt(this.getAttribute('data-image-index'));
             selectImage(index);
         });
     });
+}
+
+// Initialize immediately if DOM is ready, otherwise wait for DOMContentLoaded
+if (document.readyState !== 'loading') {
+    initializeCarousel();
+} else {
+    document.addEventListener('DOMContentLoaded', initializeCarousel);
 }
 
 // Keyboard navigation

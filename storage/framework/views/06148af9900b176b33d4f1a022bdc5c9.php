@@ -105,7 +105,7 @@ if (!$shop_menu) {
                 
                 <?php if($primary_menu && !empty($primary_menu)): ?>
                     <?php $__currentLoopData = $primary_menu; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                        <?php if($item->menu_item_parent == 0 && strtoupper($item->title) !== 'SHOP'): ?>
+                        <?php if($item->menu_item_parent == 0 && strtoupper($item->title) !== 'SHOP' && strtoupper($item->title) !== 'MY ACCOUNT'): ?>
                             <a href="<?php echo e($item->url); ?>" class="navbar-link">
                                 <?php echo e(strtoupper($item->title)); ?>
 

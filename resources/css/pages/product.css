@@ -388,7 +388,7 @@
   border: 1px solid var(--color-primary-dark);
   border-radius: 9999px;
   padding: .85rem 1.35rem;
-  transition: all .3s;
+  transition: background-color .3s, border-color .3s, color .3s;
   display: inline-block;
   font-size: 14px;
   font-weight: 600;
@@ -398,6 +398,8 @@
   flex: 1;
   text-align: center;
   min-height: 44px;
+  box-sizing: border-box;
+  white-space: nowrap;
 }
 
 .add-to-cart-btn:hover {
@@ -520,7 +522,7 @@
   border: 1px solid var(--color-primary-dark) !important;
   border-radius: 9999px !important;
   padding: .85rem 1.35rem !important;
-  transition: all .3s !important;
+  transition: background-color .3s, border-color .3s, color .3s !important;
   display: inline-block !important;
   font-size: 14px !important;
   font-weight: 600 !important;
@@ -532,6 +534,8 @@
   min-width: auto !important;
   min-height: auto !important;
   aspect-ratio: auto !important;
+  box-sizing: border-box !important;
+  white-space: nowrap !important;
 }
 
 .custom-add-cart-form button:hover,
@@ -661,9 +665,7 @@
   .product-title { 
     font-size: 2.5rem; 
   } 
-  .price-current, .price-sale { 
-    font-size: 1.4rem !important; 
-  } 
+ 
   .related-products-grid { 
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
     gap: 16px; 
@@ -678,42 +680,40 @@
   position: relative;
   border-radius: 1px !important; /* Make it a button, not a circle */
   padding: 12px 24px !important;
-  border: 1px solid #ddd !important;
   background: #fff !important;
   display: inline-flex !important;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  font-size: 14px !important;
-  font-weight: 500 !important;
-  text-transform: none !important;
-  min-width: auto !important;
-  min-height: 44px !important;
+  text-decoration: none !important;
 }
 
 .tinvwl_add_to_wishlist_button:hover {
-  border-color: #000 !important;
   background: #f8f9fa !important;
+  text-decoration: none !important;
 }
 
-/* When in wishlist - show filled TI heart icon only */
-.tinvwl_add_to_wishlist_button.in-wishlist .tinvwl_add_to_wishlist-text {
+/* Hide text always */
+.tinvwl_add_to_wishlist_button .tinvwl_add_to_wishlist-text {
   display: none !important;
 }
 
+/* When in wishlist (liked) - fill heart pink */
 .tinvwl_add_to_wishlist_button.in-wishlist .tinvwl-icon-heart,
-.tinvwl_add_to_wishlist_button.in-wishlist svg {
+.tinvwl_add_to_wishlist_button.in-wishlist svg,
+.tinvwl_add_to_wishlist_button.in-wishlist path {
   fill: #ff6b9d !important;
   color: #ff6b9d !important;
+  stroke: #ff6b9d !important;
 }
 
-/* When NOT in wishlist - show "Add to Wishlist" text only, hide icon */
+/* When NOT in wishlist - outline only (no fill) */
 .tinvwl_add_to_wishlist_button:not(.in-wishlist) .tinvwl-icon-heart,
-.tinvwl_add_to_wishlist_button:not(.in-wishlist) svg {
-  display: none !important;
+.tinvwl_add_to_wishlist_button:not(.in-wishlist) svg,
+.tinvwl_add_to_wishlist_button:not(.in-wishlist) path {
+  fill: none !important;
+  color: #333 !important;
+  stroke: #333 !important;
 }
 
-.tinvwl_add_to_wishlist_button:not(.in-wishlist) .tinvwl_add_to_wishlist-text {
-  display: inline !important;
-}
+ 
 
