@@ -2,6 +2,7 @@ import { defineConfig, loadEnv } from 'vite'
 import tailwindcss from '@tailwindcss/vite'
 import laravel from 'laravel-vite-plugin'
 import { wordpressPlugin, wordpressThemeJson } from '@roots/vite-plugin'
+import react from '@vitejs/plugin-react'
 
 export default ({ mode }) => {
   // Load env variables
@@ -32,12 +33,19 @@ export default ({ mode }) => {
           'resources/css/editor.css',
           'resources/js/editor.js',
           'resources/js/image-optimization.js',
+          'resources/js/archive-filters.jsx',
         ],
       },
       // Remove manifestDir to put manifest.json directly in outDir
     },
 
     plugins: [
+      // ✅ React plugin
+      react({
+        jsxRuntime: 'automatic',
+        jsxImportSource: 'react',
+      }),
+
       // ✅ TailwindCSS (native Vite integration)
       tailwindcss(),
 
@@ -49,6 +57,7 @@ export default ({ mode }) => {
           'resources/css/editor.css',
           'resources/js/editor.js',
           'resources/js/image-optimization.js',
+          'resources/js/archive-filters.jsx',
         ],
         refresh: true,
         buildDirectory: 'build',

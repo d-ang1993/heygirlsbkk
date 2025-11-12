@@ -716,6 +716,136 @@ function handle_get_product_variations() {
 add_action('wp_ajax_get_product_variations', 'handle_get_product_variations');
 add_action('wp_ajax_nopriv_get_product_variations', 'handle_get_product_variations');
 
+/**
+ * AJAX handler for getting filtered products (used by Archive Filters)
+ */
+function handle_get_filtered_products() {
+    // Verify nonce
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'archive_filters_nonce')) {
+        wp_send_json_error(['message' => 'Invalid nonce']);
+        return;
+    }
+    
+    // Get filter parameters
+    $filter_colors = isset($_POST['filter_color']) ? (array) $_POST['filter_color'] : [];
+    $filter_categories = isset($_POST['filter_category']) ? (array) $_POST['filter_category'] : [];
+    $filter_sizes = isset($_POST['filter_size']) ? (array) $_POST['filter_size'] : [];
+    $orderby = isset($_POST['orderby']) ? sanitize_text_field($_POST['orderby']) : 'menu_order';
+    
+    // Build query args
+    $args = [
+        'post_type' => 'product',
+        'post_status' => 'publish',
+        'posts_per_page' => get_option('posts_per_page', 12),
+        'orderby' => $orderby,
+        'meta_query' => [],
+        'tax_query' => ['relation' => 'AND'],
+    ];
+    
+    // Handle ordering
+    switch ($orderby) {
+        case 'popularity':
+            $args['meta_key'] = 'total_sales';
+            $args['orderby'] = 'meta_value_num';
+            $args['order'] = 'DESC';
+            break;
+        case 'rating':
+            $args['meta_key'] = '_wc_average_rating';
+            $args['orderby'] = 'meta_value_num';
+            $args['order'] = 'DESC';
+            break;
+        case 'date':
+            $args['orderby'] = 'date';
+            $args['order'] = 'DESC';
+            break;
+        case 'price':
+            $args['meta_key'] = '_price';
+            $args['orderby'] = 'meta_value_num';
+            $args['order'] = 'ASC';
+            break;
+        case 'price-desc':
+            $args['meta_key'] = '_price';
+            $args['orderby'] = 'meta_value_num';
+            $args['order'] = 'DESC';
+            break;
+        default:
+            $args['orderby'] = 'menu_order';
+            $args['order'] = 'ASC';
+    }
+    
+    // Filter by categories
+    if (!empty($filter_categories)) {
+        $args['tax_query'][] = [
+            'taxonomy' => 'product_cat',
+            'field' => 'slug',
+            'terms' => array_map('sanitize_text_field', $filter_categories),
+            'operator' => 'IN',
+        ];
+    }
+    
+    // Filter by colors (product attribute)
+    if (!empty($filter_colors)) {
+        $args['tax_query'][] = [
+            'taxonomy' => 'pa_color',
+            'field' => 'slug',
+            'terms' => array_map('sanitize_text_field', $filter_colors),
+            'operator' => 'IN',
+        ];
+    }
+    
+    // Filter by sizes (product attribute)
+    if (!empty($filter_sizes)) {
+        // Try both pa_sizes and pa_size taxonomies
+        $size_taxonomy = taxonomy_exists('pa_sizes') ? 'pa_sizes' : 'pa_size';
+        $args['tax_query'][] = [
+            'taxonomy' => $size_taxonomy,
+            'field' => 'slug',
+            'terms' => array_map('sanitize_text_field', $filter_sizes),
+            'operator' => 'IN',
+        ];
+    }
+    
+    // Execute query
+    $query = new WP_Query($args);
+    
+    // Collect products
+    $products = [];
+    if ($query->have_posts()) {
+        while ($query->have_posts()) {
+            $query->the_post();
+            global $product;
+            if ($product && is_a($product, 'WC_Product')) {
+                $products[] = $product;
+            }
+        }
+    }
+    wp_reset_postdata();
+    
+    // Render product grid HTML
+    ob_start();
+    if (!empty($products)) {
+        echo view('components.product-grid', [
+            'title' => '',
+            'products' => $products,
+            'columns' => 4,
+            'showDiscount' => true,
+            'showQuickView' => true,
+            'viewAllUrl' => null,
+        ])->render();
+    } else {
+        echo '<p class="text-center text-gray-500 py-8">No products found matching your filters.</p>';
+    }
+    $products_html = ob_get_clean();
+    
+    wp_send_json_success([
+        'products_html' => $products_html,
+        'found_posts' => $query->found_posts,
+    ]);
+}
+
+add_action('wp_ajax_get_filtered_products', 'handle_get_filtered_products');
+add_action('wp_ajax_nopriv_get_filtered_products', 'handle_get_filtered_products');
+
 function clear_cart_drawer_cache() {
     // This will be handled by the JavaScript cache invalidation
     // when the cart drawer is opened after modifications

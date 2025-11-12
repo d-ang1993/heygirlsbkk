@@ -679,6 +679,133 @@
 }
 @media (max-width: 480px) {
   .product-grid {
-      grid-template-columns: 1fr !important;
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Reduced card sizes for archive/category filter pages */
+.archive-product-grid .product-grid-section .container {
+  padding: 0;
+}
+
+.archive-product-grid .product-grid {
+  gap: 10px;
+}
+
+.archive-product-grid .product-grid--4-cols {
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.archive-product-grid .product-card {
+  border-radius: 6px;
+}
+
+.archive-product-grid .product-image {
+  height: 300px; /* Reduced from 450px */
+}
+
+.archive-product-grid .product-info {
+  padding: 8px 10px;
+  gap: 2px;
+  min-height: 90px;
+}
+
+.archive-product-grid .product-info .product-title {
+  font-size: 13px;
+  margin: 0 0 3px 0;
+  min-height: 1.8em;
+}
+
+.archive-product-grid .product-price {
+  font-size: 13px;
+  min-height: 1.2em;
+}
+
+.archive-product-grid .price-current,
+.archive-product-grid .price-sale {
+  font-size: 13px;
+}
+
+.archive-product-grid .price-regular {
+  font-size: 11px;
+}
+
+.archive-product-grid .product-colors {
+  margin: 3px 0 4px 0;
+  min-height: 18px;
+  gap: 3px;
+}
+
+.archive-product-grid .color-swatch {
+  width: 10px;
+  height: 10px;
+}
+
+.archive-product-grid .product-badge {
+  top: 8px;
+  left: 8px;
+  padding: 4px 8px;
+  font-size: 10px;
+}
+
+.archive-product-grid .product-actions {
+  top: 8px;
+  right: 8px;
+  gap: 6px;
+}
+
+.archive-product-grid .quick-view-btn {
+  width: 32px;
+  height: 32px;
+}
+
+.archive-product-grid .quick-view-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Responsive adjustments for archive grid */
+@media (max-width: 1024px) {
+  .archive-product-grid .product-grid--4-cols {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .archive-product-grid .product-image {
+    height: 280px;
+  }
+}
+
+@media (max-width: 768px) {
+  .archive-product-grid .product-grid--4-cols {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .archive-product-grid .product-image {
+    height: 250px;
+  }
+  
+  .archive-product-grid .product-info {
+    padding: 6px 8px;
+  }
+  
+  .archive-product-grid .product-info .product-title {
+    font-size: 12px;
+  }
+  
+  .archive-product-grid .price-current,
+  .archive-product-grid .price-sale {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .archive-product-grid .product-grid--4-cols {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  
+  .archive-product-grid .product-image {
+    height: 220px;
   }
 }

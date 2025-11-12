@@ -26,26 +26,11 @@
       global $wp_query;
       $total_products = $wp_query->found_posts;
       
-      // Get all available product categories (for navigation links)
+      // Get all available product categories
       $product_categories = get_terms([
         'taxonomy' => 'product_cat',
         'hide_empty' => true,
       ]);
-      
-      // Get Collections category and its children
-      $collections_parent = get_term_by('slug', 'collections', 'product_cat');
-      if (!$collections_parent) {
-        $collections_parent = get_term_by('name', 'Collections', 'product_cat');
-      }
-      
-      $collections = [];
-      if ($collections_parent && !is_wp_error($collections_parent)) {
-        $collections = get_terms([
-          'taxonomy' => 'product_cat',
-          'parent' => $collections_parent->term_id,
-          'hide_empty' => true,
-        ]);
-      }
       
       // Get all available colors from products
       $all_colors = [];
@@ -86,18 +71,18 @@
       
       // Get current filter values from URL
       $selected_colors = isset($_GET['filter_color']) ? (array) $_GET['filter_color'] : [];
-      $selected_collections = isset($_GET['filter_category']) ? (array) $_GET['filter_category'] : [];
+      $selected_categories = isset($_GET['filter_category']) ? (array) $_GET['filter_category'] : [];
       $selected_sizes = isset($_GET['filter_size']) ? (array) $_GET['filter_size'] : [];
       $current_orderby = $_GET['orderby'] ?? 'menu_order';
       
-      // Prepare collections data for React component
-      $collections_data = [];
-      if (!empty($collections) && !is_wp_error($collections)) {
-        foreach ($collections as $collection) {
-          $collections_data[] = [
-            'slug' => $collection->slug,
-            'name' => $collection->name,
-            'link' => get_term_link($collection),
+      // Prepare categories data for React component
+      $categories_data = [];
+      if (!empty($product_categories) && !is_wp_error($product_categories)) {
+        foreach ($product_categories as $cat) {
+          $categories_data[] = [
+            'slug' => $cat->slug,
+            'name' => $cat->name,
+            'link' => get_term_link($cat),
           ];
         }
       }
@@ -171,11 +156,11 @@
                   </div>
                 <?php endif; ?>
 
-                <?php if(!empty($collections) && !is_wp_error($collections)): ?>
+                <?php if(!empty($product_categories) && !is_wp_error($product_categories)): ?>
                   <div class="border-t border-gray-200 px-4 py-6">
                     <h3 class="-mx-2 -my-3 flow-root">
-                      <button type="button" command="--toggle" commandfor="filter-section-mobile-collection" class="flex w-full items-center justify-between bg-white px-2 py-3 text-gray-400 hover:text-gray-500">
-                        <span class="font-medium text-gray-900">Collection</span>
+                      <button type="button" command="--toggle" commandfor="filter-section-mobile-category" class="flex w-full items-center justify-between bg-white px-2 py-3 text-gray-400 hover:text-gray-500">
+                        <span class="font-medium text-gray-900">Category</span>
                         <span class="ml-6 flex items-center">
                           <svg viewBox="0 0 20 20" fill="currentColor" data-slot="icon" aria-hidden="true" class="size-5 [[aria-expanded='true']_&]:hidden">
                             <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
@@ -186,20 +171,20 @@
                         </span>
                       </button>
                     </h3>
-                    <el-disclosure id="filter-section-mobile-collection" hidden class="pt-6 [&:not([hidden])]:block">
+                    <el-disclosure id="filter-section-mobile-category" hidden class="pt-6 [&:not([hidden])]:block">
                       <div class="space-y-6">
-                        <?php $__currentLoopData = $collections; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $collection): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <?php $__currentLoopData = $product_categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $category): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                           <div class="flex gap-3">
                             <div class="flex h-5 shrink-0 items-center">
                               <div class="group grid size-4 grid-cols-1">
-                                <input id="filter-mobile-collection-<?php echo e($index); ?>" type="checkbox" name="filter_category[]" value="<?php echo e($collection->slug); ?>" <?php echo e(in_array($collection->slug, $selected_collections) ? 'checked' : ''); ?> class="col-start-1 row-start-1 appearance-none rounded border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto" />
+                                <input id="filter-mobile-category-<?php echo e($index); ?>" type="checkbox" name="filter_category[]" value="<?php echo e($category->slug); ?>" <?php echo e(in_array($category->slug, $selected_categories) ? 'checked' : ''); ?> class="col-start-1 row-start-1 appearance-none rounded border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto" />
                                 <svg viewBox="0 0 14 14" fill="none" class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-[:disabled]:stroke-gray-950/25">
                                   <path d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="opacity-0 group-has-[:checked]:opacity-100" />
                                   <path d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="opacity-0 group-has-[:indeterminate]:opacity-100" />
                                 </svg>
                               </div>
                             </div>
-                            <label for="filter-mobile-collection-<?php echo e($index); ?>" class="min-w-0 flex-1 text-gray-500"><?php echo e($collection->name); ?></label>
+                            <label for="filter-mobile-category-<?php echo e($index); ?>" class="min-w-0 flex-1 text-gray-500"><?php echo e($category->name); ?></label>
                           </div>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                       </div>
@@ -366,11 +351,11 @@
                 </div>
               <?php endif; ?>
 
-              <?php if(!empty($collections) && !is_wp_error($collections)): ?>
+              <?php if(!empty($product_categories) && !is_wp_error($product_categories)): ?>
                 <div class="border-b border-gray-200 py-6">
                   <h3 class="-my-3 flow-root">
-                    <button type="button" command="--toggle" commandfor="filter-section-collection" class="flex w-full items-center justify-between bg-white py-3 text-sm text-gray-400 hover:text-gray-500">
-                      <span class="font-medium text-gray-900">Collection</span>
+                    <button type="button" command="--toggle" commandfor="filter-section-category" class="flex w-full items-center justify-between bg-white py-3 text-sm text-gray-400 hover:text-gray-500">
+                      <span class="font-medium text-gray-900">Category</span>
                       <span class="ml-6 flex items-center">
                         <svg viewBox="0 0 20 20" fill="currentColor" data-slot="icon" aria-hidden="true" class="size-5 [[aria-expanded='true']_&]:hidden">
                           <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
@@ -381,20 +366,20 @@
                       </span>
                     </button>
                   </h3>
-                  <el-disclosure id="filter-section-collection" hidden class="pt-6 [&:not([hidden])]:block">
+                  <el-disclosure id="filter-section-category" hidden class="pt-6 [&:not([hidden])]:block">
                     <div class="space-y-4">
-                      <?php $__currentLoopData = $collections; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $collection): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                      <?php $__currentLoopData = $product_categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $category): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <div class="flex gap-3">
                           <div class="flex h-5 shrink-0 items-center">
                             <div class="group grid size-4 grid-cols-1">
-                              <input id="filter-collection-<?php echo e($index); ?>" type="checkbox" name="filter_category[]" value="<?php echo e($collection->slug); ?>" <?php echo e(in_array($collection->slug, $selected_collections) ? 'checked' : ''); ?> class="col-start-1 row-start-1 appearance-none rounded border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto" />
+                              <input id="filter-category-<?php echo e($index); ?>" type="checkbox" name="filter_category[]" value="<?php echo e($category->slug); ?>" <?php echo e(in_array($category->slug, $selected_categories) ? 'checked' : ''); ?> class="col-start-1 row-start-1 appearance-none rounded border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto" />
                               <svg viewBox="0 0 14 14" fill="none" class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-[:disabled]:stroke-gray-950/25">
                                 <path d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="opacity-0 group-has-[:checked]:opacity-100" />
                                 <path d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="opacity-0 group-has-[:indeterminate]:opacity-100" />
                               </svg>
                             </div>
                           </div>
-                          <label for="filter-collection-<?php echo e($index); ?>" class="text-sm text-gray-600"><?php echo e($collection->name); ?></label>
+                          <label for="filter-category-<?php echo e($index); ?>" class="text-sm text-gray-600"><?php echo e($category->name); ?></label>
                         </div>
                       <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </div>
@@ -477,12 +462,12 @@
     window.archiveFiltersData = {
       initialFilters: {
         colors: <?php echo json_encode($selected_colors, 15, 512) ?>,
-        collections: <?php echo json_encode($selected_collections, 15, 512) ?>,
+        categories: <?php echo json_encode($selected_categories, 15, 512) ?>,
         sizes: <?php echo json_encode($selected_sizes, 15, 512) ?>,
         orderby: '<?php echo e($current_orderby); ?>',
       },
       filterOptions: {
-        collections: <?php echo json_encode($collections_data, 15, 512) ?>,
+        categories: <?php echo json_encode($categories_data, 15, 512) ?>,
         colors: <?php echo json_encode($all_colors, 15, 512) ?>,
         sizes: <?php echo json_encode($all_sizes, 15, 512) ?>,
       },
