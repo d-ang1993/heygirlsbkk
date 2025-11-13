@@ -93,6 +93,48 @@ function save_registration_names($customer_id) {
     }
 }
 
+// Apply orderby from URL to WooCommerce product query
+add_action('woocommerce_product_query', 'apply_url_orderby_to_product_query');
+function apply_url_orderby_to_product_query($query) {
+    if (!is_admin() && (is_shop() || is_product_category() || is_product_tag())) {
+        $orderby = isset($_GET['orderby']) ? sanitize_text_field($_GET['orderby']) : '';
+        
+        if (!empty($orderby)) {
+            switch ($orderby) {
+                case 'popularity':
+                    $query->set('meta_key', 'total_sales');
+                    $query->set('orderby', 'meta_value_num');
+                    $query->set('order', 'DESC');
+                    break;
+                case 'rating':
+                    $query->set('meta_key', '_wc_average_rating');
+                    $query->set('orderby', 'meta_value_num');
+                    $query->set('order', 'DESC');
+                    break;
+                case 'date':
+                    $query->set('orderby', 'date');
+                    $query->set('order', 'DESC');
+                    break;
+                case 'price':
+                    $query->set('meta_key', '_price');
+                    $query->set('orderby', 'meta_value_num');
+                    $query->set('order', 'ASC');
+                    break;
+                case 'price-desc':
+                    $query->set('meta_key', '_price');
+                    $query->set('orderby', 'meta_value_num');
+                    $query->set('order', 'DESC');
+                    break;
+                case 'menu_order':
+                default:
+                    $query->set('orderby', 'menu_order');
+                    $query->set('order', 'ASC');
+                    break;
+            }
+        }
+    }
+}
+
 // Validate first and last name on registration
 add_action('woocommerce_register_post', 'validate_registration_names', 10, 3);
 function validate_registration_names($username, $email, $validation_errors) {
@@ -726,11 +768,30 @@ function handle_get_filtered_products() {
         return;
     }
     
-    // Get filter parameters
-    $filter_colors = isset($_POST['filter_color']) ? (array) $_POST['filter_color'] : [];
-    $filter_categories = isset($_POST['filter_category']) ? (array) $_POST['filter_category'] : [];
-    $filter_sizes = isset($_POST['filter_size']) ? (array) $_POST['filter_size'] : [];
+    // Get filter parameters (handle both POST and $_REQUEST)
+    $filter_colors = [];
+    if (isset($_POST['filter_color'])) {
+        $filter_colors = is_array($_POST['filter_color']) ? $_POST['filter_color'] : [$_POST['filter_color']];
+    }
+    
+    $filter_categories = [];
+    if (isset($_POST['filter_category'])) {
+        $filter_categories = is_array($_POST['filter_category']) ? $_POST['filter_category'] : [$_POST['filter_category']];
+    }
+    
+    $filter_sizes = [];
+    if (isset($_POST['filter_size'])) {
+        $filter_sizes = is_array($_POST['filter_size']) ? $_POST['filter_size'] : [$_POST['filter_size']];
+    }
+    
     $orderby = isset($_POST['orderby']) ? sanitize_text_field($_POST['orderby']) : 'menu_order';
+    $current_category = isset($_POST['current_category']) ? sanitize_text_field($_POST['current_category']) : '';
+    
+    // Debug logging
+    error_log('🔵 handle_get_filtered_products: current_category = ' . var_export($current_category, true));
+    error_log('🔵 handle_get_filtered_products: filter_colors = ' . print_r($filter_colors, true));
+    error_log('🔵 handle_get_filtered_products: filter_sizes = ' . print_r($filter_sizes, true));
+    error_log('🔵 handle_get_filtered_products: $_POST = ' . print_r($_POST, true));
     
     // Build query args
     $args = [
@@ -773,15 +834,26 @@ function handle_get_filtered_products() {
             $args['order'] = 'ASC';
     }
     
-    // Filter by categories
-    if (!empty($filter_categories)) {
+    // CRITICAL: If on a category page, ALWAYS filter by that category
+    // This must be applied FIRST, before any other filters
+    // This ensures we only show products from the current collection, even when all filters are cleared
+    if (!empty($current_category)) {
         $args['tax_query'][] = [
             'taxonomy' => 'product_cat',
             'field' => 'slug',
-            'terms' => array_map('sanitize_text_field', $filter_categories),
+            'terms' => $current_category,
             'operator' => 'IN',
         ];
+        error_log('🔵 handle_get_filtered_products: Applied category filter: ' . $current_category);
+    } else {
+        error_log('⚠️ handle_get_filtered_products: No current_category provided!');
     }
+    
+    // Note: If current_category is set, we already filtered by it above
+    // Additional category filters from the UI are subcategories within the collection
+    // Since we're on a category page, we don't need to add additional category filters
+    // as they would already be included in the current_category filter
+    // The category filter in the UI is mainly for shop page navigation
     
     // Filter by colors (product attribute)
     if (!empty($filter_colors)) {
@@ -1057,3 +1129,34 @@ add_filter('template_include', function ($template) {
 }, 99);
 
 // Note: Custom image sizes are defined in app/setup.php to avoid conflicts
+
+// Redirect special shop subpages to main /shop with appropriate sorting
+add_action('template_redirect', function () {
+
+    // 🛍️ Best Sellers → Sort by popularity
+    if (is_page('best-sellers')) {
+        wp_safe_redirect(
+            add_query_arg('orderby', 'popularity', wc_get_page_permalink('shop')),
+            301
+        );
+        exit;
+    }
+
+    // 🆕 New Arrivals → Sort by latest
+    if (is_page('new-arrivals')) {
+        wp_safe_redirect(
+            add_query_arg('orderby', 'date', wc_get_page_permalink('shop')),
+            301
+        );
+        exit;
+    }
+
+    // 💸 Sale → Show on-sale products only
+    if (is_page('sale')) {
+        wp_safe_redirect(
+            add_query_arg('onsale', '1', wc_get_page_permalink('shop')),
+            301
+        );
+        exit;
+    }
+});

@@ -628,6 +628,84 @@ class CustomizerServiceProvider extends ServiceProvider
                     '4' => '4 Columns',
                 ],
             ]);
+
+            // Featured Products Gradient Type
+            $wp_customize->add_setting('featured_products_gradient_type', [
+                'default' => 'none',
+                'sanitize_callback' => 'sanitize_text_field',
+            ]);
+
+            $wp_customize->add_control('featured_products_gradient_type', [
+                'label' => __('Title Text Gradient Type', 'sage'),
+                'description' => __('Apply a gradient to the section title text', 'sage'),
+                'section' => 'featured_products',
+                'type' => 'select',
+                'choices' => [
+                    'none' => __('None', 'sage'),
+                    'linear' => __('Linear Gradient', 'sage'),
+                    'radial' => __('Radial Gradient', 'sage'),
+                ],
+            ]);
+
+            // Featured Products Gradient Start Color
+            $wp_customize->add_setting('featured_products_gradient_start', [
+                'default' => '#000000',
+                'sanitize_callback' => 'sanitize_hex_color',
+            ]);
+
+            $wp_customize->add_control(new \WP_Customize_Color_Control($wp_customize, 'featured_products_gradient_start', [
+                'label' => __('Gradient Start Color', 'sage'),
+                'section' => 'featured_products',
+                'active_callback' => function($control) {
+                    $gradient_type = $control->manager->get_setting('featured_products_gradient_type')->value();
+                    return in_array($gradient_type, ['linear', 'radial']);
+                },
+            ]));
+
+            // Featured Products Gradient End Color
+            $wp_customize->add_setting('featured_products_gradient_end', [
+                'default' => '#666666',
+                'sanitize_callback' => 'sanitize_hex_color',
+            ]);
+
+            $wp_customize->add_control(new \WP_Customize_Color_Control($wp_customize, 'featured_products_gradient_end', [
+                'label' => __('Gradient End Color', 'sage'),
+                'section' => 'featured_products',
+                'active_callback' => function($control) {
+                    $gradient_type = $control->manager->get_setting('featured_products_gradient_type')->value();
+                    return in_array($gradient_type, ['linear', 'radial']);
+                },
+            ]));
+
+            // Featured Products Gradient Direction (for linear gradients)
+            $wp_customize->add_setting('featured_products_gradient_direction', [
+                'default' => 'to bottom',
+                'sanitize_callback' => 'sanitize_text_field',
+            ]);
+
+            $wp_customize->add_control('featured_products_gradient_direction', [
+                'label' => __('Gradient Direction', 'sage'),
+                'section' => 'featured_products',
+                'type' => 'select',
+                'choices' => [
+                    'to bottom' => __('Top to Bottom', 'sage'),
+                    'to top' => __('Bottom to Top', 'sage'),
+                    'to right' => __('Left to Right', 'sage'),
+                    'to left' => __('Right to Left', 'sage'),
+                    'to bottom right' => __('Top Left to Bottom Right', 'sage'),
+                    'to bottom left' => __('Top Right to Bottom Left', 'sage'),
+                    'to top right' => __('Bottom Left to Top Right', 'sage'),
+                    'to top left' => __('Bottom Right to Top Left', 'sage'),
+                    '45deg' => __('45 Degrees', 'sage'),
+                    '90deg' => __('90 Degrees', 'sage'),
+                    '135deg' => __('135 Degrees', 'sage'),
+                    '180deg' => __('180 Degrees', 'sage'),
+                ],
+                'active_callback' => function($control) {
+                    $gradient_type = $control->manager->get_setting('featured_products_gradient_type')->value();
+                    return $gradient_type === 'linear';
+                },
+            ]);
         });
 
         // New Arrival Section

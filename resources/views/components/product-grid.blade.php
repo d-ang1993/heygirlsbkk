@@ -5,7 +5,9 @@
     'showDiscount' => true,
     'showQuickView' => true,
     'viewAllUrl' => null,
-    'priorityLoadCount' => 0  // Number of products to eagerly load
+    'priorityLoadCount' => 0,  // Number of products to eagerly load
+    'gradientClass' => '',      // CSS class for gradient text
+    'gradientCSS' => ''         // Gradient CSS value
 ])
 
 @php
@@ -22,7 +24,7 @@
     <div class="container">
         @if(!empty($title))
             <div class="section-header">
-                <h2 class="section-title">{{ $title }}</h2>
+                <h2 class="section-title {{ $gradientClass }}"@if($gradientCSS) style="background-image: {{ $gradientCSS }};"@endif>{{ $title }}</h2>
                 @if($viewAllUrl)
                     <a href="{{ $viewAllUrl }}" class="view-all-link">View All →</a>
                 @else

@@ -1,8 +1,20 @@
 /** @jsxImportSource react */
 import React, { useState, useEffect, useCallback, useRef } from "react";
 
-export default function ArchiveFilters({ initialFilters = {}, filterOptions = {}, ajaxUrl = "", nonce = "" }) {
-  console.log("🔵 ArchiveFilters Component: Rendered with props", { initialFilters, filterOptions, ajaxUrl: !!ajaxUrl, nonce: !!nonce });
+export default function ArchiveFilters({ initialFilters = {}, filterOptions = {}, ajaxUrl = "", nonce = "", currentCategory = null }) {
+  console.log("🔵 ArchiveFilters Component: Rendered with props", { initialFilters, filterOptions, ajaxUrl: !!ajaxUrl, nonce: !!nonce, currentCategory });
+  
+  // Store initial filters in a ref to avoid dependency issues
+  const initialFiltersRef = useRef(initialFilters);
+  
+  // Store currentCategory in a ref to ensure it's always available, even if prop changes
+  const currentCategoryRef = useRef(currentCategory);
+  if (currentCategory) {
+    currentCategoryRef.current = currentCategory;
+  }
+  
+  // Use ref value for currentCategory to ensure it persists across renders
+  const effectiveCurrentCategory = currentCategoryRef.current || currentCategory;
   
   const [filters, setFilters] = useState({
     colors: initialFilters.colors || [],
@@ -19,44 +31,73 @@ export default function ArchiveFilters({ initialFilters = {}, filterOptions = {}
   });
 
   const [loading, setLoading] = useState(false);
+  const skipDebounceRef = useRef(false);
 
   const applyFilters = useCallback(async (filterState) => {
     setLoading(true);
     
     try {
-      const params = new URLSearchParams();
+      // Use FormData for proper PHP array handling
+      const formData = new FormData();
       
+      // IMPORTANT: Always include current category FIRST if on a category page
+      // This ensures the category filter is always applied, even when other filters are cleared
+      // Use the effective current category (from ref or prop)
+      const categoryToUse = effectiveCurrentCategory || currentCategoryRef.current;
+      if (categoryToUse) {
+        formData.append("current_category", categoryToUse);
+        console.log('🔵 ArchiveFilters: Including current category in request:', categoryToUse);
+      } else {
+        console.warn('⚠️ ArchiveFilters: No currentCategory available!', { 
+          currentCategory, 
+          effectiveCurrentCategory, 
+          refValue: currentCategoryRef.current 
+        });
+      }
+      
+      // Add filter colors
       if (filterState.colors.length > 0) {
         filterState.colors.forEach((color) => {
-          params.append("filter_color[]", color);
+          formData.append("filter_color[]", color);
         });
       }
       
+      // Add filter categories
       if (filterState.categories.length > 0) {
         filterState.categories.forEach((category) => {
-          params.append("filter_category[]", category);
+          formData.append("filter_category[]", category);
         });
       }
       
+      // Add filter sizes
       if (filterState.sizes.length > 0) {
         filterState.sizes.forEach((size) => {
-          params.append("filter_size[]", size);
+          formData.append("filter_size[]", size);
         });
       }
       
+      // Add orderby
       if (filterState.orderby) {
-        params.append("orderby", filterState.orderby);
+        formData.append("orderby", filterState.orderby);
       }
 
-      params.append("action", "get_filtered_products");
-      params.append("nonce", nonce);
+      // Add action and nonce
+      formData.append("action", "get_filtered_products");
+      formData.append("nonce", nonce);
+      
+      // Log what we're sending
+      console.log('🔵 ArchiveFilters: Sending filter request', {
+        currentCategory: categoryToUse || currentCategory,
+        effectiveCurrentCategory,
+        colors: filterState.colors,
+        categories: filterState.categories,
+        sizes: filterState.sizes,
+        orderby: filterState.orderby,
+      });
 
       const response = await fetch(ajaxUrl, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: params.toString(),
+        body: formData, // FormData automatically sets Content-Type with boundary
       });
 
       const data = await response.json();
@@ -105,12 +146,44 @@ export default function ArchiveFilters({ initialFilters = {}, filterOptions = {}
     } finally {
       setLoading(false);
     }
-  }, [ajaxUrl, nonce]);
+  }, [ajaxUrl, nonce, effectiveCurrentCategory]); // Use effectiveCurrentCategory to ensure category is always included
 
   const isInitialMount = useRef(true);
+  
+  // Apply filters on initial mount if there are URL parameters
   useEffect(() => {
     if (isInitialMount.current) {
       isInitialMount.current = false;
+      
+      const initFilters = initialFiltersRef.current;
+      
+      // Check if there are active filters or non-default orderby
+      const hasActiveFilters = 
+        (initFilters.colors && initFilters.colors.length > 0) ||
+        (initFilters.categories && initFilters.categories.length > 0) ||
+        (initFilters.sizes && initFilters.sizes.length > 0) ||
+        (initFilters.orderby && initFilters.orderby !== 'menu_order');
+      
+      // Apply filters on initial mount if URL parameters exist
+      // This ensures the React component applies the same filters that were in the URL
+      if (hasActiveFilters) {
+        console.log('🔵 ArchiveFilters: Applying initial filters from URL', initFilters);
+        // Use a small timeout to ensure DOM is ready
+        setTimeout(() => {
+          applyFilters({
+            colors: initFilters.colors || [],
+            categories: initFilters.categories || [],
+            sizes: initFilters.sizes || [],
+            orderby: initFilters.orderby || 'menu_order',
+          });
+        }, 100);
+      }
+      return;
+    }
+
+    // Skip debounce if orderby was updated programmatically
+    if (skipDebounceRef.current) {
+      skipDebounceRef.current = false;
       return;
     }
 
@@ -137,6 +210,30 @@ export default function ArchiveFilters({ initialFilters = {}, filterOptions = {}
       [section]: !prev[section],
     }));
   };
+
+  // Function to update orderby - exposed globally for sort dropdown
+  const updateOrderby = useCallback((newOrderby) => {
+    skipDebounceRef.current = true; // Skip the debounced useEffect
+    setFilters((prev) => {
+      const updatedFilters = {
+        ...prev,
+        orderby: newOrderby,
+      };
+      // Immediately apply filters with new orderby (don't wait for debounce)
+      setTimeout(() => {
+        applyFilters(updatedFilters);
+      }, 0);
+      return updatedFilters;
+    });
+  }, [applyFilters]);
+
+  // Expose updateOrderby function globally so sort dropdown can use it
+  useEffect(() => {
+    window.updateArchiveSort = updateOrderby;
+    return () => {
+      delete window.updateArchiveSort;
+    };
+  }, [updateOrderby]);
 
   // Debug: Log what filter options are available
   console.log("🔵 ArchiveFilters: filterOptions", filterOptions);
@@ -211,8 +308,8 @@ export default function ArchiveFilters({ initialFilters = {}, filterOptions = {}
             </div>
           )}
 
-          {/* Category Filter */}
-          {filterOptions.categories && filterOptions.categories.length > 0 && (
+              {/* Category Filter - Hide on category pages */}
+              {!effectiveCurrentCategory && filterOptions.categories && filterOptions.categories.length > 0 && (
             <div className="border-b border-gray-200 py-6">
               <h3 className="-my-3 flow-root">
                 <button

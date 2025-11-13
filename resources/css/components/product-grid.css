@@ -5,6 +5,25 @@
   background: #fff;
 }
 
+/* Featured Products Section with Gradient Text Support */
+.featured-products-section {
+  width: 100%;
+}
+
+/* Gradient Text Effect - ONLY on text, no background visible */
+.section-title.has-text-gradient {
+  /* Clip background to text shape only */
+  -webkit-background-clip: text;
+  background-clip: text;
+  
+  /* Make text transparent so gradient shows through */
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  
+  /* Ensure proper display */
+  display: inline-block;
+}
+
 .new-arrival-section {
   padding: 40px 0;
   background: #fff;

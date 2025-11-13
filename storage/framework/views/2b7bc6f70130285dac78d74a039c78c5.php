@@ -5,6 +5,24 @@ $categoryId = get_theme_mod('featured_products_category', '');
 $count = get_theme_mod('featured_products_count', 6);
 $columns = get_theme_mod('featured_products_columns', 3);
 
+// Get gradient settings for text
+$gradientType = get_theme_mod('featured_products_gradient_type', 'none');
+$gradientStart = get_theme_mod('featured_products_gradient_start', '#000000');
+$gradientEnd = get_theme_mod('featured_products_gradient_end', '#666666');
+$gradientDirection = get_theme_mod('featured_products_gradient_direction', 'to bottom');
+
+// Build gradient CSS class name and custom CSS property
+$gradientClass = '';
+$gradientCSS = '';
+if ($gradientType !== 'none' && $gradientStart && $gradientEnd) {
+    $gradientClass = 'has-text-gradient';
+    if ($gradientType === 'linear') {
+        $gradientCSS = "linear-gradient({$gradientDirection}, {$gradientStart}, {$gradientEnd})";
+    } elseif ($gradientType === 'radial') {
+        $gradientCSS = "radial-gradient(circle, {$gradientStart}, {$gradientEnd})";
+    }
+}
+
 // Get products for featured section
 $featuredProducts = [];
 if ($enable && $categoryId) {
@@ -33,16 +51,17 @@ if ($enable && $categoryId) {
     }
   }
 ?>
-<?php if (isset($component)) { $__componentOriginala87666a6c7dfd023b4375fc379bf394c = $component; } ?>
+<div class="featured-products-section">
+  <?php if (isset($component)) { $__componentOriginala87666a6c7dfd023b4375fc379bf394c = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginala87666a6c7dfd023b4375fc379bf394c = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.product-grid','data' => ['title' => ''.e($title).'','products' => $featuredProducts,'columns' => $columns,'viewAllUrl' => $collectionUrl]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.product-grid','data' => ['title' => ''.e($title).'','products' => $featuredProducts,'columns' => $columns,'viewAllUrl' => $collectionUrl,'gradientClass' => $gradientClass,'gradientCSS' => $gradientCSS]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('product-grid'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['title' => ''.e($title).'','products' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($featuredProducts),'columns' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($columns),'viewAllUrl' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($collectionUrl)]); ?>
+<?php $component->withAttributes(['title' => ''.e($title).'','products' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($featuredProducts),'columns' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($columns),'viewAllUrl' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($collectionUrl),'gradientClass' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($gradientClass),'gradientCSS' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($gradientCSS)]); ?>
 <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginala87666a6c7dfd023b4375fc379bf394c)): ?>
@@ -53,6 +72,7 @@ if ($enable && $categoryId) {
 <?php $component = $__componentOriginala87666a6c7dfd023b4375fc379bf394c; ?>
 <?php unset($__componentOriginala87666a6c7dfd023b4375fc379bf394c); ?>
 <?php endif; ?>
+</div>
 <?php else: ?>
 <!-- Debug info for Featured Products -->
 <?php if(current_user_can('manage_options')): ?>

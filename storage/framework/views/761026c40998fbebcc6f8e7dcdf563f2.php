@@ -11,61 +11,255 @@
     <?php do_action('woocommerce_before_shop_loop') ?>
 
     <?php
-      // Collect all products from the current query
-      $archive_products = [];
-      while (have_posts()) {
-        the_post();
-        global $product;
-        if ($product && is_a($product, 'WC_Product')) {
-          $archive_products[] = $product;
+      // Detect if we're on a category/collection page FIRST
+      $current_category = null;
+      $current_category_slug = null;
+      if (is_product_category()) {
+        $current_category = get_queried_object();
+        if ($current_category && is_a($current_category, 'WP_Term')) {
+          $current_category_slug = $current_category->slug;
         }
       }
-      wp_reset_postdata();
       
-      // Get current query info
-      global $wp_query;
-      $total_products = $wp_query->found_posts;
+      // Collect products - explicitly filter by category if on a category page
+      $archive_products = [];
       
-      // Get all available product categories
+      if ($current_category_slug) {
+        // On a category page: explicitly query products from this category only
+        $orderby = isset($_GET['orderby']) ? sanitize_text_field($_GET['orderby']) : 'menu_order';
+        
+        // Build query args with proper orderby
+        $query_args = [
+          'post_type' => 'product',
+          'post_status' => 'publish',
+          'posts_per_page' => get_option('posts_per_page', 12),
+          'tax_query' => [
+            [
+              'taxonomy' => 'product_cat',
+              'field' => 'slug',
+              'terms' => $current_category_slug,
+              'operator' => 'IN',
+            ],
+          ],
+        ];
+        
+        // Apply orderby based on URL parameter
+        switch ($orderby) {
+          case 'popularity':
+            $query_args['meta_key'] = 'total_sales';
+            $query_args['orderby'] = 'meta_value_num';
+            $query_args['order'] = 'DESC';
+            break;
+          case 'rating':
+            $query_args['meta_key'] = '_wc_average_rating';
+            $query_args['orderby'] = 'meta_value_num';
+            $query_args['order'] = 'DESC';
+            break;
+          case 'date':
+            $query_args['orderby'] = 'date';
+            $query_args['order'] = 'DESC';
+            break;
+          case 'price':
+            $query_args['meta_key'] = '_price';
+            $query_args['orderby'] = 'meta_value_num';
+            $query_args['order'] = 'ASC';
+            break;
+          case 'price-desc':
+            $query_args['meta_key'] = '_price';
+            $query_args['orderby'] = 'meta_value_num';
+            $query_args['order'] = 'DESC';
+            break;
+          default:
+            $query_args['orderby'] = 'menu_order';
+            $query_args['order'] = 'ASC';
+            break;
+        }
+        
+        $category_products_query = new WP_Query($query_args);
+        
+        if ($category_products_query->have_posts()) {
+          while ($category_products_query->have_posts()) {
+            $category_products_query->the_post();
+            global $product;
+            if ($product && is_a($product, 'WC_Product')) {
+              $archive_products[] = $product;
+            }
+          }
+        }
+        wp_reset_postdata();
+        $total_products = $category_products_query->found_posts;
+      } else {
+        // On shop page: use WooCommerce's default query
+        while (have_posts()) {
+          the_post();
+          global $product;
+          if ($product && is_a($product, 'WC_Product')) {
+            $archive_products[] = $product;
+          }
+        }
+        wp_reset_postdata();
+        
+        // Get current query info
+        global $wp_query;
+        $total_products = $wp_query->found_posts;
+      }
+      
+      // Get products in the current category (if on a category page)
+      $category_product_ids = [];
+      if ($current_category_slug) {
+        // Use WP_Query to get all products in this category
+        $category_query = new WP_Query([
+          'post_type' => 'product',
+          'post_status' => 'publish',
+          'posts_per_page' => -1,
+          'tax_query' => [
+            [
+              'taxonomy' => 'product_cat',
+              'field' => 'slug',
+              'terms' => $current_category_slug,
+              'operator' => 'IN',
+            ],
+          ],
+          'fields' => 'ids',
+        ]);
+        
+        if ($category_query->have_posts()) {
+          $category_product_ids = $category_query->posts;
+        }
+        wp_reset_postdata();
+      }
+      
+      // Get all available product categories (for shop page, or as sub-categories for current category)
       $product_categories = get_terms([
         'taxonomy' => 'product_cat',
         'hide_empty' => true,
       ]);
       
-      // Get all available colors from products
+      // Get available colors from products in the current category (if on category page)
       $all_colors = [];
-      $color_terms = get_terms([
-        'taxonomy' => 'pa_color',
-        'hide_empty' => true,
-      ]);
-      foreach ($color_terms as $term) {
-        $color_meta = get_term_meta($term->term_id, 'product_attribute_color', true);
-        $all_colors[] = [
-          'slug' => $term->slug,
-          'name' => $term->name,
-          'color' => $color_meta ?: '#cccccc',
-        ];
-      }
-      
-      // Get all available sizes from products
-      $all_sizes = [];
-      $size_terms = get_terms([
-        'taxonomy' => 'pa_sizes',
-        'hide_empty' => true,
-      ]);
-      if (empty($size_terms) || is_wp_error($size_terms)) {
-        // Try alternative size taxonomy names
-        $size_terms = get_terms([
-          'taxonomy' => 'pa_size',
+      if ($current_category_slug && !empty($category_product_ids)) {
+        // Get colors from products in this category only
+        foreach ($category_product_ids as $product_id) {
+          $product = wc_get_product($product_id);
+          if (!$product) continue;
+          
+          // Get colors from product variations or attributes
+          if ($product->is_type('variable')) {
+            $variations = $product->get_available_variations();
+            foreach ($variations as $variation) {
+              $attrs = $variation['attributes'] ?? [];
+              $color_slug = $attrs['attribute_pa_color'] ?? $attrs['attribute_color'] ?? '';
+              if ($color_slug && !in_array($color_slug, array_column($all_colors, 'slug'))) {
+                $color_term = get_term_by('slug', $color_slug, 'pa_color');
+                if ($color_term) {
+                  $color_meta = get_term_meta($color_term->term_id, 'product_attribute_color', true);
+                  $all_colors[] = [
+                    'slug' => $color_term->slug,
+                    'name' => $color_term->name,
+                    'color' => $color_meta ?: '#cccccc',
+                  ];
+                }
+              }
+            }
+          } else {
+            // For simple products, check attributes
+            $attributes = $product->get_attributes();
+            if (isset($attributes['pa_color'])) {
+              $color_options = $attributes['pa_color']->get_options() ?? [];
+              foreach ($color_options as $color_id) {
+                $color_term = get_term($color_id, 'pa_color');
+                if ($color_term && !is_wp_error($color_term) && !in_array($color_term->slug, array_column($all_colors, 'slug'))) {
+                  $color_meta = get_term_meta($color_term->term_id, 'product_attribute_color', true);
+                  $all_colors[] = [
+                    'slug' => $color_term->slug,
+                    'name' => $color_term->name,
+                    'color' => $color_meta ?: '#cccccc',
+                  ];
+                }
+              }
+            }
+          }
+        }
+      } else {
+        // Get all colors from all products (shop page)
+        $color_terms = get_terms([
+          'taxonomy' => 'pa_color',
           'hide_empty' => true,
         ]);
-      }
-      if (!empty($size_terms) && !is_wp_error($size_terms)) {
-        foreach ($size_terms as $term) {
-          $all_sizes[] = [
+        foreach ($color_terms as $term) {
+          $color_meta = get_term_meta($term->term_id, 'product_attribute_color', true);
+          $all_colors[] = [
             'slug' => $term->slug,
-            'name' => strtoupper($term->name),
+            'name' => $term->name,
+            'color' => $color_meta ?: '#cccccc',
           ];
+        }
+      }
+      
+      // Get available sizes from products in the current category (if on category page)
+      $all_sizes = [];
+      if ($current_category_slug && !empty($category_product_ids)) {
+        // Get sizes from products in this category only
+        foreach ($category_product_ids as $product_id) {
+          $product = wc_get_product($product_id);
+          if (!$product) continue;
+          
+          // Get sizes from product variations or attributes
+          if ($product->is_type('variable')) {
+            $variations = $product->get_available_variations();
+            foreach ($variations as $variation) {
+              $attrs = $variation['attributes'] ?? [];
+              $size_slug = $attrs['attribute_pa_sizes'] ?? $attrs['attribute_pa_size'] ?? $attrs['attribute_sizes'] ?? $attrs['attribute_size'] ?? '';
+              if ($size_slug && !in_array($size_slug, array_column($all_sizes, 'slug'))) {
+                $size_term = get_term_by('slug', $size_slug, 'pa_sizes');
+                if (!$size_term) {
+                  $size_term = get_term_by('slug', $size_slug, 'pa_size');
+                }
+                if ($size_term) {
+                  $all_sizes[] = [
+                    'slug' => $size_term->slug,
+                    'name' => strtoupper($size_term->name),
+                  ];
+                }
+              }
+            }
+          } else {
+            // For simple products, check attributes
+            $attributes = $product->get_attributes();
+            $size_attr = $attributes['pa_sizes'] ?? $attributes['pa_size'] ?? null;
+            if ($size_attr) {
+              $size_options = $size_attr->get_options() ?? [];
+              foreach ($size_options as $size_id) {
+                $size_term = get_term($size_id, $size_attr->get_name());
+                if ($size_term && !is_wp_error($size_term) && !in_array($size_term->slug, array_column($all_sizes, 'slug'))) {
+                  $all_sizes[] = [
+                    'slug' => $size_term->slug,
+                    'name' => strtoupper($size_term->name),
+                  ];
+                }
+              }
+            }
+          }
+        }
+      } else {
+        // Get all sizes from all products (shop page)
+        $size_terms = get_terms([
+          'taxonomy' => 'pa_sizes',
+          'hide_empty' => true,
+        ]);
+        if (empty($size_terms) || is_wp_error($size_terms)) {
+          $size_terms = get_terms([
+            'taxonomy' => 'pa_size',
+            'hide_empty' => true,
+          ]);
+        }
+        if (!empty($size_terms) && !is_wp_error($size_terms)) {
+          foreach ($size_terms as $term) {
+            $all_sizes[] = [
+              'slug' => $term->slug,
+              'name' => strtoupper($term->name),
+            ];
+          }
         }
       }
       
@@ -75,9 +269,18 @@
       $selected_sizes = isset($_GET['filter_size']) ? (array) $_GET['filter_size'] : [];
       $current_orderby = $_GET['orderby'] ?? 'menu_order';
       
+      // On a category page, don't show category filters in the UI
+      // The current category is automatically applied in the backend
+      // Clear selected_categories if on a category page to avoid confusion
+      if ($current_category_slug) {
+        $selected_categories = [];
+      }
+      
       // Prepare categories data for React component
+      // On a category page, we don't need to show category filters
+      // since we're already viewing a specific collection
       $categories_data = [];
-      if (!empty($product_categories) && !is_wp_error($product_categories)) {
+      if (!$current_category_slug && !empty($product_categories) && !is_wp_error($product_categories)) {
         foreach ($product_categories as $cat) {
           $categories_data[] = [
             'slug' => $cat->slug,
@@ -256,7 +459,7 @@
                 </svg>
               </button>
 
-              <el-menu anchor="bottom end" popover class="m-0 w-40 origin-top-right rounded-md bg-white p-0 shadow-2xl ring-1 ring-black/5 transition [--anchor-gap:theme(spacing.2)] [transition-behavior:allow-discrete] focus:outline-none data-[closed]:scale-95 data-[closed]:transform data-[closed]:opacity-0 data-[enter]:duration-100 data-[leave]:duration-75 data-[enter]:ease-out data-[leave]:ease-in">
+              <el-menu anchor="bottom end" popover class="archive-sort-menu m-0 w-40 origin-top-right rounded-md bg-white p-0 shadow-2xl ring-1 ring-black/5 transition [--anchor-gap:theme(spacing.2)] [transition-behavior:allow-discrete] focus:outline-none data-[closed]:scale-95 data-[closed]:transform data-[closed]:opacity-0 data-[enter]:duration-100 data-[leave]:duration-75 data-[enter]:ease-out data-[leave]:ease-in">
                 <div class="py-1">
                   <?php
                     $current_url = remove_query_arg('paged');
@@ -274,7 +477,13 @@
                       $sort_url = add_query_arg('orderby', $value, $current_url);
                       $is_active = $current_orderby === $value;
                     ?>
-                    <a href="<?php echo e($sort_url); ?>" class="block px-4 py-2 text-sm <?php echo e($is_active ? 'font-medium text-gray-900' : 'text-gray-500'); ?> focus:bg-gray-100 focus:outline-none"><?php echo e($label); ?></a>
+                    <a 
+                      href="<?php echo e($sort_url); ?>" 
+                      data-orderby="<?php echo e($value); ?>"
+                      class="archive-sort-link block px-4 py-2 text-sm <?php echo e($is_active ? 'font-medium text-gray-900' : 'text-gray-500'); ?> focus:bg-gray-100 focus:outline-none"
+                      <?php echo e($is_active ? 'aria-current="page"' : ''); ?>
+
+                    ><?php echo e($label); ?></a>
                   <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </div>
               </el-menu>
@@ -471,6 +680,7 @@
         colors: <?php echo json_encode($all_colors, 15, 512) ?>,
         sizes: <?php echo json_encode($all_sizes, 15, 512) ?>,
       },
+      currentCategory: <?php echo json_encode($current_category_slug, 15, 512) ?>,
       ajaxUrl: '<?php echo e(admin_url('admin-ajax.php')); ?>',
       nonce: '<?php echo e(wp_create_nonce('archive_filters_nonce')); ?>',
     };
@@ -482,6 +692,55 @@
 
   <!-- Archive Page JavaScript -->
   <script>
+    // Handle sort dropdown clicks - integrate with React filters
+    // Use event delegation to handle clicks on sort links
+    function handleSortClick(e) {
+      const link = e.target.closest('.archive-sort-link');
+      if (!link) return;
+      
+      // Only intercept if React filters are active
+      if (typeof window.updateArchiveSort === 'function') {
+        e.preventDefault();
+        const orderby = link.getAttribute('data-orderby');
+        
+        if (orderby) {
+          console.log('🔵 Archive Sort: Changing orderby to', orderby);
+          
+          // Update React component's orderby
+          window.updateArchiveSort(orderby);
+          
+          // Update active state in UI
+          document.querySelectorAll('.archive-sort-link').forEach(function(l) {
+            l.classList.remove('font-medium', 'text-gray-900');
+            l.classList.add('text-gray-500');
+            l.removeAttribute('aria-current');
+          });
+          link.classList.add('font-medium', 'text-gray-900');
+          link.classList.remove('text-gray-500');
+          link.setAttribute('aria-current', 'page');
+        }
+      }
+      // If React filters aren't available, let the link work normally (page reload)
+    }
+    
+    function initSortLinks() {
+      // Remove existing listener if it exists
+      const sortContainer = document.querySelector('.archive-sort-menu');
+      if (sortContainer) {
+        // Use event delegation on the container
+        sortContainer.removeEventListener('click', handleSortClick);
+        sortContainer.addEventListener('click', handleSortClick);
+      }
+    }
+
+    // Initialize sort links on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      // Wait for React component to be mounted
+      setTimeout(function() {
+        initSortLinks();
+      }, 500);
+    });
+
     // Re-initialize product grid after AJAX updates
     window.productGridInit = function() {
       // Re-observe images for lazy loading
@@ -563,6 +822,11 @@
       // If the sidebar was replaced via AJAX, safely re-mount the React filters
       if (typeof window.mountArchiveFilters === 'function') {
         window.mountArchiveFilters();
+      }
+
+      // Re-initialize sort links after AJAX updates
+      if (typeof initSortLinks === 'function') {
+        initSortLinks();
       }
     };
   </script>

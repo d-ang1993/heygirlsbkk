@@ -4,7 +4,7 @@
     "src": "editor.deps.json"
   },
   "resources/css/app.css": {
-    "file": "assets/app-COdeM7AL.css",
+    "file": "assets/app-XGX3TzEx.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
@@ -20,7 +20,7 @@
     "isEntry": true
   },
   "resources/js/archive-filters.jsx": {
-    "file": "assets/archive-filters-CE-qRQLI.js",
+    "file": "assets/archive-filters-EJnu8FzH.js",
     "name": "archive-filters",
     "src": "resources/js/archive-filters.jsx",
     "isEntry": true
