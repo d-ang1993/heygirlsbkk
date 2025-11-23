@@ -34,6 +34,7 @@ export default ({ mode }) => {
           'resources/js/editor.js',
           'resources/js/image-optimization.js',
           'resources/js/archive-filters.jsx',
+          'resources/js/checkout-form.jsx',
         ],
       },
       // Remove manifestDir to put manifest.json directly in outDir
@@ -58,6 +59,7 @@ export default ({ mode }) => {
           'resources/js/editor.js',
           'resources/js/image-optimization.js',
           'resources/js/archive-filters.jsx',
+          'resources/js/checkout-form.jsx',
         ],
         refresh: true,
         buildDirectory: 'build',

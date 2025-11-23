@@ -256,8 +256,8 @@ export default function ArchiveFilters({ initialFilters = {}, filterOptions = {}
         </div>
       ) : (
         <>
-          {/* Color Filter */}
-          {filterOptions.colors && filterOptions.colors.length > 0 && (
+      {/* Color Filter */}
+      {filterOptions.colors && filterOptions.colors.length > 0 && (
             <div className="border-b border-gray-200 py-6">
               <h3 className="-my-3 flow-root">
                 <button
@@ -302,11 +302,11 @@ export default function ArchiveFilters({ initialFilters = {}, filterOptions = {}
                         {c.name}
                       </label>
                     </div>
-                  ))}
-                </div>
-              )}
+              ))}
             </div>
           )}
+        </div>
+      )}
 
               {/* Category Filter - Hide on category pages */}
               {!effectiveCurrentCategory && filterOptions.categories && filterOptions.categories.length > 0 && (
@@ -354,14 +354,14 @@ export default function ArchiveFilters({ initialFilters = {}, filterOptions = {}
                         {category.name}
                       </label>
                     </div>
-                  ))}
-                </div>
-              )}
+              ))}
             </div>
           )}
+        </div>
+      )}
 
-          {/* Size Filter */}
-          {filterOptions.sizes && filterOptions.sizes.length > 0 && (
+      {/* Size Filter */}
+      {filterOptions.sizes && filterOptions.sizes.length > 0 && (
             <div className="border-b border-gray-200 py-6">
               <h3 className="-my-3 flow-root">
                 <button
@@ -406,10 +406,10 @@ export default function ArchiveFilters({ initialFilters = {}, filterOptions = {}
                         {s.name}
                       </label>
                     </div>
-                  ))}
-                </div>
-              )}
+              ))}
             </div>
+          )}
+        </div>
           )}
         </>
       )}

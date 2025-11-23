@@ -434,6 +434,38 @@ function handle_load_address_form() {
     wp_send_json_success($content);
 }
 
+// AJAX handler to get states for a country
+add_action('wp_ajax_get_states_for_country', 'handle_get_states_for_country');
+add_action('wp_ajax_nopriv_get_states_for_country', 'handle_get_states_for_country');
+
+function handle_get_states_for_country() {
+    check_ajax_referer('checkout-nonce', 'nonce');
+    
+    $country = isset($_POST['country']) ? sanitize_text_field($_POST['country']) : '';
+    
+    if (empty($country)) {
+        wp_send_json_error(array('message' => 'Country code is required'));
+        return;
+    }
+    
+    $states = WC()->countries->get_states($country);
+    
+    $states_array = array();
+    if (!empty($states) && is_array($states)) {
+        foreach ($states as $key => $label) {
+            $states_array[] = array(
+                'key' => $key,
+                'label' => $label
+            );
+        }
+    }
+    
+    wp_send_json_success(array(
+        'states' => $states_array,
+        'has_states' => !empty($states_array)
+    ));
+}
+
 // WooCommerce Cart Fragments Support
 add_filter('woocommerce_add_to_cart_fragments', 'add_to_cart_fragments');
 
@@ -1089,6 +1121,24 @@ add_filter('woocommerce_locate_template', function ($template, $template_name, $
         
         if (file_exists($blade_template)) {
             return $blade_template;
+        }
+    }
+    
+    // Override checkout form template - use PHP wrapper that loads Blade template
+    if ($template_name === 'checkout/form-checkout.php' || $template_name === 'form-checkout.php') {
+        $custom_template = get_template_directory() . '/woocommerce/checkout/form-checkout.php';
+        
+        if (file_exists($custom_template)) {
+            return $custom_template;
+        }
+    }
+    
+    // Override thankyou template - use PHP wrapper that loads Blade template
+    if ($template_name === 'checkout/thankyou.php') {
+        $custom_template = get_template_directory() . '/woocommerce/checkout/thankyou.php';
+        
+        if (file_exists($custom_template)) {
+            return $custom_template;
         }
     }
     

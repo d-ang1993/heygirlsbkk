@@ -1,15 +1,19 @@
 {
+  "_client-W9jQdWFX.js": {
+    "file": "assets/client-W9jQdWFX.js",
+    "name": "client"
+  },
   "editor.deps.json": {
     "file": "assets/editor.deps-DxpY22xl.json",
     "src": "editor.deps.json"
   },
   "resources/css/app.css": {
-    "file": "assets/app-XGX3TzEx.css",
+    "file": "assets/app-CbD440EA.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
   "resources/css/editor.css": {
-    "file": "assets/editor-CsG96ycD.css",
+    "file": "assets/editor-Do_jx6hC.css",
     "src": "resources/css/editor.css",
     "isEntry": true
   },
@@ -20,10 +24,22 @@
     "isEntry": true
   },
   "resources/js/archive-filters.jsx": {
-    "file": "assets/archive-filters-EJnu8FzH.js",
+    "file": "assets/archive-filters-BwJDudfq.js",
     "name": "archive-filters",
     "src": "resources/js/archive-filters.jsx",
-    "isEntry": true
+    "isEntry": true,
+    "imports": [
+      "_client-W9jQdWFX.js"
+    ]
+  },
+  "resources/js/checkout-form.jsx": {
+    "file": "assets/checkout-form-BtOu_5OT.js",
+    "name": "checkout-form",
+    "src": "resources/js/checkout-form.jsx",
+    "isEntry": true,
+    "imports": [
+      "_client-W9jQdWFX.js"
+    ]
   },
   "resources/js/editor.js": {
     "file": "assets/editor-CfU4GbSP.js",

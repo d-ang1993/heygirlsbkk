@@ -1,0 +1,421 @@
+@extends('layouts.app')
+
+@section('content')
+  @php
+    do_action('woocommerce_before_checkout_form', WC()->checkout());
+    
+    $checkout = WC()->checkout();
+    
+    // Get ALL shipping methods grouped by zones (not just applicable ones)
+    $shipping_methods_by_zone = [];
+    $chosen_shipping_method = WC()->session->get('chosen_shipping_methods', []);
+    $chosen_method_id = isset($chosen_shipping_method[0]) ? $chosen_shipping_method[0] : '';
+    
+    // Get all shipping zones (including default/global zone)
+    $all_zones = WC_Shipping_Zones::get_zones();
+    
+    // Also get the default/global zone (zone_id = 0)
+    $default_zone = new WC_Shipping_Zone(0);
+    
+    // Combine all zones including default
+    $zones_to_process = [];
+    foreach ($all_zones as $zone_data) {
+      $zones_to_process[] = new WC_Shipping_Zone($zone_data['zone_id']);
+    }
+    $zones_to_process[] = $default_zone; // Add default zone at the end
+    
+    // Get available methods from packages to check if they're available
+    $available_method_ids = [];
+    $packages = [];
+    if (WC()->cart->needs_shipping() && WC()->cart->show_shipping()) {
+      $packages = WC()->shipping()->get_packages();
+      foreach ($packages as $package) {
+        if (isset($package['rates']) && is_array($package['rates'])) {
+          foreach ($package['rates'] as $method_id => $method) {
+            $available_method_ids[$method_id] = true;
+          }
+        }
+      }
+    }
+    
+    // Process each zone and get all its methods
+    foreach ($zones_to_process as $zone) {
+      $zone_name = $zone->get_zone_name();
+      if (empty($zone_name)) {
+        $zone_name = 'Global'; // Default zone has no name
+      }
+      
+      // Initialize zone array if it doesn't exist
+      if (!isset($shipping_methods_by_zone[$zone_name])) {
+        $shipping_methods_by_zone[$zone_name] = [];
+      }
+      
+      // Get all shipping methods from this zone
+      $zone_methods = $zone->get_shipping_methods(true);
+      
+      foreach ($zone_methods as $zone_method) {
+        // Get the rate ID that WooCommerce uses
+        $method_id = $zone_method->get_rate_id();
+        
+        // Check if this method is available (in the package rates)
+        $is_available = isset($available_method_ids[$method_id]);
+        
+        // Only include if method is available OR if we want to show all methods
+        // For now, let's show all methods regardless of availability
+        $method_label = $zone_method->get_title();
+        if (empty($method_label)) {
+          $method_label = $zone_method->get_method_title();
+        }
+        
+        // Calculate cost (this might vary based on cart, so we'll use the method's default cost calculation)
+        $cost = 0;
+        $cost_html = '';
+        try {
+          if (WC()->cart && WC()->cart->needs_shipping() && !empty($packages)) {
+            // Try to get cost from available methods if it exists
+            if ($is_available && isset($packages[0]['rates'][$method_id])) {
+              $rate_obj = $packages[0]['rates'][$method_id];
+              $cost = $rate_obj->get_cost();
+              $cost_html = wc_price($cost);
+            } else {
+              // Estimate cost from method settings
+              $cost = $zone_method->get_option('cost', 0);
+              if (empty($cost)) {
+                $cost = 0;
+              }
+              $cost_html = wc_price($cost);
+            }
+          } else {
+            // Fallback: get cost from method settings
+            $cost = $zone_method->get_option('cost', 0);
+            if (empty($cost)) {
+              $cost = 0;
+            }
+            $cost_html = wc_price($cost);
+          }
+        } catch (Exception $e) {
+          $cost = 0;
+          $cost_html = wc_price(0);
+        }
+        
+        $is_chosen = ($chosen_method_id == $method_id);
+        
+        // Add method to zone
+        $shipping_methods_by_zone[$zone_name][] = [
+          'id' => $method_id,
+          'label' => $method_label,
+          'cost' => $cost_html,
+          'cost_raw' => $cost,
+          'delivery_time' => apply_filters('woocommerce_shipping_method_delivery_time', '4–10 business days', $zone_method),
+          'chosen' => $is_chosen,
+          'zone' => $zone_name,
+          'available' => $is_available,
+        ];
+      }
+    }
+    
+    // Also get methods from packages (for methods that might not be in zones)
+    if (WC()->cart->needs_shipping() && WC()->cart->show_shipping()) {
+      $packages = WC()->shipping()->get_packages();
+      
+      foreach ($packages as $i => $package) {
+        $available_methods = $package['rates'];
+        $chosen_method = isset($chosen_shipping_method[$i]) ? $chosen_shipping_method[$i] : '';
+        $first_method = true;
+        
+        // Try to determine zone from package
+        $zone_name = 'Global';
+        
+        if (isset($package['zone_id'])) {
+          $zone_id = $package['zone_id'];
+          if ($zone_id > 0) {
+            $zone = new WC_Shipping_Zone($zone_id);
+            $zone_name = $zone->get_zone_name();
+          }
+        }
+        
+        // If zone doesn't exist yet, create it
+        if (!isset($shipping_methods_by_zone[$zone_name])) {
+          $shipping_methods_by_zone[$zone_name] = [];
+        }
+        
+        // Add methods from package (they might have updated costs)
+        foreach ($available_methods as $method_id => $method) {
+          // Check if method already exists in zone
+          $method_exists = false;
+          foreach ($shipping_methods_by_zone[$zone_name] as $key => $existing_method) {
+            if ($existing_method['id'] === $method_id) {
+              // Update with package data (cost might be different)
+              $shipping_methods_by_zone[$zone_name][$key]['cost'] = wc_price($method->get_cost());
+              $shipping_methods_by_zone[$zone_name][$key]['cost_raw'] = $method->get_cost();
+              $shipping_methods_by_zone[$zone_name][$key]['available'] = true;
+              $method_exists = true;
+              break;
+            }
+          }
+          
+          // If method doesn't exist yet, add it
+          if (!$method_exists) {
+            $is_chosen = ($chosen_method == $method_id) || ($first_method && empty($chosen_method));
+            $shipping_methods_by_zone[$zone_name][] = [
+              'id' => $method_id,
+              'label' => $method->get_label(),
+              'cost' => wc_price($method->get_cost()),
+              'cost_raw' => $method->get_cost(),
+              'delivery_time' => apply_filters('woocommerce_shipping_method_delivery_time', '4–10 business days', $method),
+              'chosen' => $is_chosen,
+              'zone' => $zone_name,
+              'available' => true,
+            ];
+          }
+          $first_method = false;
+        }
+      }
+    }
+    
+    // Also create a flat array for backward compatibility
+    $shipping_methods = [];
+    foreach ($shipping_methods_by_zone as $zone_methods) {
+      $shipping_methods = array_merge($shipping_methods, $zone_methods);
+    }
+    
+    // Get payment gateways
+    $available_gateways = WC()->payment_gateways()->get_available_payment_gateways();
+    $payment_gateways = [];
+    foreach ($available_gateways as $gateway_id => $gateway) {
+      $payment_gateways[] = [
+        'id' => $gateway_id,
+        'title' => $gateway->get_title(),
+      ];
+    }
+    
+    // Get cart items
+    $cart_items = [];
+    foreach (WC()->cart->get_cart() as $cart_item_key => $cart_item) {
+      $_product = apply_filters('woocommerce_cart_item_product', $cart_item['data'], $cart_item, $cart_item_key);
+      $product_id = apply_filters('woocommerce_cart_item_product_id', $cart_item['product_id'], $cart_item, $cart_item_key);
+      
+      if ($_product && $_product->exists() && $cart_item['quantity'] > 0 && apply_filters('woocommerce_checkout_cart_item_visible', true, $cart_item, $cart_item_key)) {
+        $product_permalink = apply_filters('woocommerce_cart_item_permalink', $_product->is_visible() ? $_product->get_permalink($cart_item) : '', $cart_item, $cart_item_key);
+        $image = $_product->get_image('thumbnail', ['class' => 'w-20 rounded-md', 'alt' => esc_attr($_product->get_name())]);
+        
+        // Get variation attributes
+        $variation_attributes = [];
+        if ($_product->is_type('variation')) {
+          $attributes = $_product->get_variation_attributes();
+          foreach ($attributes as $key => $value) {
+            $variation_attributes[str_replace('attribute_', '', $key)] = $value;
+          }
+        } elseif (isset($cart_item['variation']) && is_array($cart_item['variation'])) {
+          $variation_attributes = $cart_item['variation'];
+        }
+        
+        $cart_items[] = [
+          'key' => $cart_item_key,
+          'name' => $_product->get_name(),
+          'quantity' => $cart_item['quantity'],
+          'permalink' => $product_permalink,
+          'image' => preg_match('/src=["\']([^"\']+)["\']/', $image, $matches) ? $matches[1] : '',
+          'subtotal' => apply_filters('woocommerce_cart_item_subtotal', WC()->cart->get_product_subtotal($_product, $cart_item['quantity']), $cart_item, $cart_item_key),
+          'variation' => $variation_attributes,
+        ];
+      }
+    }
+    
+    // Get countries for dropdown - use WooCommerce's full country list
+    $countries = [];
+    $woocommerce_countries = WC()->countries->get_countries();
+    if (!empty($woocommerce_countries)) {
+      foreach ($woocommerce_countries as $key => $label) {
+        $countries[] = ['key' => $key, 'label' => $label];
+      }
+    } else {
+      // Fallback: try to get from checkout fields
+      $country_fields = $checkout->get_checkout_fields('billing');
+      if (isset($country_fields['billing_country']['options']) && is_array($country_fields['billing_country']['options'])) {
+        foreach ($country_fields['billing_country']['options'] as $key => $label) {
+          $countries[] = ['key' => $key, 'label' => $label];
+        }
+      }
+    }
+    
+    // Get Stripe publishable key for credit card form
+    // Must be defined in wp-config.php as HG_STRIPE_CC_PUBLISHABLE_KEY
+    $stripe_publishable_key = defined('HG_STRIPE_CC_PUBLISHABLE_KEY') 
+      ? HG_STRIPE_CC_PUBLISHABLE_KEY 
+      : '';
+    
+    // Prepare checkout data
+    $checkout_data = [
+      'billing_email' => $checkout->get_value('billing_email'),
+      'billing_first_name' => $checkout->get_value('billing_first_name'),
+      'billing_last_name' => $checkout->get_value('billing_last_name'),
+      'billing_company' => $checkout->get_value('billing_company'),
+      'billing_address_1' => $checkout->get_value('billing_address_1'),
+      'billing_address_2' => $checkout->get_value('billing_address_2'),
+      'billing_city' => $checkout->get_value('billing_city'),
+      'billing_country' => $checkout->get_value('billing_country') ?: WC()->countries->get_base_country(),
+      'billing_state' => $checkout->get_value('billing_state'),
+      'billing_postcode' => $checkout->get_value('billing_postcode'),
+      'billing_phone' => $checkout->get_value('billing_phone'),
+      'shipping_method' => isset($shipping_methods[0]) ? $shipping_methods[0]['id'] : '',
+      'payment_method' => isset($payment_gateways[0]) ? $payment_gateways[0]['id'] : '',
+      'order_comments' => $checkout->get_value('order_comments'),
+      'countries' => $countries,
+      'enable_order_notes' => apply_filters(
+        'woocommerce_enable_order_notes_field',
+        'yes' === get_option('woocommerce_enable_order_comments', 'yes')
+      ),
+      'cart_subtotal' => WC()->cart->get_cart_subtotal(),
+      'cart_total' => WC()->cart->get_total(),
+      'cart_total_amount' => WC()->cart->get_total(''), // Get numeric amount without currency symbol
+      'currency' => get_woocommerce_currency(),
+      'stripe_publishable_key' => $stripe_publishable_key,
+    ];
+    
+    // Get shipping total
+    if (WC()->cart->needs_shipping() && WC()->cart->show_shipping()) {
+      $packages = WC()->shipping()->get_packages();
+      $chosen_methods = WC()->session->get('chosen_shipping_methods', []);
+      foreach ($packages as $i => $package) {
+        $available_methods = $package['rates'];
+        $chosen_method = isset($chosen_methods[$i]) ? $chosen_methods[$i] : '';
+        if ($chosen_method && isset($available_methods[$chosen_method])) {
+          $method = $available_methods[$chosen_method];
+          $checkout_data['shipping_total'] = wc_price($method->get_cost());
+          break;
+        }
+      }
+      if (!isset($checkout_data['shipping_total']) && count($packages) > 0) {
+        $first_package = $packages[0];
+        $first_method = reset($first_package['rates']);
+        if ($first_method) {
+          $checkout_data['shipping_total'] = wc_price($first_method->get_cost());
+        }
+      }
+    }
+    
+    // Get tax total
+    if (wc_tax_enabled() && ! WC()->cart->display_prices_including_tax()) {
+      if ('itemized' === get_option('woocommerce_tax_total_display')) {
+        $tax_totals = WC()->cart->get_tax_totals();
+        $checkout_data['tax_total'] = '';
+        foreach ($tax_totals as $code => $tax) {
+          $checkout_data['tax_total'] .= wp_kses_post($tax->formatted_amount) . ' ';
+        }
+        $checkout_data['tax_total'] = trim($checkout_data['tax_total']);
+      } else {
+        $checkout_data['tax_total'] = wc_price(WC()->cart->get_taxes_total());
+      }
+    }
+  @endphp
+
+  {{-- Notices --}}
+  @php do_action('woocommerce_before_checkout_form_cart_notices'); @endphp
+
+  {{-- Pass data to React component FIRST --}}
+  @php
+    // Generate nonces for WooCommerce checkout, Stripe AJAX, and states
+    $woo_checkout_nonce = wp_create_nonce('woocommerce-process_checkout');
+    $hg_stripe_cc_nonce = wp_create_nonce('hg_stripe_cc_nonce');
+    $checkout_states_nonce = wp_create_nonce('checkout-nonce');  // For states/provinces fetch
+  @endphp
+  
+  <script>
+    window.checkoutFormData = {
+      checkoutData: @json($checkout_data),
+      cartItems: @json($cart_items),
+      shippingMethods: @json($shipping_methods),
+      shippingMethodsByZone: @json($shipping_methods_by_zone),
+      paymentGateways: @json($payment_gateways),
+      checkoutUrl: @json(esc_url(wc_get_checkout_url())),
+      cartUrl: @json(esc_url(wc_get_cart_url())),
+      ajaxUrl: @json(esc_url(admin_url('admin-ajax.php'))),
+      nonce: @json(wp_create_nonce('woocommerce-cart')),
+      checkoutNonce: @json($hg_stripe_cc_nonce),        // Stripe AJAX nonce
+      wooCheckoutNonce: @json($woo_checkout_nonce),     // WooCommerce checkout nonce
+      statesNonce: @json($checkout_states_nonce),       // States/provinces nonce
+    };
+    console.log('🔵 CheckoutForm Data loaded:', window.checkoutFormData);
+  </script>
+
+  {{-- React Component Mount Point --}}
+  <div id="checkout-form-react"></div>
+
+  {{-- Hidden WooCommerce Payment Container (for gateway fields) --}}
+  <div style="display:none;">
+    @php
+      // This outputs the real <div id="payment" class="woocommerce-checkout-payment">...</div>
+      woocommerce_checkout_payment();
+    @endphp
+  </div>
+
+  {{-- Load React Component Script --}}
+  @viteReactRefresh
+  @vite('resources/js/checkout-form.jsx')
+
+  {{-- Fallback: Manual mount trigger and error detection --}}
+  <script>
+    (function() {
+      console.log('🔵 CheckoutForm Blade: Script block executing...');
+      
+      // Verify data is available
+      if (!window.checkoutFormData) {
+        console.error('❌ CheckoutForm Blade: window.checkoutFormData is not defined!');
+      } else {
+        console.log('✅ CheckoutForm Blade: window.checkoutFormData is available');
+        console.log('✅ CheckoutForm Blade: Data keys:', Object.keys(window.checkoutFormData));
+      }
+      
+      // Wait for script to load and then check for mount function
+      function waitForMountFunction(attempts = 0) {
+        const maxAttempts = 100; // Wait up to 5 seconds (100 * 50ms)
+        
+        if (typeof window.mountCheckoutForm === 'function') {
+          console.log('✅ CheckoutForm Blade: mountCheckoutForm function is available');
+          
+          // Try manual mount if React hasn't mounted yet
+          const mountPoint = document.getElementById('checkout-form-react');
+          if (mountPoint) {
+            if (mountPoint.children.length === 0) {
+              console.log('🔵 CheckoutForm Blade: Attempting manual mount...');
+              try {
+                window.mountCheckoutForm();
+              } catch (error) {
+                console.error('❌ CheckoutForm Blade: Error calling mountCheckoutForm:', error);
+              }
+            } else {
+              console.log('✅ CheckoutForm Blade: Component already mounted');
+            }
+          }
+          
+          // Final check after delay
+          setTimeout(function() {
+            const mountPoint = document.getElementById('checkout-form-react');
+            if (mountPoint && mountPoint.children.length === 0) {
+              console.error('❌ CheckoutForm Blade: React component did not mount after 3 seconds');
+              console.error('Available scripts:', Array.from(document.querySelectorAll('script[src]')).map(s => s.src));
+              mountPoint.innerHTML = '<div class="p-8 bg-red-50 border border-red-200 rounded-lg"><p class="text-red-800 font-semibold">Checkout form failed to load.</p><p class="text-red-700 mt-2">Please refresh the page or contact support.</p><p class="text-sm text-red-600 mt-2">Check the browser console (F12) for error details.</p><button onclick="location.reload()" class="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Refresh Page</button></div>';
+            } else if (mountPoint && mountPoint.children.length > 0) {
+              console.log('✅ CheckoutForm Blade: React component appears to have mounted successfully');
+            }
+          }, 3000);
+        } else if (attempts < maxAttempts) {
+          setTimeout(() => waitForMountFunction(attempts + 1), 50);
+        } else {
+          console.error('❌ CheckoutForm Blade: mountCheckoutForm function not available after ' + maxAttempts + ' attempts');
+          console.error('Script may not have loaded. Check Network tab for checkout-form-*.js');
+          const mountPoint = document.getElementById('checkout-form-react');
+          if (mountPoint && mountPoint.children.length === 0) {
+            mountPoint.innerHTML = '<div class="p-8 bg-red-50 border border-red-200 rounded-lg"><p class="text-red-800 font-semibold">Checkout form script failed to load.</p><p class="text-red-700 mt-2">Please check your browser console and network tab for errors.</p><p class="text-sm text-red-600 mt-2">Make sure the build was successful (npm run build).</p><button onclick="location.reload()" class="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Refresh Page</button></div>';
+          }
+        }
+      }
+      
+      // Start waiting for mount function
+      waitForMountFunction();
+    })();
+  </script>
+
+  @php do_action('woocommerce_after_checkout_form', WC()->checkout()); @endphp
+@endsection
