@@ -47,8 +47,9 @@ const StripePaymentElement = forwardRef(function StripePaymentElement(
        * This matches your backend flow:
        *  - PI created via AJAX (`hg_stripe_cc_create_pi`)
        *  - clientSecret passed into this function
+       *  - billingDetails contains customer name, email, phone, and address
        */
-      async confirmPayment(clientSecret /*, billingDetails */) {
+      async confirmPayment(clientSecret, billingDetails = {}) {
         if (!stripe || !elements) {
           throw new Error("Stripe not initialized");
         }
@@ -64,15 +65,59 @@ const StripePaymentElement = forwardRef(function StripePaymentElement(
           throw submitError;
         }
 
+        // Prepare confirmParams with billing details
+        const confirmParams = {
+          // We don't actually want a redirect; backend will verify PI.
+          return_url: window.location.href,
+        };
+
+        // Add receipt email if provided (for receipt delivery)
+        if (billingDetails.email) {
+          confirmParams.receipt_email = billingDetails.email;
+        }
+
+        // Add billing details to payment method data
+        // This ensures Stripe has customer name, email, and address for the payment
+        const billingDetailsForStripe = {};
+        
+        if (billingDetails.name) {
+          billingDetailsForStripe.name = billingDetails.name;
+        }
+        
+        if (billingDetails.email) {
+          billingDetailsForStripe.email = billingDetails.email;
+        }
+        
+        if (billingDetails.phone) {
+          billingDetailsForStripe.phone = billingDetails.phone;
+        }
+        
+        if (billingDetails.address) {
+          const address = {};
+          if (billingDetails.address.line1) address.line1 = billingDetails.address.line1;
+          if (billingDetails.address.line2) address.line2 = billingDetails.address.line2;
+          if (billingDetails.address.city) address.city = billingDetails.address.city;
+          if (billingDetails.address.postal_code) address.postal_code = billingDetails.address.postal_code;
+          if (billingDetails.address.country) address.country = billingDetails.address.country;
+          
+          if (Object.keys(address).length > 0) {
+            billingDetailsForStripe.address = address;
+          }
+        }
+
+        // Only add payment_method_data if we have billing details to send
+        if (Object.keys(billingDetailsForStripe).length > 0) {
+          confirmParams.payment_method_data = {
+            billing_details: billingDetailsForStripe,
+          };
+        }
+
         // Confirm the payment with the given client secret
         const { error: confirmError, paymentIntent } =
           await stripe.confirmPayment({
             elements,
             clientSecret,
-            confirmParams: {
-              // We don't actually want a redirect; backend will verify PI.
-              return_url: window.location.href,
-            },
+            confirmParams,
             redirect: "if_required",
           });
 
@@ -152,9 +197,8 @@ const StripeCardForm = forwardRef(function StripeCardForm(
       if (!paymentElementRef.current) {
         throw new Error("Payment element not ready");
       }
-      // billingDetails currently not used by PaymentElement;
-      // the PaymentElement collects what it needs, but we keep
-      // the signature for compatibility.
+      // Pass billing details (name, email, phone, address) to Stripe
+      // This ensures customer information is captured in Stripe
       return await paymentElementRef.current.confirmPayment(
         clientSecret,
         billingDetails

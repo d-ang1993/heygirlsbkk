@@ -1,5 +1,5 @@
 /** @jsxImportSource react */
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import StripeCardForm from "../StripeCardForm";
 
 export default function Payment({
@@ -16,6 +16,8 @@ export default function Payment({
   isContactComplete,
   isShippingAddressComplete,
 }) {
+  // Track focus state for floating label
+  const [orderNotesFocused, setOrderNotesFocused] = useState(false);
   // Check if payment section is complete
   const isComplete = useMemo(() => {
     if (!formData.payment_method) return false;
@@ -111,22 +113,28 @@ export default function Payment({
 
           {/* Order Notes */}
           {checkoutData.enable_order_notes && (
-            <div className="mt-4">
-              <label
-                htmlFor="order_comments"
-                className="block text-sm font-medium text-gray-700 mb-1.5"
-              >
-                Order notes (optional)
-              </label>
+            <div className="mt-4 relative">
               <textarea
                 id="order_comments"
                 name="order_comments"
                 rows={3}
-                value={formData.order_comments}
+                value={formData.order_comments || ""}
                 onChange={onInputChange}
-                placeholder="Notes about your order, e.g. special notes for delivery."
-                className="block w-full rounded-lg bg-white px-3 py-2 text-sm text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 transition-colors resize-none"
+                onFocus={() => setOrderNotesFocused(true)}
+                onBlur={() => setOrderNotesFocused(false)}
+                placeholder=" "
+                className="block w-full rounded-lg bg-white border border-gray-300 pl-3 pr-4 pt-6 pb-2 text-sm text-gray-900 placeholder:text-transparent focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10 focus:outline-none transition-all resize-none"
               />
+              <label
+                htmlFor="order_comments"
+                className={`absolute left-3 pointer-events-none transition-all duration-200 ${
+                  formData.order_comments || orderNotesFocused
+                    ? "top-2 text-xs text-gray-700"
+                    : "top-6 text-sm text-gray-500"
+                }`}
+              >
+                Order notes (optional)
+              </label>
             </div>
           )}
       </div>

@@ -53,6 +53,7 @@ export default function CheckoutFormFields({
       {/* Delivery (Shipping Method) Section */}
       <Delivery
         formData={formData}
+        checkoutData={checkoutData}
         shippingMethods={shippingMethods}
         shippingMethodsByZone={shippingMethodsByZone || {}}
         onInputChange={onInputChange}

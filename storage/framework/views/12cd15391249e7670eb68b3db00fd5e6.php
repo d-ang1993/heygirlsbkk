@@ -22,6 +22,31 @@
     }
     $zones_to_process[] = $default_zone; // Add default zone at the end
     
+    // Ensure shipping address is set in session for package calculation
+    // Get current checkout values or use defaults
+    $checkout = WC()->checkout();
+    $billing_country = $checkout->get_value('billing_country') ?: WC()->countries->get_base_country();
+    $billing_state = $checkout->get_value('billing_state') ?: '';
+    $billing_postcode = $checkout->get_value('billing_postcode') ?: '';
+    $billing_city = $checkout->get_value('billing_city') ?: '';
+    
+    // Set shipping address in session if not already set (needed for package calculation)
+    if (!WC()->customer->get_shipping_country()) {
+      WC()->customer->set_shipping_country($billing_country);
+    }
+    if (!WC()->customer->get_shipping_state() && $billing_state) {
+      WC()->customer->set_shipping_state($billing_state);
+    }
+    if (!WC()->customer->get_shipping_postcode() && $billing_postcode) {
+      WC()->customer->set_shipping_postcode($billing_postcode);
+    }
+    if (!WC()->customer->get_shipping_city() && $billing_city) {
+      WC()->customer->set_shipping_city($billing_city);
+    }
+    
+    // Calculate shipping packages with the current address
+    WC()->shipping()->calculate_shipping(WC()->cart->get_shipping_packages());
+    
     // Get available methods from packages to check if they're available
     $available_method_ids = [];
     $packages = [];
@@ -56,10 +81,35 @@
         $method_id = $zone_method->get_rate_id();
         
         // Check if this method is available (in the package rates)
-        $is_available = isset($available_method_ids[$method_id]);
+        $is_available_from_packages = isset($available_method_ids[$method_id]);
         
-        // Only include if method is available OR if we want to show all methods
-        // For now, let's show all methods regardless of availability
+        // Also check if method should be available based on zone location restrictions
+        // If no address is set yet, check if zone matches the default/base country
+        $is_available_by_zone = false;
+        if ($is_available_from_packages) {
+          $is_available_by_zone = true;
+        } else {
+          // Check if zone location matches current or default country
+          $zone_locations = $zone->get_zone_locations();
+          $current_country = WC()->customer->get_shipping_country() ?: WC()->countries->get_base_country();
+          
+          // If zone has no location restrictions, it's available globally
+          if (empty($zone_locations)) {
+            $is_available_by_zone = true;
+          } else {
+            // Check if current country matches any zone location
+            foreach ($zone_locations as $location) {
+              if ($location->type === 'country' && $location->code === $current_country) {
+                $is_available_by_zone = true;
+                break;
+              }
+            }
+          }
+        }
+        
+        // Method is available if it's in packages OR if zone location matches
+        $is_available = $is_available_from_packages || $is_available_by_zone;
+        
         $method_label = $zone_method->get_title();
         if (empty($method_label)) {
           $method_label = $zone_method->get_method_title();
@@ -71,7 +121,7 @@
         try {
           if (WC()->cart && WC()->cart->needs_shipping() && !empty($packages)) {
             // Try to get cost from available methods if it exists
-            if ($is_available && isset($packages[0]['rates'][$method_id])) {
+            if ($is_available_from_packages && isset($packages[0]['rates'][$method_id])) {
               $rate_obj = $packages[0]['rates'][$method_id];
               $cost = $rate_obj->get_cost();
               $cost_html = wc_price($cost);
@@ -98,6 +148,16 @@
         
         $is_chosen = ($chosen_method_id == $method_id);
         
+        // Get minimum spend requirement for free shipping
+        $min_amount = null;
+        $min_amount_formatted = null;
+        if (method_exists($zone_method, 'get_option')) {
+          $min_amount = $zone_method->get_option('min_amount', '');
+          if (!empty($min_amount) && is_numeric($min_amount)) {
+            $min_amount_formatted = wc_price($min_amount);
+          }
+        }
+        
         // Add method to zone
         $shipping_methods_by_zone[$zone_name][] = [
           'id' => $method_id,
@@ -108,6 +168,8 @@
           'chosen' => $is_chosen,
           'zone' => $zone_name,
           'available' => $is_available,
+          'min_amount' => $min_amount ? floatval($min_amount) : null,
+          'min_amount_formatted' => $min_amount_formatted,
         ];
       }
     }
@@ -144,9 +206,21 @@
           foreach ($shipping_methods_by_zone[$zone_name] as $key => $existing_method) {
             if ($existing_method['id'] === $method_id) {
               // Update with package data (cost might be different)
+              // Preserve min_amount if it was already set
               $shipping_methods_by_zone[$zone_name][$key]['cost'] = wc_price($method->get_cost());
               $shipping_methods_by_zone[$zone_name][$key]['cost_raw'] = $method->get_cost();
               $shipping_methods_by_zone[$zone_name][$key]['available'] = true;
+              // Preserve min_amount and min_amount_formatted if they exist
+              if (!isset($shipping_methods_by_zone[$zone_name][$key]['min_amount'])) {
+                // Try to get from rate meta if available
+                if (method_exists($method, 'get_meta') && $method->get_meta('min_amount')) {
+                  $min_amount = $method->get_meta('min_amount');
+                  if (is_numeric($min_amount)) {
+                    $shipping_methods_by_zone[$zone_name][$key]['min_amount'] = floatval($min_amount);
+                    $shipping_methods_by_zone[$zone_name][$key]['min_amount_formatted'] = wc_price($min_amount);
+                  }
+                }
+              }
               $method_exists = true;
               break;
             }
@@ -155,6 +229,18 @@
           // If method doesn't exist yet, add it
           if (!$method_exists) {
             $is_chosen = ($chosen_method == $method_id) || ($first_method && empty($chosen_method));
+            
+            // Try to get min_amount from rate meta or method instance
+            $min_amount = null;
+            $min_amount_formatted = null;
+            // Try to get from rate meta first
+            if (method_exists($method, 'get_meta') && $method->get_meta('min_amount')) {
+              $min_amount = $method->get_meta('min_amount');
+              if (is_numeric($min_amount)) {
+                $min_amount_formatted = wc_price($min_amount);
+              }
+            }
+            
             $shipping_methods_by_zone[$zone_name][] = [
               'id' => $method_id,
               'label' => $method->get_label(),
@@ -164,6 +250,8 @@
               'chosen' => $is_chosen,
               'zone' => $zone_name,
               'available' => true,
+              'min_amount' => $min_amount ? floatval($min_amount) : null,
+              'min_amount_formatted' => $min_amount_formatted,
             ];
           }
           $first_method = false;
@@ -293,17 +381,30 @@
       }
     }
     
-    // Get tax total
-    if (wc_tax_enabled() && ! WC()->cart->display_prices_including_tax()) {
-      if ('itemized' === get_option('woocommerce_tax_total_display')) {
-        $tax_totals = WC()->cart->get_tax_totals();
-        $checkout_data['tax_total'] = '';
-        foreach ($tax_totals as $code => $tax) {
-          $checkout_data['tax_total'] .= wp_kses_post($tax->formatted_amount) . ' ';
+    // Get tax rate for the shipping country
+    // Frontend will calculate tax amount based on this rate
+    $checkout_data['tax_enabled'] = wc_tax_enabled();
+    $checkout_data['tax_rate'] = 0; // Tax rate as decimal (e.g., 0.07 for 7%)
+    
+    if (wc_tax_enabled()) {
+      // Get shipping country (or billing country as fallback)
+      $shipping_country = WC()->customer->get_shipping_country() ?: WC()->customer->get_billing_country() ?: WC()->countries->get_base_country();
+      $shipping_state = WC()->customer->get_shipping_state() ?: WC()->customer->get_billing_state() ?: '';
+      $shipping_postcode = WC()->customer->get_shipping_postcode() ?: WC()->customer->get_billing_postcode() ?: '';
+      
+      // Find tax rates for this country/state/postcode
+      $tax_rates = WC_Tax::find_rates([
+        'country' => $shipping_country,
+        'state' => $shipping_state,
+        'postcode' => $shipping_postcode,
+      ]);
+      
+      // Get the first applicable tax rate (as decimal)
+      if (!empty($tax_rates)) {
+        $first_rate = reset($tax_rates);
+        if (isset($first_rate['rate'])) {
+          $checkout_data['tax_rate'] = $first_rate['rate'] / 100; // Convert percentage to decimal
         }
-        $checkout_data['tax_total'] = trim($checkout_data['tax_total']);
-      } else {
-        $checkout_data['tax_total'] = wc_price(WC()->cart->get_taxes_total());
       }
     }
   ?>

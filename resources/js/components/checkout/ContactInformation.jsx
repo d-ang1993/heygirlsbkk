@@ -302,8 +302,8 @@ export default function ContactInformation({
                 <label
                   htmlFor="billing_phone_number"
                   className={`absolute left-3 pointer-events-none transition-all duration-200 ${
-                    phoneData.number?.replace(/\D/g, "") || phoneFocused
-                      ? "top-2 text-xs text-gray-700"
+                    (phoneData.number && phoneData.number.trim().length > 0) || phoneFocused
+                      ? "bottom-6 text-xs text-gray-700"
                       : "top-1/2 -translate-y-1/2 text-sm text-gray-500"
                   }`}
                 >
@@ -316,7 +316,7 @@ export default function ContactInformation({
                   id="billing_phone_number"
                   type="tel"
                   autoComplete="tel"
-                  value={phoneData.number}
+                  value={phoneData.number || ""}
                   onChange={handlePhoneNumberChange}
                   onFocus={() => setPhoneFocused(true)}
                   onBlur={() => setPhoneFocused(false)}

@@ -466,6 +466,47 @@ function handle_get_states_for_country() {
     ));
 }
 
+// AJAX handler to get tax rate for a country
+add_action('wp_ajax_get_tax_rate_for_country', 'handle_get_tax_rate_for_country');
+add_action('wp_ajax_nopriv_get_tax_rate_for_country', 'handle_get_tax_rate_for_country');
+
+function handle_get_tax_rate_for_country() {
+    check_ajax_referer('checkout-nonce', 'nonce');
+    
+    $country = isset($_POST['country']) ? sanitize_text_field($_POST['country']) : '';
+    $state = isset($_POST['state']) ? sanitize_text_field($_POST['state']) : '';
+    $postcode = isset($_POST['postcode']) ? sanitize_text_field($_POST['postcode']) : '';
+    
+    if (empty($country)) {
+        wp_send_json_error(array('message' => 'Country code is required'));
+        return;
+    }
+    
+    $tax_rate = 0;
+    
+    if (wc_tax_enabled()) {
+        // Find tax rates for this country/state/postcode
+        $tax_rates = WC_Tax::find_rates([
+            'country' => $country,
+            'state' => $state,
+            'postcode' => $postcode,
+        ]);
+        
+        // Get the first applicable tax rate (as decimal)
+        if (!empty($tax_rates)) {
+            $first_rate = reset($tax_rates);
+            if (isset($first_rate['rate'])) {
+                $tax_rate = $first_rate['rate'] / 100; // Convert percentage to decimal
+            }
+        }
+    }
+    
+    wp_send_json_success(array(
+        'tax_rate' => $tax_rate,
+        'tax_enabled' => wc_tax_enabled()
+    ));
+}
+
 // WooCommerce Cart Fragments Support
 add_filter('woocommerce_add_to_cart_fragments', 'add_to_cart_fragments');
 

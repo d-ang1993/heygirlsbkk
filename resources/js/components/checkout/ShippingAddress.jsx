@@ -1,5 +1,5 @@
 /** @jsxImportSource react */
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 
 export default function ShippingAddress({
   formData,
@@ -11,6 +11,16 @@ export default function ShippingAddress({
   isExpanded,
   onToggle,
 }) {
+  // Track focus state for floating labels
+  const [focusedFields, setFocusedFields] = useState({});
+  
+  const handleFocus = (fieldName) => {
+    setFocusedFields(prev => ({ ...prev, [fieldName]: true }));
+  };
+  
+  const handleBlur = (fieldName) => {
+    setFocusedFields(prev => ({ ...prev, [fieldName]: false }));
+  };
   // Check if shipping address section is complete
   const isComplete = useMemo(() => {
     const requiredFields = [
@@ -118,134 +128,167 @@ export default function ShippingAddress({
 
       {isExpanded && (
         <div className="mt-4 grid grid-cols-1 gap-y-4 sm:grid-cols-2 sm:gap-x-4">
-          <div>
+          <div className="relative">
+            <input
+              id="first-name"
+              name="billing_first_name"
+              type="text"
+              autoComplete="given-name"
+              value={formData.billing_first_name || ""}
+              onChange={onInputChange}
+              onFocus={() => handleFocus('billing_first_name')}
+              onBlur={() => handleBlur('billing_first_name')}
+              className="block w-full rounded-lg bg-white border border-gray-300 pl-3 pr-4 pt-6 pb-2 text-sm text-gray-900 placeholder:text-transparent focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10 focus:outline-none transition-all"
+              placeholder=" "
+            />
             <label
               htmlFor="first-name"
-              className="block text-sm font-medium text-gray-700 mb-1.5"
+              className={`absolute left-3 pointer-events-none transition-all duration-200 ${
+                formData.billing_first_name || focusedFields.billing_first_name
+                  ? "top-2 text-xs text-gray-700"
+                  : "top-1/2 -translate-y-1/2 text-sm text-gray-500"
+              }`}
             >
               First name{" "}
               <abbr className="required text-red-600 ml-0.5" title="required">
                 *
               </abbr>
             </label>
-            <input
-              id="first-name"
-              name="billing_first_name"
-              type="text"
-              autoComplete="given-name"
-              value={formData.billing_first_name}
-              onChange={onInputChange}
-              className="block w-full rounded-lg bg-white px-3 py-2 text-sm text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 transition-colors"
-            />
           </div>
 
-          <div>
+          <div className="relative">
+            <input
+              id="last-name"
+              name="billing_last_name"
+              type="text"
+              autoComplete="family-name"
+              value={formData.billing_last_name || ""}
+              onChange={onInputChange}
+              onFocus={() => handleFocus('billing_last_name')}
+              onBlur={() => handleBlur('billing_last_name')}
+              className="block w-full rounded-lg bg-white border border-gray-300 pl-3 pr-4 pt-6 pb-2 text-sm text-gray-900 placeholder:text-transparent focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10 focus:outline-none transition-all"
+              placeholder=" "
+            />
             <label
               htmlFor="last-name"
-              className="block text-sm font-medium text-gray-700 mb-1.5"
+              className={`absolute left-3 pointer-events-none transition-all duration-200 ${
+                formData.billing_last_name || focusedFields.billing_last_name
+                  ? "top-2 text-xs text-gray-700"
+                  : "top-1/2 -translate-y-1/2 text-sm text-gray-500"
+              }`}
             >
               Last name{" "}
               <abbr className="required text-red-600 ml-0.5" title="required">
                 *
               </abbr>
             </label>
-            <input
-              id="last-name"
-              name="billing_last_name"
-              type="text"
-              autoComplete="family-name"
-              value={formData.billing_last_name}
-              onChange={onInputChange}
-              className="block w-full rounded-lg bg-white px-3 py-2 text-sm text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 transition-colors"
-            />
           </div>
 
-          <div className="sm:col-span-2">
-            <label
-              htmlFor="company"
-              className="block text-sm font-medium text-gray-700 mb-1.5"
-            >
-              Company
-            </label>
+          <div className="sm:col-span-2 relative">
             <input
               id="company"
               name="billing_company"
               type="text"
-              value={formData.billing_company}
+              value={formData.billing_company || ""}
               onChange={onInputChange}
-              className="block w-full rounded-lg bg-white px-3 py-2 text-sm text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 transition-colors"
+              onFocus={() => handleFocus('billing_company')}
+              onBlur={() => handleBlur('billing_company')}
+              className="block w-full rounded-lg bg-white border border-gray-300 pl-3 pr-4 pt-6 pb-2 text-sm text-gray-900 placeholder:text-transparent focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10 focus:outline-none transition-all"
+              placeholder=" "
             />
+            <label
+              htmlFor="company"
+              className={`absolute left-3 pointer-events-none transition-all duration-200 ${
+                formData.billing_company || focusedFields.billing_company
+                  ? "top-2 text-xs text-gray-700"
+                  : "top-1/2 -translate-y-1/2 text-sm text-gray-500"
+              }`}
+            >
+              Company
+            </label>
           </div>
 
-          <div className="sm:col-span-2">
+          <div className="sm:col-span-2 relative">
+            <input
+              id="address"
+              name="billing_address_1"
+              type="text"
+              autoComplete="street-address"
+              value={formData.billing_address_1 || ""}
+              onChange={onInputChange}
+              onFocus={() => handleFocus('billing_address_1')}
+              onBlur={() => handleBlur('billing_address_1')}
+              className="block w-full rounded-lg bg-white border border-gray-300 pl-3 pr-4 pt-6 pb-2 text-sm text-gray-900 placeholder:text-transparent focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10 focus:outline-none transition-all"
+              placeholder=" "
+            />
             <label
               htmlFor="address"
-              className="block text-sm font-medium text-gray-700 mb-1.5"
+              className={`absolute left-3 pointer-events-none transition-all duration-200 ${
+                formData.billing_address_1 || focusedFields.billing_address_1
+                  ? "top-2 text-xs text-gray-700"
+                  : "top-1/2 -translate-y-1/2 text-sm text-gray-500"
+              }`}
             >
               Address{" "}
               <abbr className="required text-red-600 ml-0.5" title="required">
                 *
               </abbr>
             </label>
-            <input
-              id="address"
-              name="billing_address_1"
-              type="text"
-              autoComplete="street-address"
-              value={formData.billing_address_1}
-              onChange={onInputChange}
-              className="block w-full rounded-lg bg-white px-3 py-2 text-sm text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 transition-colors"
-            />
           </div>
 
-          <div className="sm:col-span-2">
-            <label
-              htmlFor="apartment"
-              className="block text-sm font-medium text-gray-700 mb-1.5"
-            >
-              Apartment, suite, etc.
-            </label>
+          <div className="sm:col-span-2 relative">
             <input
               id="apartment"
               name="billing_address_2"
               type="text"
-              value={formData.billing_address_2}
+              value={formData.billing_address_2 || ""}
               onChange={onInputChange}
-              className="block w-full rounded-lg bg-white px-3 py-2 text-sm text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 transition-colors"
+              onFocus={() => handleFocus('billing_address_2')}
+              onBlur={() => handleBlur('billing_address_2')}
+              className="block w-full rounded-lg bg-white border border-gray-300 pl-3 pr-4 pt-6 pb-2 text-sm text-gray-900 placeholder:text-transparent focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10 focus:outline-none transition-all"
+              placeholder=" "
             />
+            <label
+              htmlFor="apartment"
+              className={`absolute left-3 pointer-events-none transition-all duration-200 ${
+                formData.billing_address_2 || focusedFields.billing_address_2
+                  ? "top-2 text-xs text-gray-700"
+                  : "top-1/2 -translate-y-1/2 text-sm text-gray-500"
+              }`}
+            >
+              Apartment, suite, etc.
+            </label>
           </div>
 
-          <div>
+          <div className="relative">
+            <input
+              id="city"
+              name="billing_city"
+              type="text"
+              autoComplete="address-level2"
+              value={formData.billing_city || ""}
+              onChange={onInputChange}
+              onFocus={() => handleFocus('billing_city')}
+              onBlur={() => handleBlur('billing_city')}
+              className="block w-full rounded-lg bg-white border border-gray-300 pl-3 pr-4 pt-6 pb-2 text-sm text-gray-900 placeholder:text-transparent focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10 focus:outline-none transition-all"
+              placeholder=" "
+            />
             <label
               htmlFor="city"
-              className="block text-sm font-medium text-gray-700 mb-1.5"
+              className={`absolute left-3 pointer-events-none transition-all duration-200 ${
+                formData.billing_city || focusedFields.billing_city
+                  ? "top-2 text-xs text-gray-700"
+                  : "top-1/2 -translate-y-1/2 text-sm text-gray-500"
+              }`}
             >
               City{" "}
               <abbr className="required text-red-600 ml-0.5" title="required">
                 *
               </abbr>
             </label>
-            <input
-              id="city"
-              name="billing_city"
-              type="text"
-              autoComplete="address-level2"
-              value={formData.billing_city}
-              onChange={onInputChange}
-              className="block w-full rounded-lg bg-white px-3 py-2 text-sm text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 transition-colors"
-            />
           </div>
 
-          <div>
-            <label
-              htmlFor="country"
-              className="block text-sm font-medium text-gray-700 mb-1.5"
-            >
-              Country{" "}
-              <abbr className="required text-red-600 ml-0.5" title="required">
-                *
-              </abbr>
-            </label>
+          <div className="relative">
             <div className="relative">
               <select
                 id="country"
@@ -253,24 +296,41 @@ export default function ShippingAddress({
                 autoComplete="country-name"
                 value={formData.billing_country || ""}
                 onChange={onInputChange}
-                className="w-full appearance-none rounded-lg bg-white py-2 pl-3 pr-10 text-sm text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 transition-colors"
+                onFocus={() => handleFocus('billing_country')}
+                onBlur={() => handleBlur('billing_country')}
+                className="w-full appearance-none rounded-lg bg-white border border-gray-300 pl-3 pr-10 pt-6 pb-2 text-sm text-gray-900 focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10 focus:outline-none transition-all hover:border-gray-400 hover:shadow-sm cursor-pointer shadow-sm"
               >
-                <option value="">Select a country</option>
+                <option value=""></option>
                 {checkoutData.countries && checkoutData.countries.length > 0 ? (
-                  checkoutData.countries.map((country) => (
-                    <option key={country.key} value={country.key}>
-                      {country.label}
-                    </option>
-                  ))
+                  checkoutData.countries
+                    .filter((country) => country.key === 'TH' || country.key === 'CA')
+                    .map((country) => (
+                      <option key={country.key} value={country.key}>
+                        {country.label}
+                      </option>
+                    ))
                 ) : (
                   <option value="">No countries available</option>
                 )}
               </select>
+              <label
+                htmlFor="country"
+                className={`absolute left-3 pointer-events-none transition-all duration-200 ${
+                  formData.billing_country || focusedFields.billing_country
+                    ? "top-2 text-xs text-gray-700"
+                    : "top-1/2 -translate-y-1/2 text-sm text-gray-500"
+                }`}
+              >
+                Country{" "}
+                <abbr className="required text-red-600 ml-0.5" title="required">
+                  *
+                </abbr>
+              </label>
               <svg
                 viewBox="0 0 16 16"
                 fill="currentColor"
                 aria-hidden="true"
-                className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 size-4 text-gray-500"
+                className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 size-5 text-gray-400 z-10 transition-transform duration-200"
               >
                 <path
                   d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"
@@ -281,13 +341,7 @@ export default function ShippingAddress({
             </div>
           </div>
 
-          <div>
-            <label
-              htmlFor="region"
-              className="block text-sm font-medium text-gray-700 mb-1.5"
-            >
-              State / Province
-            </label>
+          <div className="relative">
             {hasStates && states.length > 0 ? (
               <div className="relative">
                 <select
@@ -296,21 +350,33 @@ export default function ShippingAddress({
                   autoComplete="address-level1"
                   value={formData.billing_state || ""}
                   onChange={onInputChange}
+                  onFocus={() => handleFocus('billing_state')}
+                  onBlur={() => handleBlur('billing_state')}
                   disabled={loadingStates}
-                  className="w-full appearance-none rounded-lg bg-white py-2 pl-3 pr-10 text-sm text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full appearance-none rounded-lg bg-white border border-gray-300 pl-3 pr-10 pt-6 pb-2 text-sm text-gray-900 focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10 focus:outline-none transition-all hover:border-gray-400 hover:shadow-sm cursor-pointer shadow-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-300 disabled:hover:shadow-sm"
                 >
-                  <option value="">Select a state</option>
+                  <option value=""></option>
                   {states.map((state) => (
                     <option key={state.key} value={state.key}>
                       {state.label}
                     </option>
                   ))}
                 </select>
+                <label
+                  htmlFor="region"
+                  className={`absolute left-3 pointer-events-none transition-all duration-200 ${
+                    formData.billing_state || focusedFields.billing_state
+                      ? "top-2 text-xs text-gray-700"
+                      : "top-1/2 -translate-y-1/2 text-sm text-gray-500"
+                  }`}
+                >
+                  State / Province
+                </label>
                 <svg
                   viewBox="0 0 16 16"
                   fill="currentColor"
                   aria-hidden="true"
-                  className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 size-4 text-gray-500"
+                  className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 size-5 text-gray-400 z-10 transition-transform duration-200"
                 >
                   <path
                     d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"
@@ -320,38 +386,57 @@ export default function ShippingAddress({
                 </svg>
               </div>
             ) : (
-              <input
-                id="region"
-                name="billing_state"
-                type="text"
-                autoComplete="address-level1"
-                value={formData.billing_state || ""}
-                onChange={onInputChange}
-                disabled={loadingStates}
-                placeholder={
-                  loadingStates ? "Loading states..." : "State / Province"
-                }
-                className="block w-full rounded-lg bg-white px-3 py-2 text-sm text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              />
+              <>
+                <input
+                  id="region"
+                  name="billing_state"
+                  type="text"
+                  autoComplete="address-level1"
+                  value={formData.billing_state || ""}
+                  onChange={onInputChange}
+                  onFocus={() => handleFocus('billing_state')}
+                  onBlur={() => handleBlur('billing_state')}
+                  disabled={loadingStates}
+                  placeholder=" "
+                  className="block w-full rounded-lg bg-white border border-gray-300 pl-3 pr-4 pt-6 pb-2 text-sm text-gray-900 placeholder:text-transparent focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10 focus:outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+                <label
+                  htmlFor="region"
+                  className={`absolute left-3 pointer-events-none transition-all duration-200 ${
+                    formData.billing_state || focusedFields.billing_state
+                      ? "top-2 text-xs text-gray-700"
+                      : "top-1/2 -translate-y-1/2 text-sm text-gray-500"
+                  }`}
+                >
+                  {loadingStates ? "Loading states..." : "State / Province"}
+                </label>
+              </>
             )}
           </div>
 
-          <div>
-            <label
-              htmlFor="postal-code"
-              className="block text-sm font-medium text-gray-700 mb-1.5"
-            >
-              Postal code
-            </label>
+          <div className="relative">
             <input
               id="postal-code"
               name="billing_postcode"
               type="text"
               autoComplete="postal-code"
-              value={formData.billing_postcode}
+              value={formData.billing_postcode || ""}
               onChange={onInputChange}
-              className="block w-full rounded-lg bg-white px-3 py-2 text-sm text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 transition-colors"
+              onFocus={() => handleFocus('billing_postcode')}
+              onBlur={() => handleBlur('billing_postcode')}
+              className="block w-full rounded-lg bg-white border border-gray-300 pl-3 pr-4 pt-6 pb-2 text-sm text-gray-900 placeholder:text-transparent focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10 focus:outline-none transition-all"
+              placeholder=" "
             />
+            <label
+              htmlFor="postal-code"
+              className={`absolute left-3 pointer-events-none transition-all duration-200 ${
+                formData.billing_postcode || focusedFields.billing_postcode
+                  ? "top-2 text-xs text-gray-700"
+                  : "top-1/2 -translate-y-1/2 text-sm text-gray-500"
+              }`}
+            >
+              Postal code
+            </label>
           </div>
         </div>
       )}

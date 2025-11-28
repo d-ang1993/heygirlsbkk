@@ -1,7 +1,32 @@
 /** @jsxImportSource react */
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import CheckoutFormFields from "./CheckoutFormFields";
 import CheckoutOrderSummary from "./CheckoutOrderSummary";
+import { extractPriceNumber } from "../utils/priceUtils";
+import {
+  calculateFinalTotal,
+  initializeQuantities,
+  getVariationAttributes,
+  updateCartQuantity,
+  removeCartItem,
+} from "../utils/cartUtils";
+import {
+  getDefaultShippingMethod,
+  getShippingCost,
+  updateShippingMethod,
+  isShippingMethodComplete as checkShippingMethodComplete,
+} from "../utils/shippingUtils";
+import {
+  fetchStatesForCountry,
+  fetchTaxRateForCountry,
+  isAddressField,
+  triggerCheckoutUpdate,
+} from "../utils/countryUtils";
+import {
+  validateForm,
+  validateContactInfo,
+  validateShippingAddress,
+} from "../utils/formValidation";
 
 export default function CheckoutForm({
   checkoutData = {},
@@ -19,6 +44,14 @@ export default function CheckoutForm({
   statesNonce = "",        // States/provinces nonce
   stripeGatewayId = "hg_stripe_creditcard",
 }) {
+  // Get initial shipping total from selected shipping method
+  // Keep the WooCommerce HTML format
+  const getInitialShippingTotal = () => {
+    const initialMethodId = checkoutData.shipping_method || shippingMethods[0]?.id || "";
+    const selectedMethod = shippingMethods.find(m => m.id === initialMethodId);
+    return selectedMethod?.cost || checkoutData.shipping_total || "฿0.00";
+  };
+
   const [formData, setFormData] = useState({
     billing_email: checkoutData.billing_email || "",
     billing_first_name: checkoutData.billing_first_name || "",
@@ -33,9 +66,13 @@ export default function CheckoutForm({
     billing_phone: checkoutData.billing_phone || "",
     shipping_method:
       checkoutData.shipping_method || (shippingMethods[0]?.id || ""),
+    shipping_total: getInitialShippingTotal(),
+    // Use WooCommerce tax rate if available, otherwise default to 0.07 (7%)
+    vat_tax: checkoutData.tax_rate || 0.07,
     payment_method:
       checkoutData.payment_method || (paymentGateways[0]?.id || ""),
     order_comments: checkoutData.order_comments || "",
+    final_total: 0,
   });
 
   const [quantities, setQuantities] = useState({});
@@ -116,29 +153,13 @@ export default function CheckoutForm({
   };
 
   // Check if contact is complete
-  const isContactComplete = !!(
-    formData.billing_email?.trim() && 
-    formData.billing_phone?.trim()
-  );
+  const isContactComplete = validateContactInfo(formData);
 
   // Check if shipping address is complete
-  const isShippingAddressComplete = (() => {
-    const requiredFields = [
-      formData.billing_first_name?.trim(),
-      formData.billing_last_name?.trim(),
-      formData.billing_address_1?.trim(),
-      formData.billing_city?.trim(),
-      formData.billing_country?.trim(),
-    ];
-    const allRequiredFilled = requiredFields.every(field => field && field.length > 0);
-    const stateValid = !hasStates || (hasStates && formData.billing_state?.trim());
-    return allRequiredFilled && stateValid;
-  })();
+  const isShippingAddressComplete = validateShippingAddress(formData, hasStates);
 
   // Check if shipping method is complete
-  const isShippingMethodComplete = !!(
-    formData.shipping_method && formData.shipping_method.length > 0
-  );
+  const isShippingMethodComplete = checkShippingMethodComplete(formData.shipping_method);
 
   // Track previous completion states to detect when sections become complete
   const prevCompletionRef = useRef({
@@ -197,18 +218,29 @@ export default function CheckoutForm({
 
   // Initialize quantities
   useEffect(() => {
-    const initialQuantities = {};
-    cartItems.forEach((item) => {
-      initialQuantities[item.key] = item.quantity;
-    });
+    const initialQuantities = initializeQuantities(cartItems);
     setQuantities(initialQuantities);
   }, [cartItems]);
+
+  // Update tax rate when WooCommerce tax data changes (e.g., country change)
+  useEffect(() => {
+    if (checkoutData.tax_rate !== undefined && checkoutData.tax_rate !== formData.vat_tax) {
+      setFormData((prev) => ({
+        ...prev,
+        vat_tax: checkoutData.tax_rate,
+      }));
+      console.log("🔵 Tax rate updated from WooCommerce:", {
+        oldRate: formData.vat_tax,
+        newRate: checkoutData.tax_rate,
+        taxEnabled: checkoutData.tax_enabled,
+      });
+    }
+  }, [checkoutData.tax_rate, checkoutData.tax_enabled]);
 
   // Ensure shipping method is set if not already set
   useEffect(() => {
     if (!formData.shipping_method && shippingMethods.length > 0) {
-      // Use the first available shipping method or the chosen one
-      const defaultMethod = shippingMethods.find(m => m.chosen) || shippingMethods[0];
+      const defaultMethod = getDefaultShippingMethod(shippingMethods);
       if (defaultMethod) {
         setFormData((prev) => ({ ...prev, shipping_method: defaultMethod.id }));
       }
@@ -228,6 +260,84 @@ export default function CheckoutForm({
     }
   }, [formData.payment_method, isStripeCreditCard]);
 
+  // Debug: Log cart and checkout data
+  useEffect(() => {
+    console.log("🛒 ========== CART & CHECKOUT DATA ==========");
+    console.log("📦 Cart Items:", cartItems);
+    console.log("📦 Cart Items Count:", cartItems.length);
+    console.log("📦 Quantities:", quantities);
+    
+    console.log("💰 Checkout Data:", checkoutData);
+    console.log("💰 Subtotal:", checkoutData.cart_subtotal);
+    console.log("💰 Shipping Total (from checkoutData):", checkoutData.shipping_total);
+    console.log("💰 Tax Total (from checkoutData):", checkoutData.tax_total);
+    console.log("💰 Cart Total:", checkoutData.cart_total);
+    
+    console.log("📝 Form Data:", formData);
+    console.log("📝 Shipping Method:", formData.shipping_method);
+    console.log("📝 Shipping Total (from formData):", formData.shipping_total);
+    console.log("📝 VAT Tax:", formData.vat_tax);
+    
+    // Calculate totals from formData
+    const subtotalNum = parseFloat(checkoutData.cart_subtotal?.replace(/[^\d.]/g, '') || 0);
+    const shippingNum = parseFloat(formData.shipping_total || 0);
+    const vatTaxRate = parseFloat(formData.vat_tax || 0);
+    const taxAmount = subtotalNum * vatTaxRate;
+    const calculatedTotal = subtotalNum + shippingNum + taxAmount;
+    
+    console.log("🧮 Calculated Totals:", {
+      subtotal: subtotalNum,
+      shipping: shippingNum,
+      taxRate: vatTaxRate,
+      taxAmount: taxAmount,
+      total: calculatedTotal,
+    });
+    
+    // Also expose to window for easy debugging in console
+    if (typeof window !== "undefined") {
+      window.debugCartData = {
+        cartItems,
+        quantities,
+        checkoutData,
+        formData,
+        calculatedTotals: {
+          subtotal: subtotalNum,
+          shipping: shippingNum,
+          taxRate: vatTaxRate,
+          taxAmount: taxAmount,
+          total: calculatedTotal,
+        }
+      };
+      console.log("💡 Tip: Access all data via window.debugCartData");
+    }
+    console.log("🛒 =========================================");
+  }, [cartItems, quantities, checkoutData, formData]);
+
+  // Calculate final_total whenever cart items, shipping, or taxes change
+  // Use WooCommerce tax amount if available, otherwise calculate from rate
+  const calculatedFinalTotal = useMemo(() => {
+    return calculateFinalTotal(
+      checkoutData.cart_subtotal,
+      formData.shipping_total,
+      formData.vat_tax,
+      extractPriceNumber,
+      checkoutData.tax_total_amount // Use WooCommerce calculated tax if available
+    );
+  }, [
+    checkoutData.cart_subtotal,
+    formData.shipping_total,
+    formData.vat_tax,
+    checkoutData.tax_total_amount,
+  ]);
+
+  // Update formData.final_total when calculated value changes
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      final_total: calculatedFinalTotal,
+    }));
+  }, [calculatedFinalTotal]);
+
   // Debug: countries
   useEffect(() => {
     console.log("🔵 Countries data:", {
@@ -240,156 +350,186 @@ export default function CheckoutForm({
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => {
+      const updated = { ...prev, [name]: value };
+      
+      // Update tax rate when country, state, or postcode changes
+      if (name === "billing_country") {
+        handleFetchStatesForCountry(value);
+        handleFetchTaxRateForCountry(value, updated.billing_state, updated.billing_postcode);
+      } else if (name === "billing_state" || name === "billing_postcode") {
+        // Update tax rate when state or postcode changes (if country is set)
+        if (updated.billing_country) {
+          handleFetchTaxRateForCountry(updated.billing_country, updated.billing_state, updated.billing_postcode);
+        }
+      }
+      
+      return updated;
+    });
 
-    if (name === "billing_country") {
-      fetchStatesForCountry(value);
+    // Trigger shipping recalculation when address fields change
+    // This ensures available shipping methods are updated based on the new address
+    if (isAddressField(name)) {
+      triggerCheckoutUpdate();
     }
   };
 
-  const fetchStatesForCountry = (countryCode) => {
+  const handleFetchTaxRateForCountry = async (countryCode, state = '', postcode = '') => {
     if (!countryCode || !statesNonce || !ajaxUrl) {
-      setStates([]);
-      setHasStates(false);
-      setFormData((prev) => ({ ...prev, billing_state: "" }));
+      console.log("💰 Tax Rate: Unable to fetch (missing country, nonce, or ajaxUrl)");
       return;
     }
 
-    setLoadingStates(true);
-
-    const fd = new FormData();
-    fd.append("action", "get_states_for_country");
-    fd.append("country", countryCode);
-    fd.append("nonce", statesNonce);
-
-    fetch(ajaxUrl, {
-      method: "POST",
-      body: fd,
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        setLoadingStates(false);
-        if (data.success && data.data) {
-          const statesList = data.data.states || [];
-          const hasStatesList = data.data.has_states || false;
-          setStates(statesList);
-          setHasStates(hasStatesList);
-          setFormData((prev) => ({ ...prev, billing_state: "" }));
-        } else {
-          setStates([]);
-          setHasStates(false);
-          setFormData((prev) => ({ ...prev, billing_state: "" }));
-        }
-      })
-      .catch((error) => {
-        console.error("❌ Error fetching states:", error);
-        setLoadingStates(false);
-        setStates([]);
-        setHasStates(false);
-        setFormData((prev) => ({ ...prev, billing_state: "" }));
-      });
+    try {
+      const data = await fetchTaxRateForCountry(countryCode, ajaxUrl, statesNonce, state, postcode);
+      
+      if (data.success && data.data) {
+        const taxRate = data.data.tax_rate || 0;
+        const taxEnabled = data.data.tax_enabled || false;
+        const taxRatePercent = (taxRate * 100).toFixed(2);
+        
+        // Update formData with the fetched tax rate
+        setFormData((prev) => ({
+          ...prev,
+          vat_tax: taxRate,
+        }));
+        
+        console.log("💰 Tax Rate:", {
+          country: countryCode,
+          rate: taxRate,
+          ratePercent: `${taxRatePercent}%`,
+          enabled: taxEnabled,
+        });
+      } else {
+        console.log("💰 Tax Rate: No tax rate found for country", countryCode);
+        // Set tax rate to 0 if no tax rate found
+        setFormData((prev) => ({
+          ...prev,
+          vat_tax: 0,
+        }));
+      }
+    } catch (error) {
+      console.error("❌ Error fetching tax rate:", error);
+    }
   };
 
-  // Fetch states on mount if country already set
+  const handleFetchStatesForCountry = async (countryCode, preserveState = false) => {
+    if (!countryCode || !statesNonce || !ajaxUrl) {
+      setStates([]);
+      setHasStates(false);
+      if (!preserveState) {
+        setFormData((prev) => ({ ...prev, billing_state: "" }));
+      }
+      return;
+    }
+
+    // Save current state value to preserve it if valid
+    const currentState = formData.billing_state;
+
+    setLoadingStates(true);
+
+    try {
+      const data = await fetchStatesForCountry(countryCode, ajaxUrl, statesNonce);
+      setLoadingStates(false);
+
+      if (data.success && data.data) {
+        const statesList = data.data.states || [];
+        const hasStatesList = data.data.has_states || false;
+        setStates(statesList);
+        setHasStates(hasStatesList);
+
+        // If preserving state and current state is valid, keep it; otherwise clear
+        if (preserveState && currentState) {
+          const isValidState = statesList.some((state) => state.key === currentState);
+          if (isValidState) {
+            // Keep the current state - don't update formData
+            return;
+          }
+        }
+
+        // Clear state if not preserving or if preserved state is invalid
+        setFormData((prev) => ({ ...prev, billing_state: "" }));
+      } else {
+        setStates([]);
+        setHasStates(false);
+        if (!preserveState) {
+          setFormData((prev) => ({ ...prev, billing_state: "" }));
+        }
+      }
+    } catch (error) {
+      console.error("❌ Error fetching states:", error);
+      setLoadingStates(false);
+      setStates([]);
+      setHasStates(false);
+      if (!preserveState) {
+        setFormData((prev) => ({ ...prev, billing_state: "" }));
+      }
+    }
+  };
+
+  // Fetch states on mount if country already set (preserve existing state from account)
   useEffect(() => {
     if (formData.billing_country) {
-      fetchStatesForCountry(formData.billing_country);
+      // Preserve state on initial load if user has account data
+      handleFetchStatesForCountry(formData.billing_country, true);
+      handleFetchTaxRateForCountry(formData.billing_country, formData.billing_state, formData.billing_postcode);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleQuantityChange = (itemKey, quantity) => {
     setQuantities((prev) => ({ ...prev, [itemKey]: quantity }));
-
-    if (typeof jQuery !== "undefined") {
-      const fd = new FormData();
-      fd.append(`cart[${itemKey}][qty]`, quantity);
-      fd.append("update_cart", "Update Cart");
-
-      fetch(checkoutUrl, {
-        method: "POST",
-        body: fd,
-      }).then(() => {
-        jQuery("body").trigger("update_checkout");
-      });
-    }
-  };
-
-  const handleRemoveItem = (itemKey) => {
-    if (typeof jQuery === "undefined") return;
-
-    fetch(cartUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: new URLSearchParams({
-        remove_item: itemKey,
-        "woocommerce-cart-nonce": nonce,
-      }),
-    }).then(() => {
-      window.location.reload();
+    updateCartQuantity(itemKey, quantity, checkoutUrl).catch((error) => {
+      console.error("Error updating cart quantity:", error);
     });
   };
 
-  const handleShippingChange = (methodId) => {
-    setFormData((prev) => ({ ...prev, shipping_method: methodId }));
-
-    if (typeof jQuery !== "undefined") {
-      const fd = new FormData();
-      fd.append("shipping_method[0]", methodId);
-      fd.append("calc_shipping", "Calculate shipping");
-
-      fetch(checkoutUrl, {
-        method: "POST",
-        body: fd,
-      }).then(() => {
-        jQuery("body").trigger("update_checkout");
+  const handleRemoveItem = (itemKey) => {
+    removeCartItem(itemKey, cartUrl, nonce)
+      .then(() => {
+        window.location.reload();
+      })
+      .catch((error) => {
+        console.error("Error removing cart item:", error);
       });
-    }
   };
 
-  const getVariationAttributes = (item) => {
-    const attrs = [];
-    if (item.variation && typeof item.variation === "object") {
-      Object.values(item.variation).forEach((value) => {
-        if (value) attrs.push(value);
+  const handleShippingChange = (methodId, shippingCost = null) => {
+    // Get shipping cost from method if not provided
+    // Keep the WooCommerce HTML format
+    const shippingTotal = shippingCost || getShippingCost(shippingMethods, methodId);
+    
+    console.log("🚚 handleShippingChange called:", {
+      methodId,
+      shippingCost,
+      shippingTotal,
+    });
+    
+    setFormData((prev) => {
+      const updated = {
+        ...prev, 
+        shipping_method: methodId,
+        shipping_total: shippingTotal,
+      };
+      console.log("✅ Updated formData with shipping:", {
+        shipping_method: updated.shipping_method,
+        shipping_total: updated.shipping_total,
       });
-    }
-    return attrs;
+      return updated;
+    });
+
+    updateShippingMethod(methodId, checkoutUrl).catch((error) => {
+      console.error("Error updating shipping method:", error);
+    });
   };
 
   // Basic validation
-  const validateForm = () => {
-    const requiredFields = {
-      billing_email: formData.billing_email?.trim(),
-      billing_first_name: formData.billing_first_name?.trim(),
-      billing_last_name: formData.billing_last_name?.trim(),
-      billing_address_1: formData.billing_address_1?.trim(),
-      billing_city: formData.billing_city?.trim(),
-      billing_country: formData.billing_country?.trim(),
-      billing_phone: formData.billing_phone?.trim(),
-      payment_method: formData.payment_method?.trim(),
-    };
-
-    const allFieldsFilled = Object.values(requiredFields).every(
-      (v) => v && v.length > 0
-    );
-
-    const stateValid =
-      !hasStates || (hasStates && formData.billing_state?.trim());
-
-    const paymentValid =
-      formData.payment_method && formData.payment_method.length > 0;
-
-    const paymentMethodValid = isStripeCreditCard
-      ? isStripePaymentReady
-      : paymentValid;
-
-    return allFieldsFilled && stateValid && paymentMethodValid;
-  };
-
-  const isFormValid = validateForm();
+  const isFormValid = validateForm(
+    formData,
+    hasStates,
+    isStripeCreditCard,
+    isStripePaymentReady
+  );
 
   // 🔑 Final submission handler: Stripe first, then Woo
   const handleFormSubmit = async (e) => {
@@ -413,7 +553,17 @@ export default function CheckoutForm({
       if (isStripeCreditCard && stripeRef.current) {
         try {
           // Step 1: Create PaymentIntent via WP AJAX
-          console.log("🔵 Creating PaymentIntent via AJAX", { ajaxUrl, checkoutNonce });
+          // Send client-calculated final_total to ensure consistency with client-side calculations
+          // Convert final_total to satang (smallest currency unit for THB: 1 baht = 100 satang)
+          const amountInSatang = Math.round((formData.final_total || 0) * 100);
+          
+          console.log("🔵 Creating PaymentIntent via AJAX", { 
+            ajaxUrl, 
+            checkoutNonce,
+            clientCalculatedAmount: formData.final_total,
+            amountInSatang,
+            note: "Sending client-calculated amount to server. Server should use this if provided, otherwise fallback to WC()->cart->get_total()"
+          });
 
           const response = await fetch(ajaxUrl, {
             method: "POST",
@@ -423,6 +573,7 @@ export default function CheckoutForm({
             body: new URLSearchParams({
               action: "hg_stripe_cc_create_pi",
               security: checkoutNonce,
+              amount: amountInSatang.toString(),
             }),
           });
           
@@ -449,9 +600,6 @@ export default function CheckoutForm({
             return;
           }
           
-
-          
-
           const clientSecret = data.data.clientSecret;
           console.log("✅ PaymentIntent created:", clientSecret);
 
@@ -558,6 +706,19 @@ export default function CheckoutForm({
         }
       }
       
+      // Add cart item quantities if they've been changed
+      // WooCommerce stores cart in session, but we need to send quantity updates
+      if (cartItems && cartItems.length > 0 && quantities) {
+        cartItems.forEach((item) => {
+          const quantity = quantities[item.key] || item.quantity;
+          // Only send if quantity differs from original or if explicitly set
+          if (quantities[item.key] !== undefined) {
+            formDataToSubmit.append(`cart[${item.key}][qty]`, quantity);
+            console.log(`✅ Added cart quantity for ${item.key}:`, quantity);
+          }
+        });
+      }
+      
       // Add wc-ajax parameter for WooCommerce AJAX endpoint
       formDataToSubmit.append('wc-ajax', 'checkout');
       
@@ -567,6 +728,35 @@ export default function CheckoutForm({
         formDataObj[key] = value;
       }
       
+      // Calculate final totals before submission
+      const subtotalNum = parseFloat(checkoutData.cart_subtotal?.replace(/[^\d.]/g, '') || 0);
+      const shippingNum = parseFloat(formData.shipping_total || 0);
+      const vatTaxRate = parseFloat(formData.vat_tax || 0);
+      const taxAmount = subtotalNum * vatTaxRate;
+      const calculatedTotal = subtotalNum + shippingNum + taxAmount;
+      
+      console.log("🔵 ========== CHECKOUT SUBMISSION DATA ==========");
+      console.log("📦 Cart Items:", cartItems);
+      console.log("📦 Cart Items Count:", cartItems.length);
+      console.log("📦 Quantities:", quantities);
+      console.log("💰 PHP Session Data (from checkoutData):", {
+        subtotal: checkoutData.cart_subtotal,
+        shipping: checkoutData.shipping_total,
+        tax: checkoutData.tax_total,
+        total: checkoutData.cart_total,
+      });
+      console.log("📝 React Form Data:", {
+        shipping_method: formData.shipping_method,
+        shipping_total: formData.shipping_total,
+        vat_tax: formData.vat_tax,
+      });
+      console.log("🧮 Calculated Totals:", {
+        subtotal: subtotalNum,
+        shipping: shippingNum,
+        taxRate: vatTaxRate,
+        taxAmount: taxAmount,
+        total: calculatedTotal,
+      });
       console.log("🔵 Submitting form to WooCommerce via wc-ajax=checkout:", {
         cartItems: cartItems.length,
         paymentMethod: formData.payment_method,
@@ -578,6 +768,7 @@ export default function CheckoutForm({
         shippingMethodValue: formDataToSubmit.get('shipping_method[0]'),
         allFormData: formDataObj
       });
+      console.log("🔵 ============================================");
       
       // Ensure all form fields are present
       const criticalFields = [
@@ -734,6 +925,7 @@ export default function CheckoutForm({
               cartItems={cartItems}
               quantities={quantities}
               checkoutData={checkoutData}
+              formData={formData}
               onQuantityChange={handleQuantityChange}
               onRemoveItem={handleRemoveItem}
               getVariationAttributes={getVariationAttributes}

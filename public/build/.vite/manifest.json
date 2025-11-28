@@ -8,12 +8,12 @@
     "src": "editor.deps.json"
   },
   "resources/css/app.css": {
-    "file": "assets/app-CbD440EA.css",
+    "file": "assets/app-ff24J0j9.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
   "resources/css/editor.css": {
-    "file": "assets/editor-Do_jx6hC.css",
+    "file": "assets/editor-BZloCJ0x.css",
     "src": "resources/css/editor.css",
     "isEntry": true
   },
@@ -33,7 +33,7 @@
     ]
   },
   "resources/js/checkout-form.jsx": {
-    "file": "assets/checkout-form-BtOu_5OT.js",
+    "file": "assets/checkout-form-Cr1O-CpZ.js",
     "name": "checkout-form",
     "src": "resources/js/checkout-form.jsx",
     "isEntry": true,
