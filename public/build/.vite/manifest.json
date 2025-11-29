@@ -8,12 +8,12 @@
     "src": "editor.deps.json"
   },
   "resources/css/app.css": {
-    "file": "assets/app-ff24J0j9.css",
+    "file": "assets/app-BufO8pfN.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
   "resources/css/editor.css": {
-    "file": "assets/editor-BZloCJ0x.css",
+    "file": "assets/editor-3lBc6S-F.css",
     "src": "resources/css/editor.css",
     "isEntry": true
   },
@@ -33,7 +33,7 @@
     ]
   },
   "resources/js/checkout-form.jsx": {
-    "file": "assets/checkout-form-Cr1O-CpZ.js",
+    "file": "assets/checkout-form-ZW1MXDnM.js",
     "name": "checkout-form",
     "src": "resources/js/checkout-form.jsx",
     "isEntry": true,
@@ -52,5 +52,14 @@
     "name": "image-optimization",
     "src": "resources/js/image-optimization.js",
     "isEntry": true
+  },
+  "resources/js/thankyou-page.jsx": {
+    "file": "assets/thankyou-page-Cz7Ta0qK.js",
+    "name": "thankyou-page",
+    "src": "resources/js/thankyou-page.jsx",
+    "isEntry": true,
+    "imports": [
+      "_client-W9jQdWFX.js"
+    ]
   }
 }

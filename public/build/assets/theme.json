@@ -64,29 +64,14 @@
           "color": "oklch(98.7% .026 102.212)"
         },
         {
-          "name": "Yellow (100)",
-          "slug": "yellow-100",
-          "color": "oklch(97.3% .071 103.193)"
-        },
-        {
           "name": "Yellow (400)",
           "slug": "yellow-400",
           "color": "oklch(85.2% .199 91.936)"
         },
         {
-          "name": "Yellow (800)",
-          "slug": "yellow-800",
-          "color": "oklch(47.6% .114 61.907)"
-        },
-        {
           "name": "Green (50)",
           "slug": "green-50",
           "color": "oklch(98.2% .018 155.826)"
-        },
-        {
-          "name": "Green (100)",
-          "slug": "green-100",
-          "color": "oklch(96.2% .044 156.743)"
         },
         {
           "name": "Green (400)",
@@ -97,16 +82,6 @@
           "name": "Green (600)",
           "slug": "green-600",
           "color": "oklch(62.7% .194 149.214)"
-        },
-        {
-          "name": "Green (700)",
-          "slug": "green-700",
-          "color": "oklch(52.7% .154 150.069)"
-        },
-        {
-          "name": "Green (800)",
-          "slug": "green-800",
-          "color": "oklch(44.8% .119 151.328)"
         },
         {
           "name": "Blue (50)",
@@ -268,11 +243,6 @@
           "name": "2xl",
           "slug": "2xl",
           "size": "1.5rem"
-        },
-        {
-          "name": "3xl",
-          "slug": "3xl",
-          "size": "1.875rem"
         },
         {
           "name": "4xl",
