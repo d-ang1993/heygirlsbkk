@@ -187,559 +187,209 @@
         error_log('⚠️ Server-side QR: Cannot generate - is_promptpay=' . ($is_promptpay ? 'yes' : 'no') . ', intent_id=' . ($intent_id ?: 'empty') . ', secret_key=' . ($stripe_secret_key ? 'exists' : 'missing') . ', Stripe class=' . (class_exists('\Stripe\Stripe') ? 'exists' : 'missing') . ', order=' . ($order ? 'exists' : 'missing'));
       }
     }
+    
+    // Prepare order data for React component
+    $order_data = [];
+    if ($order) {
+      // Basic order info
+      $order_data['id'] = $order->get_id();
+      $order_data['orderNumber'] = $order->get_order_number();
+      $order_data['dateCreated'] = wc_format_datetime($order->get_date_created());
+      $order_data['billingEmail'] = $order->get_billing_email();
+      $order_data['paymentMethodTitle'] = $order->get_payment_method_title();
+      $order_data['formattedTotal'] = $order->get_formatted_order_total();
+      $order_data['statusName'] = wc_get_order_status_name($order->get_status());
+      $order_data['formattedBillingAddress'] = $order->get_formatted_billing_address();
+      $order_data['formattedShippingAddress'] = $order->get_formatted_shipping_address() ?: $order->get_formatted_billing_address();
+      
+      // Order items
+      $order_data['items'] = [];
+      foreach ($order->get_items() as $item_id => $item) {
+        $product = $item->get_product();
+        $item_data = [
+          'name' => $item->get_name(),
+          'quantity' => $item->get_quantity(),
+          'formattedTotal' => wc_price($item->get_total(), ['currency' => $order->get_currency()]),
+          'meta' => wc_display_item_meta($item, ['echo' => false]),
+        ];
+        if ($product && $product->get_sku()) {
+          $item_data['sku'] = $product->get_sku();
+        }
+        
+        // Add product image
+        if ($product) {
+          $image_id = $product->get_image_id();
+          if ($image_id) {
+            $image_url = wp_get_attachment_image_url($image_id, 'thumbnail');
+            if ($image_url) {
+              $item_data['imageSrc'] = $image_url;
+              $item_data['imageAlt'] = $product->get_name();
+            }
+          }
+          
+          // Add product description/short description
+          $short_description = $product->get_short_description();
+          if ($short_description) {
+            $item_data['description'] = wp_strip_all_tags($short_description);
+          }
+        }
+        
+        $order_data['items'][] = $item_data;
+      }
+      
+      // Order totals
+      $order_data['subtotalToDisplay'] = $order->get_subtotal_to_display();
+      $order_data['discountTotal'] = (float) $order->get_discount_total();
+      if ($order_data['discountTotal'] > 0) {
+        $order_data['formattedDiscountTotal'] = wc_price($order->get_discount_total(), ['currency' => $order->get_currency()]);
+      }
+      
+      // Shipping methods
+      $order_data['shippingMethods'] = [];
+      foreach ($order->get_shipping_methods() as $shipping) {
+        $order_data['shippingMethods'][] = [
+          'name' => $shipping->get_name(),
+          'formattedTotal' => wc_price($shipping->get_total(), ['currency' => $order->get_currency()]),
+        ];
+      }
+      
+      // Fees
+      $order_data['fees'] = [];
+      foreach ($order->get_fees() as $fee) {
+        $order_data['fees'][] = [
+          'name' => $fee->get_name(),
+          'formattedTotal' => wc_price($fee->get_total(), ['currency' => $order->get_currency()]),
+        ];
+      }
+      
+      // Tax/VAT information
+      $order_data['taxTotals'] = [];
+      $tax_totals = $order->get_tax_totals();
+      if (!empty($tax_totals)) {
+        foreach ($tax_totals as $tax) {
+          $order_data['taxTotals'][] = [
+            'label' => $tax->label,
+            'formattedAmount' => wc_price($tax->amount, ['currency' => $order->get_currency()]),
+            'amount' => (float) $tax->amount,
+          ];
+        }
+      } else {
+        // Fallback: if no detailed tax totals, get total tax
+        $total_tax = (float) $order->get_total_tax();
+        if ($total_tax > 0) {
+          $order_data['taxTotals'][] = [
+            'label' => 'VAT',
+            'formattedAmount' => wc_price($total_tax, ['currency' => $order->get_currency()]),
+            'amount' => $total_tax,
+          ];
+        }
+      }
+    }
+    
+    // Generate nonce for AJAX calls
+    $thankyou_nonce = $order ? wp_create_nonce('hg_promptpay_check_' . $order->get_id()) : '';
   @endphp
 
-  <div class="container my-12">
-    @if (!isset($order) || ! $order)
+  {{-- Pass data to React component --}}
+  <script>
+    window.thankYouPageData = {
+      orderData: @json($order_data),
+      qrCodeUrl: @json($qr_code_url),
+      isPromptPay: @json($is_promptpay),
+      isPaid: @json($is_paid),
+      clientSecret: @json($client_secret),
+      intentId: @json($intent_id),
+      stripePublishableKey: @json($stripe_pp_key),
+      ajaxUrl: @json(esc_url(admin_url('admin-ajax.php'))),
+      nonce: @json($thankyou_nonce),
+    };
+    console.log('🔵 ThankYou Page Data loaded:', window.thankYouPageData);
+  </script>
+
+  {{-- React Component Mount Point --}}
+  <div id="thankyou-page-react"></div>
+
+  {{-- Load React Component Script --}}
+  @viteReactRefresh
+  @vite('resources/js/thankyou-page.jsx')
+
+  {{-- Client-side QR code generation script (for fallback) --}}
+  @if ($is_promptpay && !$is_paid && $client_secret && $stripe_pp_key && !$qr_code_url)
+    <script src="https://js.stripe.com/v3/"></script>
+    <script>
+      // Client-side QR code generation script
+      // This is kept here as a fallback if server-side generation fails
+      // The React component will handle the QR code display once generated
+    </script>
+  @endif
+
+  {{-- Fallback: Manual mount trigger and error detection --}}
+  <script>
+    (function() {
+      console.log('🔵 ThankYou Blade: Script block executing...');
+      
+      // Verify data is available
+      if (!window.thankYouPageData) {
+        console.error('❌ ThankYou Blade: window.thankYouPageData is not defined!');
+      } else {
+        console.log('✅ ThankYou Blade: window.thankYouPageData is available');
+        console.log('✅ ThankYou Blade: Data keys:', Object.keys(window.thankYouPageData));
+      }
+      
+      // Wait for script to load and then check for mount function
+      function waitForMountFunction(attempts = 0) {
+        const maxAttempts = 100;
+        
+        if (typeof window.mountThankYouPage === 'function') {
+          console.log('✅ ThankYou Blade: mountThankYouPage function is available');
+          
+          // Try manual mount if React hasn't mounted yet
+          const mountPoint = document.getElementById('thankyou-page-react');
+          if (mountPoint) {
+            if (mountPoint.children.length === 0) {
+              console.log('🔵 ThankYou Blade: Attempting manual mount...');
+              try {
+                window.mountThankYouPage();
+              } catch (error) {
+                console.error('❌ ThankYou Blade: Error calling mountThankYouPage:', error);
+              }
+            } else {
+              console.log('✅ ThankYou Blade: Component already mounted');
+            }
+          }
+          
+          // Final check after delay
+          setTimeout(function() {
+            const mountPoint = document.getElementById('thankyou-page-react');
+            if (mountPoint && mountPoint.children.length === 0) {
+              console.error('❌ ThankYou Blade: React component did not mount after 3 seconds');
+              mountPoint.innerHTML = '<div class="p-8 bg-red-50 border border-red-200 rounded-lg"><p class="text-red-800 font-semibold">Thank you page failed to load.</p><p class="text-red-700 mt-2">Please refresh the page or contact support.</p><p class="text-sm text-red-600 mt-2">Check the browser console (F12) for error details.</p><button onclick="location.reload()" class="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Refresh Page</button></div>';
+            } else if (mountPoint && mountPoint.children.length > 0) {
+              console.log('✅ ThankYou Blade: React component appears to have mounted successfully');
+            }
+          }, 3000);
+        } else if (attempts < maxAttempts) {
+          setTimeout(() => waitForMountFunction(attempts + 1), 50);
+        } else {
+          console.error('❌ ThankYou Blade: mountThankYouPage function not available after ' + maxAttempts + ' attempts');
+          const mountPoint = document.getElementById('thankyou-page-react');
+          if (mountPoint && mountPoint.children.length === 0) {
+            mountPoint.innerHTML = '<div class="p-8 bg-red-50 border border-red-200 rounded-lg"><p class="text-red-800 font-semibold">Thank you page script failed to load.</p><p class="text-red-700 mt-2">Please check your browser console and network tab for errors.</p><p class="text-sm text-red-600 mt-2">Make sure the build was successful (npm run build).</p><button onclick="location.reload()" class="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Refresh Page</button></div>';
+          }
+        }
+      }
+      
+      // Start waiting for mount function
+      waitForMountFunction();
+    })();
+  </script>
+
+  {{-- Old Blade HTML content removed - now handled by React component --}}
+  
+  @if (!isset($order) || ! $order)
+    <div class="container my-12">
       <h1 class="text-2xl font-semibold mb-4">Order not found</h1>
       <p class="text-gray-700">We couldn't find your order. If you believe this is a mistake, please contact us.</p>
-    @else
-      {{-- HEADER + MAIN INFO --}}
-      <div class="mb-10">
-        <h1 class="text-2xl md:text-3xl font-semibold mb-2">
-          Thank you for your order ❤️
-        </h1>
-        <p class="text-gray-700 mb-1">
-          <span class="font-medium">Order #{{ $order->get_order_number() }}</span>
-        </p>
-        <p class="text-gray-600 text-sm">
-          Placed on {{ wc_format_datetime($order->get_date_created()) }}
-        </p>
-      </div>
-
-      {{-- TOP SECTION: OVERVIEW + (OPTIONAL) PROMPTPAY QR --}}
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-        {{-- LEFT: ORDER OVERVIEW --}}
-        <div>
-          <div class="bg-gray-50 border border-gray-200 rounded-lg p-6">
-            <h2 class="text-lg font-semibold mb-4">Order summary</h2>
-
-            <dl class="space-y-2 text-sm text-gray-700">
-              <div class="flex justify-between">
-                <dt class="font-medium">Order number</dt>
-                <dd>#{{ $order->get_order_number() }}</dd>
-              </div>
-
-              <div class="flex justify-between">
-                <dt class="font-medium">Date</dt>
-                <dd>{{ wc_format_datetime($order->get_date_created()) }}</dd>
-              </div>
-
-              @if ($order->get_billing_email())
-                <div class="flex justify-between">
-                  <dt class="font-medium">Email</dt>
-                  <dd>{{ $order->get_billing_email() }}</dd>
-                </div>
-              @endif
-
-              <div class="flex justify-between">
-                <dt class="font-medium">Payment method</dt>
-                <dd>{{ $order->get_payment_method_title() ?: '—' }}</dd>
-              </div>
-
-              <div class="flex justify-between">
-                <dt class="font-medium">Order total</dt>
-                <dd class="font-semibold">{!! $order->get_formatted_order_total() !!}</dd>
-              </div>
-
-              <div class="flex justify-between">
-                <dt class="font-medium">Payment status</dt>
-                <dd>
-                  @if ($is_paid)
-                    <span class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
-                      Paid
-                    </span>
-                  @elseif($is_promptpay)
-                    <span class="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800">
-                      Awaiting PromptPay payment
-                    </span>
-                  @else
-                    <span class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800">
-                      {{ wc_get_order_status_name( $order->get_status() ) }}
-                    </span>
-                  @endif
-                </dd>
-              </div>
-            </dl>
-          </div>
-
-          {{-- BILLING / SHIPPING SNIPPET --}}
-          <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
-            <div>
-              <h3 class="font-semibold mb-2">Billing address</h3>
-              <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                {!! wp_kses_post( $order->get_formatted_billing_address() ?: '—' ) !!}
-              </div>
-            </div>
-
-            <div>
-              <h3 class="font-semibold mb-2">Shipping address</h3>
-              <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                {!! wp_kses_post( $order->get_formatted_shipping_address() ?: $order->get_formatted_billing_address() ?: '—' ) !!}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {{-- RIGHT: PROMPTPAY QR (ONLY FOR PROMPTPAY ORDERS) --}}
-        <div>
-          @if ($is_promptpay)
-            <div class="bg-gray-50 border border-gray-200 rounded-lg p-6 max-w-md mx-auto">
-              <h2 class="text-lg font-semibold mb-3">Pay with PromptPay</h2>
-
-              @if ($is_paid)
-                <p class="mb-2 text-green-700 font-medium">
-                  We’ve received your payment. Thank you! 💚
-                </p>
-                <p class="text-sm text-gray-700">
-                  You’ll receive an email confirmation shortly. You don’t need to pay again.
-                </p>
-              @elseif ($qr_code_url)
-                {{-- Server-side generated QR code --}}
-                <p class="mb-4 text-sm text-gray-700">
-                  Scan this QR code with your Thai banking app to complete payment.  
-                  This QR is valid for a limited time.
-                </p>
-                
-                <div class="flex justify-center mb-4">
-                  <img src="{{ $qr_code_url }}" alt="PromptPay QR Code" style="max-width: 260px; height: auto; border: 1px solid #ccc; padding: 10px; background: white;" />
-                </div>
-                
-                <p class="mt-4 text-xs text-gray-500 leading-relaxed">
-                  After you complete the payment in your banking app, this page will update once Stripe
-                  confirms your payment. You’ll also receive an email confirmation.
-                </p>
-                
-                {{-- Poll for payment status updates --}}
-                @if ($intent_id)
-                  <script>
-                    (function() {
-                      var orderId = {{ $order->get_id() }};
-                      var intentId = '{{ $intent_id }}';
-                      var pollInterval;
-                      var pollCount = 0;
-                      var maxPolls = 60;
-
-                      function checkPaymentStatus() {
-                        pollCount++;
-                        if (pollCount > maxPolls) {
-                          clearInterval(pollInterval);
-                          return;
-                        }
-                        
-                        fetch('{{ admin_url('admin-ajax.php') }}', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                          body: new URLSearchParams({
-                            action: 'hg_check_promptpay_status',
-                            order_id: orderId,
-                            intent_id: intentId,
-                            nonce: '{{ wp_create_nonce('hg_promptpay_check_' . $order->get_id()) }}'
-                          })
-                        })
-                        .then(function(res) { return res.json(); })
-                        .then(function(data) {
-                          if (data.success && data.data.status === 'succeeded') {
-                            clearInterval(pollInterval);
-                            location.reload();
-                          }
-                        })
-                        .catch(function(err) { console.error('Polling error:', err); });
-                      }
-                      
-                      pollInterval = setInterval(checkPaymentStatus, 5000);
-                    })();
-                  </script>
-                @endif
-              @elseif ($client_secret && $stripe_pp_key)
-                <p class="mb-4 text-sm text-gray-700">
-                  Scan this QR code with your Thai banking app to complete payment.  
-                  This QR is valid for a limited time.
-                </p>
-
-                <div id="promptpay-status" class="mb-2 text-gray-700 text-sm">
-                  Generating QR…
-                </div>
-                <div id="promptpay-qr-container" class="flex justify-center"></div>
-
-                <p class="mt-4 text-xs text-gray-500 leading-relaxed">
-                  After you complete the payment in your banking app, this page will update once Stripe
-                  confirms your payment. You’ll also receive an email confirmation.
-                </p>
-
-                <script src="https://js.stripe.com/v3/"></script>
-                <script>
-                  (function() {
-                    const clientSecret = @json($client_secret);
-                    const stripe = Stripe(@json($stripe_pp_key));
-                    
-                    console.log('🔵 Client-side QR: Starting with clientSecret =', clientSecret ? 'exists' : 'missing');
-                    console.log('🔵 Client-side QR: Stripe key =', @json($stripe_pp_key) ? 'exists' : 'missing');
-
-                    const statusEl = document.getElementById('promptpay-status');
-                    const qrContainer = document.getElementById('promptpay-qr-container');
-                    
-                    if (!clientSecret) {
-                      statusEl.innerText = 'Error: Payment information missing. Please contact support.';
-                      console.error('❌ Client-side QR: No clientSecret available');
-                      return;
-                    }
-                    
-                    if (!stripe) {
-                      statusEl.innerText = 'Error: Stripe not initialized. Please refresh the page.';
-                      console.error('❌ Client-side QR: Stripe not initialized');
-                      return;
-                    }
-
-                    // Function to display QR code
-                    function displayQRCode(qr) {
-                      if (!qr) return false;
-                      
-                      const imageUrl = qr.image_url_png || qr.image_url_svg || qr.hosted_voucher_url;
-                      if (!imageUrl) return false;
-
-                      statusEl.innerText = 'Scan this QR code to pay:';
-                      
-                      // Clear container first
-                      qrContainer.innerHTML = '';
-                      
-                      const img = document.createElement('img');
-                      img.src = imageUrl;
-                      img.style.width = '260px';
-                      img.style.maxWidth = '100%';
-                      img.style.height = 'auto';
-                      img.alt = 'PromptPay QR Code';
-                      img.loading = 'lazy';
-                      img.onerror = function() {
-                        statusEl.innerText = 'Error loading QR code. Please refresh the page.';
-                      };
-                      
-                      qrContainer.appendChild(img);
-                      return true;
-                    }
-
-                    // Function to check payment intent for QR code
-                    function checkPaymentIntent(paymentIntent) {
-                      if (!paymentIntent) {
-                        console.log('⚠️ checkPaymentIntent: paymentIntent is null/undefined');
-                        return false;
-                      }
-                      
-                      console.log('🔵 checkPaymentIntent: Checking paymentIntent for QR code...');
-                      console.log('🔵 checkPaymentIntent: status =', paymentIntent.status);
-                      console.log('🔵 checkPaymentIntent: has next_action =', !!paymentIntent.next_action);
-                      
-                      // Try multiple possible locations for QR code
-                      const nextAction = paymentIntent.next_action || {};
-                      
-                      console.log('🔵 checkPaymentIntent: next_action type =', nextAction.type);
-                      console.log('🔵 checkPaymentIntent: next_action keys =', nextAction ? Object.keys(nextAction) : 'none');
-                      
-                      // Check various QR code locations
-                      let qr = null;
-                      
-                      // First, check for promptpay_display_qr_code object
-                      if (nextAction.promptpay_display_qr_code) {
-                        qr = nextAction.promptpay_display_qr_code;
-                        console.log('✅ checkPaymentIntent: Found promptpay_display_qr_code');
-                      } 
-                      // Check for display_qr_code (alternative name)
-                      else if (nextAction.display_qr_code) {
-                        qr = nextAction.display_qr_code;
-                        console.log('✅ checkPaymentIntent: Found display_qr_code');
-                      }
-                      // Check if next_action itself has image URLs
-                      else if (nextAction.image_url_png || nextAction.image_url_svg || nextAction.hosted_voucher_url) {
-                        qr = nextAction;
-                        console.log('✅ checkPaymentIntent: Found image URLs in next_action');
-                      }
-                      // Check direct properties on next_action
-                      else if (paymentIntent.next_action?.promptpay_display_qr_code) {
-                        qr = paymentIntent.next_action.promptpay_display_qr_code;
-                        console.log('✅ checkPaymentIntent: Found promptpay_display_qr_code (direct access)');
-                      }
-                      
-                      if (qr) {
-                        console.log('🔵 checkPaymentIntent: QR object keys =', Object.keys(qr));
-                        console.log('🔵 checkPaymentIntent: QR image_url_png =', qr.image_url_png);
-                        console.log('🔵 checkPaymentIntent: QR image_url_svg =', qr.image_url_svg);
-                        console.log('🔵 checkPaymentIntent: QR hosted_voucher_url =', qr.hosted_voucher_url);
-                      } else {
-                        console.warn('⚠️ checkPaymentIntent: No QR code found in paymentIntent');
-                        console.log('🔵 checkPaymentIntent: Full next_action =', JSON.stringify(nextAction, null, 2));
-                      }
-                      
-                      return displayQRCode(qr);
-                    }
-
-                    // Function to poll for payment intent updates
-                    function pollForQRCode(attempts = 0, maxAttempts = 15) {
-                      if (attempts >= maxAttempts) {
-                        statusEl.innerText = 'QR code generation is taking longer than expected. Please refresh the page or contact support.';
-                        return;
-                      }
-
-                      stripe.retrievePaymentIntent(clientSecret)
-                        .then(function(result) {
-                          if (result.error) {
-                            statusEl.innerText = "Error: " + result.error.message;
-                            console.error('Stripe polling error:', result.error);
-                            return;
-                          }
-
-                          const paymentIntent = result.paymentIntent;
-                          
-                          // Check payment status
-                          if (paymentIntent.status === 'succeeded' || paymentIntent.status === 'processing') {
-                            statusEl.innerText = 'Payment confirmed! Thank you.';
-                            return;
-                          }
-
-                          // Try to display QR code
-                          if (checkPaymentIntent(paymentIntent)) {
-                            return; // QR code displayed successfully
-                          }
-
-                          // If still no QR code and payment is not succeeded, keep polling
-                          if (paymentIntent.status === 'requires_payment_method' || 
-                              paymentIntent.status === 'requires_action') {
-                            setTimeout(function() {
-                              pollForQRCode(attempts + 1, maxAttempts);
-                            }, 2000); // Poll every 2 seconds
-                          } else {
-                            statusEl.innerText = 'Payment status: ' + paymentIntent.status + '. Waiting for QR code...';
-                            setTimeout(function() {
-                              pollForQRCode(attempts + 1, maxAttempts);
-                            }, 2000);
-                          }
-                        })
-                        .catch(function(error) {
-                          console.error('Polling error:', error);
-                          if (attempts < maxAttempts) {
-                            setTimeout(function() {
-                              pollForQRCode(attempts + 1, maxAttempts);
-                            }, 2000);
-                          } else {
-                            statusEl.innerText = "Error: Unable to retrieve payment information. Please refresh the page.";
-                          }
-                        });
-                    }
-
-                    // For PromptPay, we need to retrieve the PaymentIntent first
-                    // The server-side code should have already confirmed it, but we'll check
-                    statusEl.innerText = 'Retrieving payment information…';
-                    
-                    // First, try to retrieve the PaymentIntent (it may already be confirmed with QR code)
-                    stripe.retrievePaymentIntent(clientSecret)
-                    .then(function(result) {
-                      console.log('🔵 Client-side QR: Retrieve result:', result);
-                      
-                      if (result.error) {
-                        statusEl.innerText = "Error: " + result.error.message;
-                        console.error('❌ Client-side QR: Retrieve error:', result.error);
-                        return;
-                      }
-
-                      const paymentIntent = result.paymentIntent;
-                      console.log('🔵 Client-side QR: PaymentIntent status =', paymentIntent?.status);
-                      console.log('🔵 Client-side QR: PaymentIntent next_action =', paymentIntent?.next_action);
-                      
-                      // Check if payment succeeded
-                      if (paymentIntent && (paymentIntent.status === 'succeeded' || paymentIntent.status === 'processing')) {
-                        statusEl.innerText = 'Payment confirmed! Thank you.';
-                        return;
-                      }
-
-                      // Try to display QR code if available
-                      if (paymentIntent && checkPaymentIntent(paymentIntent)) {
-                        console.log('✅ Client-side QR: QR code displayed successfully');
-                        // Start polling for payment status updates
-                        pollForQRCode(0, 15);
-                        return;
-                      }
-
-                      // If no QR code and status allows it, try confirming the PaymentIntent
-                      // This will generate the QR code
-                      if (paymentIntent && paymentIntent.status !== 'requires_action' && 
-                          paymentIntent.status !== 'succeeded' && paymentIntent.status !== 'processing') {
-                        console.log('🔵 Client-side QR: No QR found, confirming PaymentIntent to generate QR...');
-                        statusEl.innerText = 'Confirming payment to generate QR code…';
-                        
-                        // Use confirmPayment for PromptPay
-                        return stripe.confirmPayment({
-                          clientSecret: clientSecret,
-                          confirmParams: {
-                            payment_method_data: {
-                              type: 'promptpay',
-                            },
-                            return_url: window.location.href,
-                          },
-                        });
-                      }
-                      
-                      // If requires_action but no QR, start polling
-                      console.warn('⚠️ Client-side QR: PaymentIntent requires_action but no QR code found, will poll...');
-                      statusEl.innerText = 'Waiting for QR code generation…';
-                      pollForQRCode(0, 15);
-                      return null;
-                    })
-                    .then(function(result) {
-                      // Handle confirmPayment result (if we got here from confirmation)
-                      if (!result) return;
-                      
-                      console.log('🔵 Client-side QR: Confirm result:', result);
-                      
-                      if (result.error) {
-                        statusEl.innerText = "Error: " + result.error.message;
-                        console.error('❌ Client-side QR: Confirm error:', result.error);
-                        
-                        // Even if confirmation had an error, the PaymentIntent might have been updated
-                        // Try retrieving again
-                        return stripe.retrievePaymentIntent(clientSecret);
-                      }
-
-                      // Check result for QR code
-                      const paymentIntent = result.paymentIntent || result;
-                      console.log('🔵 Client-side QR: After confirm, status =', paymentIntent?.status);
-                      console.log('🔵 Client-side QR: After confirm, next_action =', paymentIntent?.next_action);
-                      
-                      if (paymentIntent && (paymentIntent.status === 'succeeded' || paymentIntent.status === 'processing')) {
-                        statusEl.innerText = 'Payment confirmed! Thank you.';
-                        return;
-                      }
-                      
-                      // Check for QR code after confirmation
-                      if (paymentIntent && checkPaymentIntent(paymentIntent)) {
-                        console.log('✅ Client-side QR: QR code found after confirmation');
-                        pollForQRCode(0, 15);
-                      } else {
-                        console.warn('⚠️ Client-side QR: No QR code after confirmation, will poll...');
-                        statusEl.innerText = 'Waiting for QR code generation…';
-                        pollForQRCode(0, 15);
-                      }
-                      
-                      return null;
-                    })
-                    .then(function(result) {
-                      // If we got here from retrieve (after confirm error), check for QR code
-                      if (!result) return;
-                      
-                      if (result.error) {
-                        statusEl.innerText = "Error: " + result.error.message;
-                        console.error('❌ Client-side QR: Final retrieve error:', result.error);
-                        return;
-                      }
-                      
-                      const paymentIntent = result.paymentIntent;
-                      console.log('🔵 Client-side QR: Final retrieved PaymentIntent status =', paymentIntent?.status);
-                      
-                      if (paymentIntent && checkPaymentIntent(paymentIntent)) {
-                        console.log('✅ Client-side QR: QR code found in final retrieved paymentIntent');
-                        pollForQRCode(0, 15);
-                      } else {
-                        statusEl.innerText = 'Waiting for QR code generation…';
-                        pollForQRCode(0, 15);
-                      }
-                    })
-                    .catch(function(error) {
-                      statusEl.innerText = "Error: " + (error.message || 'An error occurred while generating QR code');
-                      console.error('❌ Client-side QR: Fatal error:', error);
-                      console.error('❌ Error stack:', error.stack);
-                    });
-                  })();
-                </script>
-              @else
-                <p class="text-sm text-red-600">
-                  We couldn’t generate your PromptPay QR code. Please contact us so we can help you complete your payment.
-                </p>
-              @endif
-            </div>
-          @endif
-        </div>
-      </div>
-
-      {{-- ORDER ITEMS + TOTALS --}}
-      <div class="bg-white border border-gray-200 rounded-lg p-6 mb-12">
-        <h2 class="text-lg font-semibold mb-4">Items in your order</h2>
-
-        <div class="overflow-x-auto">
-          <table class="min-w-full text-sm border-t border-gray-200">
-            <thead class="bg-gray-50 text-gray-700">
-              <tr>
-                <th class="text-left py-2 pr-4">Product</th>
-                <th class="text-right py-2 pl-4">Total</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100">
-              @foreach ($order->get_items() as $item_id => $item)
-                @php
-                  $product = $item->get_product();
-                @endphp
-                <tr>
-                  <td class="py-2 pr-4 align-top">
-                    <div class="font-medium text-gray-900">
-                      {{ $item->get_name() }} × {{ $item->get_quantity() }}
-                    </div>
-                    @if ($product && $product->get_sku())
-                      <div class="text-xs text-gray-500">SKU: {{ $product->get_sku() }}</div>
-                    @endif
-                    @if ($meta = wc_display_item_meta($item, ['echo' => false]))
-                      <div class="mt-1 text-xs text-gray-500">{!! $meta !!}</div>
-                    @endif
-                  </td>
-                  <td class="py-2 pl-4 text-right align-top">
-                    {!! wc_price( $item->get_total(), ['currency' => $order->get_currency()] ) !!}
-                  </td>
-                </tr>
-              @endforeach
-            </tbody>
-            <tfoot class="bg-gray-50">
-              <tr>
-                <th class="text-right py-2 pr-4">Subtotal</th>
-                <td class="text-right py-2 pl-4">
-                  {!! $order->get_subtotal_to_display() !!}
-                </td>
-              </tr>
-              @foreach ( $order->get_shipping_methods() as $shipping )
-                <tr>
-                  <th class="text-right py-2 pr-4">Shipping</th>
-                  <td class="text-right py-2 pl-4">
-                    {{ $shipping->get_name() }} – {!! wc_price( $shipping->get_total(), ['currency' => $order->get_currency()] ) !!}
-                  </td>
-                </tr>
-              @endforeach
-              @foreach ( $order->get_fees() as $fee )
-                <tr>
-                  <th class="text-right py-2 pr-4">{{ $fee->get_name() }}</th>
-                  <td class="text-right py-2 pl-4">
-                    {!! wc_price( $fee->get_total(), ['currency' => $order->get_currency()] ) !!}
-                  </td>
-                </tr>
-              @endforeach
-              @if ( ! empty( $order->get_discount_total() ) )
-                <tr>
-                  <th class="text-right py-2 pr-4">Discount</th>
-                  <td class="text-right py-2 pl-4 text-green-700">
-                    -{!! wc_price( $order->get_discount_total(), ['currency' => $order->get_currency()] ) !!}
-                  </td>
-                </tr>
-              @endif
-              <tr>
-                <th class="text-right py-2 pr-4">Total</th>
-                <td class="text-right py-2 pl-4 font-semibold">
-                  {!! $order->get_formatted_order_total() !!}
-                </td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      </div>
-
-      {{-- KEEP WOO HOOKS SO OTHER PLUGINS CAN INJECT CONTENT --}}
-      @php
-        do_action('woocommerce_thankyou_' . $order->get_payment_method(), $order->get_id());
-        do_action('woocommerce_thankyou', $order->get_id());
-      @endphp
-    @endif
-  </div>
+    </div>
+  @endif
 @endsection
