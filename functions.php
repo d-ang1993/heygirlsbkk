@@ -1134,6 +1134,9 @@ add_action('woocommerce_add_to_cart', function() {
 
 remove_action('woocommerce_before_cart_table', 'woocommerce_cart_totals_coupon_form');
 
+// Remove coupon form from checkout page
+remove_action('woocommerce_before_checkout_form', 'woocommerce_checkout_coupon_form', 10);
+
 /**
  * 🔇 Completely disable all WooCommerce system notices
  */
@@ -1251,3 +1254,144 @@ add_action('template_redirect', function () {
         exit;
     }
 });
+
+/**
+ * AJAX handler to get all valid/available coupon codes
+ */
+add_action('wp_ajax_get_valid_coupons', 'handle_get_valid_coupons');
+add_action('wp_ajax_nopriv_get_valid_coupons', 'handle_get_valid_coupons');
+
+function handle_get_valid_coupons() {
+    if (!class_exists('WooCommerce')) {
+        wp_send_json_error(array('message' => 'WooCommerce not available'));
+        return;
+    }
+    
+    // Get all published coupons
+    $coupons = get_posts(array(
+        'post_type' => 'shop_coupon',
+        'post_status' => 'publish',
+        'posts_per_page' => -1,
+        'orderby' => 'title',
+        'order' => 'ASC'
+    ));
+    
+    $valid_coupons = array();
+    
+    foreach ($coupons as $coupon_post) {
+        $coupon = new WC_Coupon($coupon_post->ID);
+        
+        // Check if coupon is valid (not expired, has usage limit, etc.)
+        $is_valid = $coupon->is_valid();
+        
+        if ($is_valid) {
+            $valid_coupons[] = array(
+                'code' => $coupon->get_code(),
+                'id' => $coupon->get_id(),
+                'discount_type' => $coupon->get_discount_type(),
+                'amount' => $coupon->get_amount(),
+                'description' => $coupon->get_description(),
+                'usage_limit' => $coupon->get_usage_limit(),
+                'usage_count' => $coupon->get_usage_count(),
+                'expiry_date' => $coupon->get_date_expires() ? $coupon->get_date_expires()->date('Y-m-d') : null,
+            );
+        }
+    }
+    
+    wp_send_json_success(array(
+        'coupons' => $valid_coupons,
+        'count' => count($valid_coupons)
+    ));
+}
+
+/**
+ * Custom AJAX handler to apply coupon - returns updated cart totals
+ * This bypasses WooCommerce's nonce requirements for checkout
+ */
+add_action('wp_ajax_apply_checkout_coupon', 'handle_apply_checkout_coupon');
+add_action('wp_ajax_nopriv_apply_checkout_coupon', 'handle_apply_checkout_coupon');
+
+function handle_apply_checkout_coupon() {
+    if (!class_exists('WooCommerce')) {
+        wp_send_json_error(array('message' => 'WooCommerce not available'));
+        return;
+    }
+    
+    $coupon_code = isset($_POST['coupon_code']) ? sanitize_text_field($_POST['coupon_code']) : '';
+    
+    if (empty($coupon_code)) {
+        wp_send_json_error(array('message' => 'Coupon code is required'));
+        return;
+    }
+    
+    // Apply the coupon using WooCommerce's cart
+    $applied = WC()->cart->apply_coupon($coupon_code);
+    
+    if ($applied) {
+        // Get updated cart totals
+        $cart = WC()->cart;
+        
+        wp_send_json_success(array(
+            'message' => sprintf(__('Coupon "%s" applied successfully.', 'woocommerce'), $coupon_code),
+            'applied_coupons' => $cart->get_applied_coupons(),
+            'cart_subtotal' => $cart->get_cart_subtotal(),
+            'cart_total' => $cart->get_cart_total(),
+            'cart_total_amount' => $cart->get_total(''),
+            'discount_total' => $cart->get_discount_total(),
+            'discount_tax' => $cart->get_discount_tax(),
+        ));
+    } else {
+        // Get error notices
+        $notices = wc_get_notices('error');
+        $error_message = !empty($notices) ? $notices[0]['notice'] : __('Invalid coupon code.', 'woocommerce');
+        
+        // Clear the notices so they don't show on page
+        wc_clear_notices();
+        
+        wp_send_json_error(array(
+            'message' => $error_message
+        ));
+    }
+}
+
+/**
+ * Custom AJAX handler to remove coupon - returns updated cart totals
+ */
+add_action('wp_ajax_remove_checkout_coupon', 'handle_remove_checkout_coupon');
+add_action('wp_ajax_nopriv_remove_checkout_coupon', 'handle_remove_checkout_coupon');
+
+function handle_remove_checkout_coupon() {
+    if (!class_exists('WooCommerce')) {
+        wp_send_json_error(array('message' => 'WooCommerce not available'));
+        return;
+    }
+    
+    $coupon_code = isset($_POST['coupon_code']) ? sanitize_text_field($_POST['coupon_code']) : '';
+    
+    if (empty($coupon_code)) {
+        wp_send_json_error(array('message' => 'Coupon code is required'));
+        return;
+    }
+    
+    // Remove the coupon
+    $removed = WC()->cart->remove_coupon($coupon_code);
+    
+    if ($removed) {
+        // Get updated cart totals
+        $cart = WC()->cart;
+        
+        wp_send_json_success(array(
+            'message' => sprintf(__('Coupon "%s" removed.', 'woocommerce'), $coupon_code),
+            'applied_coupons' => $cart->get_applied_coupons(),
+            'cart_subtotal' => $cart->get_cart_subtotal(),
+            'cart_total' => $cart->get_cart_total(),
+            'cart_total_amount' => $cart->get_total(''),
+            'discount_total' => $cart->get_discount_total(),
+            'discount_tax' => $cart->get_discount_tax(),
+        ));
+    } else {
+        wp_send_json_error(array(
+            'message' => __('Failed to remove coupon.', 'woocommerce')
+        ));
+    }
+}

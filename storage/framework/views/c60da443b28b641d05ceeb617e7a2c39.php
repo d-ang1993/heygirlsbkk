@@ -73,4 +73,4 @@
   <?php endif; ?>
 </div>
 
-<?php /**PATH /Users/dang/Local Sites/heygirlsbkk/app/public/wp-content/themes/heygirlsbkk/resources/views/components/product-form.blade.php ENDPATH**/ ?>
+<?php /**PATH /Users/dang/Local Sites/heygirlsbkk/app/public/wp-content/themes/heygirlsbkk/resources/views/components/product/form.blade.php ENDPATH**/ ?>

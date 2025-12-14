@@ -414,4 +414,4 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-</script><?php /**PATH /Users/dang/Local Sites/heygirlsbkk/app/public/wp-content/themes/heygirlsbkk/resources/views/components/product-variations.blade.php ENDPATH**/ ?>
+</script><?php /**PATH /Users/dang/Local Sites/heygirlsbkk/app/public/wp-content/themes/heygirlsbkk/resources/views/components/product/variations.blade.php ENDPATH**/ ?>

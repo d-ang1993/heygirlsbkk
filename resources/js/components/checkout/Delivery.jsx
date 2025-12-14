@@ -382,27 +382,27 @@ export default function Delivery({
   ]);
 
   return (
-    <div className="border-b border-gray-200 pt-6 pb-6">
+    <div className="border-b border-gray-200 pt-4 sm:pt-6 pb-4 sm:pb-6">
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full items-center justify-between text-left"
+        className="flex w-full items-center justify-between text-left py-2 -mx-2 px-2 rounded-lg hover:bg-gray-50 transition-colors"
       >
-        <div className="flex-1">
-          <h2 className="text-base font-semibold text-gray-900">
+        <div className="flex-1 min-w-0 pr-2">
+          <h2 className="text-sm sm:text-base font-semibold text-gray-900">
             Delivery
           </h2>
           {!isExpanded && isComplete && (
-            <div className="mt-1 text-sm text-gray-600">
+            <div className="mt-1 text-xs sm:text-sm text-gray-600 truncate">
               {selectedShippingMethod?.label || "No method selected"}
             </div>
           )}
         </div>
-        <div className="ml-4 flex items-center gap-3">
+        <div className="ml-2 sm:ml-4 flex items-center gap-2 sm:gap-3 flex-shrink-0">
           {isComplete && (
             <>
               <svg
-                className="h-5 w-5 text-green-600"
+                className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 flex-shrink-0"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -414,11 +414,11 @@ export default function Delivery({
                   d="M5 13l4 4L19 7"
                 />
               </svg>
-              <span className="text-sm text-gray-600">Edit</span>
+              <span className="text-xs sm:text-sm text-gray-600 hidden sm:inline">Edit</span>
             </>
           )}
           <svg
-            className={`h-5 w-5 text-gray-500 transition-transform ${
+            className={`h-4 w-4 sm:h-5 sm:w-5 text-gray-500 transition-transform flex-shrink-0 ${
               isExpanded ? "rotate-180" : ""
             }`}
             fill="none"
@@ -436,9 +436,9 @@ export default function Delivery({
       </button>
 
       {isExpanded && (
-        <div className="mt-4">
+        <div className="mt-3 sm:mt-4">
           {/* Information box */}
-          <div className="mb-4 rounded-lg bg-amber-50 px-4 py-3 text-sm text-gray-700">
+          <div className="mb-3 sm:mb-4 rounded-lg bg-amber-50 px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm text-gray-700">
             <p>
               Please allow 1-3 additional business days for us to get your order ready to go. Keep in mind we only deliver on business days (aka not on weekends or public holidays).
             </p>
@@ -459,14 +459,14 @@ export default function Delivery({
                     className={`space-y-3 ${isGrayedOut ? 'opacity-50' : ''}`}
                   >
                     {/* Zone Header */}
-                    <h3 className={`text-sm font-semibold uppercase tracking-wide ${
+                    <h3 className={`text-xs sm:text-sm font-semibold uppercase tracking-wide ${
                       isGrayedOut ? 'text-gray-400' : 'text-gray-900'
                     }`}>
                       {zoneName}
                     </h3>
                     
                     {/* Shipping Methods for this Zone */}
-                    <div className="space-y-3 pl-1">
+                    <div className="space-y-2.5 sm:space-y-3 pl-0 sm:pl-1">
                       {zoneMethods.map((method) => {
                         // Check if method meets free shipping criteria
                         const meetsCriteria = meetsFreeShippingCriteria(method);
@@ -490,19 +490,19 @@ export default function Delivery({
                                 if (onShippingChange) onShippingChange(method.id, method.cost);
                               }}
                               disabled={isMethodDisabled}
-                              className="relative size-4 mt-0.5 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden [&:not(:checked)]:before:hidden"
+                              className="relative size-4 sm:size-4 mt-0.5 flex-shrink-0 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden [&:not(:checked)]:before:hidden touch-manipulation"
                             />
                             <label
                               htmlFor={`shipping_method_${method.id}`}
-                              className={`ml-3 flex-1 ${
+                              className={`ml-2 sm:ml-3 flex-1 min-w-0 ${
                                 isMethodGrayedOut ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 cursor-pointer'
                               }`}
                             >
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium">{method.label}</span>
+                              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2">
+                                <span className="text-xs sm:text-sm font-medium break-words">{method.label}</span>
                                 {method.cost && (
                                   <span
-                                    className={`ml-2 text-sm ${isMethodGrayedOut ? 'text-gray-400' : 'text-gray-500'}`}
+                                    className={`text-xs sm:text-sm whitespace-nowrap ${isMethodGrayedOut ? 'text-gray-400' : 'text-gray-500'}`}
                                     dangerouslySetInnerHTML={{ __html: method.cost }}
                                   />
                                 )}
@@ -526,7 +526,7 @@ export default function Delivery({
             </div>
           ) : shippingMethods && shippingMethods.length > 0 ? (
             // Fallback: display flat list if no zones
-            <div className="space-y-3">
+            <div className="space-y-2.5 sm:space-y-3">
               {shippingMethods.map((method) => {
                 // Check if method meets free shipping criteria
                 const meetsCriteria = meetsFreeShippingCriteria(method);
@@ -550,19 +550,19 @@ export default function Delivery({
                         if (onShippingChange) onShippingChange(method.id, method.cost);
                       }}
                       disabled={isMethodDisabled}
-                      className="relative size-4 mt-0.5 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden [&:not(:checked)]:before:hidden"
+                      className="relative size-4 sm:size-4 mt-0.5 flex-shrink-0 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden [&:not(:checked)]:before:hidden touch-manipulation"
                     />
                     <label
                       htmlFor={`shipping_method_${method.id}`}
-                      className={`ml-3 flex-1 ${
+                      className={`ml-2 sm:ml-3 flex-1 min-w-0 ${
                         isMethodGrayedOut ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 cursor-pointer'
                       }`}
                     >
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">{method.label}</span>
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2">
+                        <span className="text-xs sm:text-sm font-medium break-words">{method.label}</span>
                         {method.cost && (
                           <span
-                            className={`ml-2 text-sm ${isMethodGrayedOut ? 'text-gray-400' : 'text-gray-500'}`}
+                            className={`text-xs sm:text-sm whitespace-nowrap ${isMethodGrayedOut ? 'text-gray-400' : 'text-gray-500'}`}
                             dangerouslySetInnerHTML={{ __html: method.cost }}
                           />
                         )}

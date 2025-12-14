@@ -19,6 +19,7 @@ export default function CheckoutFormFields({
   isStripeCreditCard,
   isStripePaymentReady,
   onStripePaymentReady,
+  onStripePaymentMethodChange,
   stripeRef,
   expandedSections,
   onToggleSection,
@@ -28,7 +29,7 @@ export default function CheckoutFormFields({
   return (
     <div>
       {/* Title - aligned with Order Summary */}
-      <h2 className="text-lg font-medium text-gray-900 mb-4">Checkout details</h2>
+      <h2 className="text-base sm:text-lg font-medium text-gray-900 mb-3 sm:mb-4">Checkout details</h2>
 
       {/* Contact Information Section */}
       <ContactInformation
@@ -71,6 +72,7 @@ export default function CheckoutFormFields({
         isStripeCreditCard={isStripeCreditCard}
         isStripePaymentReady={isStripePaymentReady}
         onStripePaymentReady={onStripePaymentReady}
+        onStripePaymentMethodChange={onStripePaymentMethodChange}
         stripeRef={stripeRef}
         isExpanded={expandedSections.payment}
         onToggle={() => onToggleSection("payment")}

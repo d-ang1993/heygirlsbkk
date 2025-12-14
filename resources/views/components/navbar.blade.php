@@ -146,10 +146,15 @@ if (!$shop_menu) {
                         </div>
                     </div>
                 </div>
-                <a href="#" class="navbar-link navbar-bag cart-trigger" data-cart-url="{{ wc_get_cart_url() }}">
+                <!-- <a href="#" class="navbar-link navbar-bag cart-trigger" data-cart-url="{{ wc_get_cart_url() }}">
                     BAG(<span class="bag-count">{{ WC()->cart->get_cart_contents_count() }}</span>)
-                </a>
-            </div>
+                </a> -->
+                {{-- React Bag Button with Cart Slider --}}
+                <div 
+                    id="bag-button-react" 
+                    data-cart-url="{{ wc_get_cart_url() }}"
+                    data-bag-count="{{ WC()->cart->get_cart_contents_count() }}"
+                ></div>
         </div>
 
         <!-- Dropdown Menu -->
@@ -326,5 +331,9 @@ if (!$shop_menu) {
     </div>
 </div>
 @endif
+
+{{-- React Bag Button with Cart Slider --}}
+@viteReactRefresh
+@vite('resources/js/bag-button.jsx')
 
 @endif

@@ -8,17 +8,17 @@
     "src": "editor.deps.json"
   },
   "resources/css/app.css": {
-    "file": "assets/app-BufO8pfN.css",
+    "file": "assets/app-BePTTBV7.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
   "resources/css/editor.css": {
-    "file": "assets/editor-3lBc6S-F.css",
+    "file": "assets/editor-DOsCd6pi.css",
     "src": "resources/css/editor.css",
     "isEntry": true
   },
   "resources/js/app.js": {
-    "file": "assets/app-BIkSQnrO.js",
+    "file": "assets/app-CVYXsHX4.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true
@@ -33,7 +33,7 @@
     ]
   },
   "resources/js/checkout-form.jsx": {
-    "file": "assets/checkout-form-ZW1MXDnM.js",
+    "file": "assets/checkout-form-SSWlDFkp.js",
     "name": "checkout-form",
     "src": "resources/js/checkout-form.jsx",
     "isEntry": true,
@@ -46,6 +46,15 @@
     "name": "editor",
     "src": "resources/js/editor.js",
     "isEntry": true
+  },
+  "resources/js/hero-react.jsx": {
+    "file": "assets/hero-react-BxcsaEg2.js",
+    "name": "hero-react",
+    "src": "resources/js/hero-react.jsx",
+    "isEntry": true,
+    "imports": [
+      "_client-W9jQdWFX.js"
+    ]
   },
   "resources/js/image-optimization.js": {
     "file": "assets/image-optimization-DPoclSiv.js",

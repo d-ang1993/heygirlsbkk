@@ -84,6 +84,11 @@
           "color": "oklch(62.7% .194 149.214)"
         },
         {
+          "name": "Green (800)",
+          "slug": "green-800",
+          "color": "oklch(44.8% .119 151.328)"
+        },
+        {
           "name": "Blue (50)",
           "slug": "blue-50",
           "color": "oklch(97% .014 254.604)"

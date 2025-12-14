@@ -194,8 +194,8 @@
 
       <!-- Product Main Content -->
       <div class="product-main">
-        @include('components.product-images')
-        @include('components.product-details')
+        @include('components.product.images')
+        @include('components.product.details')
       </div>
 
       <!-- Product Description -->

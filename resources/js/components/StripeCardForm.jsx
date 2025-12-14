@@ -16,7 +16,7 @@ import {
 
 // Inner component that uses Stripe hooks + PaymentElement
 const StripePaymentElement = forwardRef(function StripePaymentElement(
-  { onPaymentReady },
+  { onPaymentReady, onPaymentMethodChange },
   ref
 ) {
   const stripe = useStripe();
@@ -24,6 +24,7 @@ const StripePaymentElement = forwardRef(function StripePaymentElement(
   const [error, setError] = useState(null);
   const [isReady, setIsReady] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
+  const [paymentMethodType, setPaymentMethodType] = useState(null);
 
   // Stripe + Elements mounted
   useEffect(() => {
@@ -141,8 +142,11 @@ const StripePaymentElement = forwardRef(function StripePaymentElement(
 
       // Optional accessor if you ever need it
       isReady: isReady && isComplete && !error,
+      
+      // Get the currently selected payment method type (e.g., 'card', 'promptpay')
+      getPaymentMethodType: () => paymentMethodType,
     }),
-    [stripe, elements, isReady, isComplete, error]
+    [stripe, elements, isReady, isComplete, error, paymentMethodType]
   );
 
   const paymentElementOptions = {
@@ -152,6 +156,7 @@ const StripePaymentElement = forwardRef(function StripePaymentElement(
 
   return (
     <div className="mt-6">
+      
       <div className="rounded-md bg-white px-3 py-2 outline outline-1 -outline-offset-1 outline-gray-300 focus-within:outline focus-within:outline-2 focus-within:-outline-offset-2 focus-within:outline-indigo-600">
         <PaymentElement
           options={paymentElementOptions}
@@ -162,6 +167,28 @@ const StripePaymentElement = forwardRef(function StripePaymentElement(
             } else {
               setError(null);
               setIsComplete(e.complete);
+            }
+            
+            // Track the selected payment method type (e.g., 'card', 'promptpay', 'apple_pay', etc.)
+            if (e.value && e.value.type) {
+              const newPaymentMethodType = e.value.type;
+              
+              // Log when payment method changes or is first selected
+              if (newPaymentMethodType !== paymentMethodType) {
+                console.log('💳 Payment method changed:', {
+                  previous: paymentMethodType || '(none selected)',
+                  current: newPaymentMethodType,
+                  complete: e.complete,
+                  timestamp: new Date().toISOString()
+                });
+              }
+              
+              setPaymentMethodType(newPaymentMethodType);
+              
+              // Notify parent component if callback is provided
+              if (onPaymentMethodChange) {
+                onPaymentMethodChange(newPaymentMethodType);
+              }
             }
           }}
         />
@@ -184,14 +211,14 @@ const StripePaymentElement = forwardRef(function StripePaymentElement(
 
 // Main wrapper that loads Stripe and renders <Elements>
 const StripeCardForm = forwardRef(function StripeCardForm(
-  { publishableKey, amount = 0, currency = "thb", onPaymentReady },
+  { publishableKey, amount = 0, currency = "thb", onPaymentReady, onPaymentMethodChange },
   ref
 ) {
   const [stripePromise, setStripePromise] = useState(null);
   const [loadingError, setLoadingError] = useState(null);
   const paymentElementRef = useRef(null);
 
-  // Expose confirmPayment to parent by delegating to inner ref
+  // Expose confirmPayment and getPaymentMethodType to parent by delegating to inner ref
   useImperativeHandle(ref, () => ({
     async confirmPayment(clientSecret, billingDetails) {
       if (!paymentElementRef.current) {
@@ -203,6 +230,18 @@ const StripeCardForm = forwardRef(function StripeCardForm(
         clientSecret,
         billingDetails
       );
+    },
+    
+    /**
+     * Get the currently selected payment method type.
+     * Returns: 'card', 'promptpay', 'apple_pay', 'google_pay', 'link', etc.
+     * Returns null if no payment method is selected yet.
+     */
+    getPaymentMethodType() {
+      if (!paymentElementRef.current) {
+        return null;
+      }
+      return paymentElementRef.current.getPaymentMethodType();
     },
   }));
 
@@ -276,6 +315,7 @@ const StripeCardForm = forwardRef(function StripeCardForm(
       <StripePaymentElement
         ref={paymentElementRef}
         onPaymentReady={onPaymentReady}
+        onPaymentMethodChange={onPaymentMethodChange}
       />
     </Elements>
   );

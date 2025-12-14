@@ -125,27 +125,27 @@ export default function ContactInformation({
   };
 
   return (
-    <div className="border-b border-gray-200 pb-6">
+    <div className="border-b border-gray-200 pb-4 sm:pb-6">
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full items-center justify-between text-left"
+        className="flex w-full items-center justify-between text-left py-2 -mx-2 px-2 rounded-lg hover:bg-gray-50 transition-colors"
       >
-        <div className="flex-1">
-          <h2 className="text-base font-semibold text-gray-900">
+        <div className="flex-1 min-w-0 pr-2">
+          <h2 className="text-sm sm:text-base font-semibold text-gray-900">
             Contact Information
           </h2>
           {!isExpanded && isComplete && (
-            <div className="mt-1 text-sm text-gray-600">
+            <div className="mt-1 text-xs sm:text-sm text-gray-600 truncate">
               {formData.billing_email}
             </div>
           )}
         </div>
-        <div className="ml-4 flex items-center gap-3">
+        <div className="ml-2 sm:ml-4 flex items-center gap-2 sm:gap-3 flex-shrink-0">
           {isComplete && (
             <>
               <svg
-                className="h-5 w-5 text-green-600"
+                className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 flex-shrink-0"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -157,11 +157,11 @@ export default function ContactInformation({
                   d="M5 13l4 4L19 7"
                 />
               </svg>
-              <span className="text-sm text-gray-600">Edit</span>
+              <span className="text-xs sm:text-sm text-gray-600 hidden sm:inline">Edit</span>
             </>
           )}
           <svg
-            className={`h-5 w-5 text-gray-500 transition-transform ${
+            className={`h-4 w-4 sm:h-5 sm:w-5 text-gray-500 transition-transform flex-shrink-0 ${
               isExpanded ? "rotate-180" : ""
             }`}
             fill="none"
@@ -179,13 +179,13 @@ export default function ContactInformation({
       </button>
 
       {isExpanded && (
-        <div className="mt-4 space-y-4">
+        <div className="mt-3 sm:mt-4 space-y-3 sm:space-y-4">
           {/* Email Field with Floating Label */}
           <div className="relative">
             <div className="relative">
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10">
+              <div className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10">
                 <svg
-                  className="h-5 w-5 text-gray-400"
+                  className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -207,14 +207,14 @@ export default function ContactInformation({
                 onChange={onInputChange}
                 onFocus={() => setEmailFocused(true)}
                 onBlur={() => setEmailFocused(false)}
-                className="block w-full rounded-lg bg-white border border-gray-300 pl-11 pr-4 pt-6 pb-2 text-sm text-gray-900 placeholder:text-transparent focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10 focus:outline-none transition-all"
+                className="block w-full rounded-lg bg-white border border-gray-300 pl-10 sm:pl-11 pr-3 sm:pr-4 pt-5 sm:pt-6 pb-2 text-base sm:text-sm text-gray-900 placeholder:text-transparent focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10 focus:outline-none transition-all"
                 placeholder=" "
               />
               <label
                 htmlFor="billing_email"
-                className={`absolute left-11 pointer-events-none transition-all duration-200 ${
+                className={`absolute left-10 sm:left-11 pointer-events-none transition-all duration-200 ${
                   formData.billing_email || emailFocused
-                    ? "top-2 text-xs text-gray-700"
+                    ? "top-1.5 sm:top-2 text-xs text-gray-700"
                     : "top-1/2 -translate-y-1/2 text-sm text-gray-500"
                 }`}
               >
@@ -229,7 +229,7 @@ export default function ContactInformation({
           {/* Phone Field with Combined Country Code + Number */}
           <div className="relative">
             {/* Combined Phone Input Container */}
-            <div className="relative flex items-center rounded-lg bg-white border border-gray-300 focus-within:border-gray-900 focus-within:ring-2 focus-within:ring-gray-900/10 transition-all pt-6 pb-2">
+            <div className="relative flex items-center rounded-lg bg-white border border-gray-300 focus-within:border-gray-900 focus-within:ring-2 focus-within:ring-gray-900/10 transition-all pt-5 sm:pt-6 pb-2">
               {/* Country Code Selector */}
               <div className="relative">
                 <button
@@ -238,12 +238,12 @@ export default function ContactInformation({
                     e.preventDefault();
                     setDropdownOpen(!dropdownOpen);
                   }}
-                  className="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-900 hover:bg-gray-50 focus:outline-none transition-colors rounded-l-lg"
+                  className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2 text-xs sm:text-sm text-gray-900 hover:bg-gray-50 focus:outline-none transition-colors rounded-l-lg touch-manipulation"
                 >
-                  <span className="text-lg leading-none">{currentCountry.flag}</span>
+                  <span className="text-base sm:text-lg leading-none">{currentCountry.flag}</span>
                   <span className="font-medium">{phoneData.countryCode}</span>
                   <svg
-                    className={`h-4 w-4 text-gray-400 transition-transform ${
+                    className={`h-3 w-3 sm:h-4 sm:w-4 text-gray-400 transition-transform ${
                       dropdownOpen ? "rotate-180" : ""
                     }`}
                     fill="none"
@@ -266,7 +266,7 @@ export default function ContactInformation({
                       className="fixed inset-0 z-10"
                       onClick={() => setDropdownOpen(false)}
                     />
-                    <div className="absolute top-full left-0 mt-1 w-56 max-h-64 overflow-y-auto rounded-lg bg-white border border-gray-200 shadow-lg z-20">
+                    <div className="absolute top-full left-0 mt-1 w-[calc(100vw-2rem)] sm:w-56 max-w-[280px] max-h-64 overflow-y-auto rounded-lg bg-white border border-gray-200 shadow-lg z-20">
                       <div className="py-1">
                         {COUNTRY_CODES.map((cc) => (
                           <button
@@ -277,15 +277,15 @@ export default function ContactInformation({
                               handleCountryCodeChange(cc.code);
                               setDropdownOpen(false);
                             }}
-                            className={`w-full flex items-center gap-3 px-4 py-2 text-sm text-left hover:bg-gray-50 transition-colors ${
+                            className={`w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-2 text-sm text-left hover:bg-gray-50 transition-colors touch-manipulation ${
                               phoneData.countryCode === cc.code
                                 ? "bg-gray-50 font-medium"
                                 : ""
                             }`}
                           >
-                            <span className="text-lg leading-none">{cc.flag}</span>
+                            <span className="text-base sm:text-lg leading-none">{cc.flag}</span>
                             <span className="flex-1 font-medium">{cc.code}</span>
-                            <span className="text-xs text-gray-500">{cc.country}</span>
+                            <span className="text-xs text-gray-500 hidden sm:inline">{cc.country}</span>
                           </button>
                         ))}
                       </div>
@@ -298,12 +298,12 @@ export default function ContactInformation({
               <div className="h-6 w-px bg-gray-300" />
               
               {/* Phone Number Input */}
-              <div className="relative flex-1">
+              <div className="relative flex-1 min-w-0">
                 <label
                   htmlFor="billing_phone_number"
-                  className={`absolute left-3 pointer-events-none transition-all duration-200 ${
+                  className={`absolute left-2 sm:left-3 pointer-events-none transition-all duration-200 ${
                     (phoneData.number && phoneData.number.trim().length > 0) || phoneFocused
-                      ? "bottom-6 text-xs text-gray-700"
+                      ? "bottom-5 sm:bottom-6 text-xs text-gray-700"
                       : "top-1/2 -translate-y-1/2 text-sm text-gray-500"
                   }`}
                 >
@@ -321,7 +321,7 @@ export default function ContactInformation({
                   onFocus={() => setPhoneFocused(true)}
                   onBlur={() => setPhoneFocused(false)}
                   placeholder=" "
-                  className="block w-full bg-transparent border-0 pl-3 pr-4 py-0 text-sm text-gray-900 placeholder:text-transparent focus:outline-none"
+                  className="block w-full bg-transparent border-0 pl-2 sm:pl-3 pr-2 sm:pr-4 py-0 text-base sm:text-sm text-gray-900 placeholder:text-transparent focus:outline-none"
                 />
               </div>
             </div>

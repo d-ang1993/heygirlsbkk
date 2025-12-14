@@ -29,7 +29,7 @@ import {
 } from "../utils/formValidation";
 
 export default function CheckoutForm({
-  checkoutData = {},
+  checkoutData: initialCheckoutData = {},
   cartItems = [],
   shippingMethods = [],
   shippingMethodsByZone = {},
@@ -44,6 +44,13 @@ export default function CheckoutForm({
   statesNonce = "",        // States/provinces nonce
   stripeGatewayId = "hg_stripe_creditcard",
 }) {
+  // Make checkoutData stateful so we can update it
+  const [checkoutData, setCheckoutData] = useState(initialCheckoutData);
+  
+  // Update checkoutData when initialCheckoutData changes
+  useEffect(() => {
+    setCheckoutData(initialCheckoutData);
+  }, [initialCheckoutData]);
   // Get initial shipping total from selected shipping method
   // Keep the WooCommerce HTML format
   const getInitialShippingTotal = () => {
@@ -81,6 +88,7 @@ export default function CheckoutForm({
   const [loadingStates, setLoadingStates] = useState(false);
   const [isStripePaymentReady, setIsStripePaymentReady] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [stripePaymentMethodType, setStripePaymentMethodType] = useState(null);
   
   const formRef = useRef(null);
   const stripeRef = useRef(null);
@@ -223,19 +231,51 @@ export default function CheckoutForm({
   }, [cartItems]);
 
   // Update tax rate when WooCommerce tax data changes (e.g., country change)
+  // OR when payment method changes (PromptPay = 0 tax, Card = normal tax)
   useEffect(() => {
-    if (checkoutData.tax_rate !== undefined && checkoutData.tax_rate !== formData.vat_tax) {
-      setFormData((prev) => ({
-        ...prev,
-        vat_tax: checkoutData.tax_rate,
-      }));
-      console.log("🔵 Tax rate updated from WooCommerce:", {
-        oldRate: formData.vat_tax,
-        newRate: checkoutData.tax_rate,
-        taxEnabled: checkoutData.tax_enabled,
-      });
+    // Check if PromptPay is selected
+    const isPromptPay = 
+      formData.payment_method?.toLowerCase().includes("promptpay") ||
+      stripePaymentMethodType === "promptpay";
+    
+    // If PromptPay is selected, set tax to 0
+    if (isPromptPay) {
+      if (formData.vat_tax !== 0) {
+        setFormData((prev) => ({
+          ...prev,
+          vat_tax: 0,
+        }));
+        console.log("🔵 Tax rate set to 0 for PromptPay:", {
+          oldRate: formData.vat_tax,
+          newRate: 0,
+          paymentMethod: formData.payment_method,
+          stripePaymentMethodType: stripePaymentMethodType,
+        });
+      }
+    } else {
+      // For Card or other payment methods, use WooCommerce tax rate
+      // Use checkoutData.tax_rate if available, otherwise keep current rate
+      const targetTaxRate = checkoutData.tax_rate !== undefined 
+        ? checkoutData.tax_rate 
+        : formData.vat_tax;
+      
+      // Only update if the target rate is different from current rate
+      // This handles switching from PromptPay (0) to Card (needs tax) or WooCommerce tax updates
+      if (targetTaxRate !== formData.vat_tax) {
+        setFormData((prev) => ({
+          ...prev,
+          vat_tax: targetTaxRate,
+        }));
+        console.log("🔵 Tax rate updated from WooCommerce:", {
+          oldRate: formData.vat_tax,
+          newRate: targetTaxRate,
+          taxEnabled: checkoutData.tax_enabled,
+          paymentMethod: formData.payment_method,
+          stripePaymentMethodType: stripePaymentMethodType,
+        });
+      }
     }
-  }, [checkoutData.tax_rate, checkoutData.tax_enabled]);
+  }, [checkoutData.tax_rate, checkoutData.tax_enabled, formData.payment_method, stripePaymentMethodType]);
 
   // Ensure shipping method is set if not already set
   useEffect(() => {
@@ -492,6 +532,48 @@ export default function CheckoutForm({
       .catch((error) => {
         console.error("Error removing cart item:", error);
       });
+  };
+
+  // Handle coupon applied - update checkout data with response from backend
+  const handleCouponApplied = (couponData) => {
+    console.log("🎟️ Coupon applied - updating checkout data:", couponData);
+    
+    // Update checkout data with all the cart totals returned from backend
+    // This is purely React - backend returns everything we need
+    setCheckoutData((prev) => ({
+      ...prev,
+      applied_coupons: couponData?.applied_coupons || prev.applied_coupons,
+      cart_subtotal: couponData?.cart_subtotal || prev.cart_subtotal,
+      cart_total: couponData?.cart_total || prev.cart_total,
+      cart_total_amount: couponData?.cart_total_amount || prev.cart_total_amount,
+    }));
+    
+    // Trigger WooCommerce events for any other listeners
+    if (typeof jQuery !== "undefined") {
+      jQuery(document.body).trigger("update_checkout");
+      jQuery(document.body).trigger("updated_wc_div");
+    }
+  };
+
+  // Handle coupon removed - update checkout data with response from backend
+  const handleCouponRemoved = (couponData) => {
+    console.log("🎟️ Coupon removed - updating checkout data:", couponData);
+    
+    // Update checkout data with all the cart totals returned from backend
+    // This is purely React - backend returns everything we need
+    setCheckoutData((prev) => ({
+      ...prev,
+      applied_coupons: couponData?.applied_coupons || prev.applied_coupons,
+      cart_subtotal: couponData?.cart_subtotal || prev.cart_subtotal,
+      cart_total: couponData?.cart_total || prev.cart_total,
+      cart_total_amount: couponData?.cart_total_amount || prev.cart_total_amount,
+    }));
+    
+    // Trigger WooCommerce events for any other listeners
+    if (typeof jQuery !== "undefined") {
+      jQuery(document.body).trigger("update_checkout");
+      jQuery(document.body).trigger("updated_wc_div");
+    }
   };
 
   const handleShippingChange = (methodId, shippingCost = null) => {
@@ -913,6 +995,7 @@ export default function CheckoutForm({
               isStripeCreditCard={isStripeCreditCard}
               isStripePaymentReady={isStripePaymentReady}
               onStripePaymentReady={setIsStripePaymentReady}
+              onStripePaymentMethodChange={setStripePaymentMethodType}
               stripeRef={stripeRef}
               expandedSections={expandedSections}
               onToggleSection={toggleSection}
@@ -933,6 +1016,11 @@ export default function CheckoutForm({
               isStripeCreditCard={isStripeCreditCard}
               isSubmitting={isSubmitting}
               onShippingChange={handleShippingChange}
+              ajaxUrl={ajaxUrl}
+              nonce={nonce}
+              wooCheckoutNonce={wooCheckoutNonce}
+              onCouponApplied={handleCouponApplied}
+              onCouponRemoved={handleCouponRemoved}
             />
           </div>
 

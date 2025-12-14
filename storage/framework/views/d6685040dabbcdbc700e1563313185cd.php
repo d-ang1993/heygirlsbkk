@@ -54,7 +54,7 @@
   <?php endif; ?>
 
   <!-- Product Variations -->
-  <?php echo $__env->make('components.product-variations', ['product' => $product, 'product_type' => $product_type, 'variations_data' => $variations_data], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+  <?php echo $__env->make('components.product.variations', ['product' => $product, 'product_type' => $product_type, 'variations_data' => $variations_data], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
   <!-- Stock Status -->
   <div class="stock-status-section">
@@ -91,7 +91,7 @@
 
   <!-- Product Form -->
       
-  <?php echo $__env->make('components.product-form', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+  <?php echo $__env->make('components.product.form', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
   
   <!-- WooCommerce Native Add to Cart Form -->
   <?php if($product_type === 'variable'): ?>
@@ -150,4 +150,4 @@
     <span>Estimated delivery: 3 days</span>
   </div> -->
 
-</div><?php /**PATH /Users/dang/Local Sites/heygirlsbkk/app/public/wp-content/themes/heygirlsbkk/resources/views/components/product-details.blade.php ENDPATH**/ ?>
+</div><?php /**PATH /Users/dang/Local Sites/heygirlsbkk/app/public/wp-content/themes/heygirlsbkk/resources/views/components/product/details.blade.php ENDPATH**/ ?>

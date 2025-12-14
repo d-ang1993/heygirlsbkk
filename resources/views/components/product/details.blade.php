@@ -52,7 +52,7 @@
   @endif
 
   <!-- Product Variations -->
-  @include('components.product-variations', ['product' => $product, 'product_type' => $product_type, 'variations_data' => $variations_data])
+  @include('components.product.variations', ['product' => $product, 'product_type' => $product_type, 'variations_data' => $variations_data])
 
   <!-- Stock Status -->
   <div class="stock-status-section">
@@ -89,7 +89,7 @@
 
   <!-- Product Form -->
       
-  @include('components.product-form')
+  @include('components.product.form')
   
   <!-- WooCommerce Native Add to Cart Form -->
   @if($product_type === 'variable')

@@ -13,6 +13,26 @@ $sectionMap = [
 ];
 ?>
 
+<!-- <?php if (isset($component)) { $__componentOriginal8382d6421d7d53db04caaeb63ca8d61f = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal8382d6421d7d53db04caaeb63ca8d61f = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.hero-react','data' => []] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('hero-react'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal8382d6421d7d53db04caaeb63ca8d61f)): ?>
+<?php $attributes = $__attributesOriginal8382d6421d7d53db04caaeb63ca8d61f; ?>
+<?php unset($__attributesOriginal8382d6421d7d53db04caaeb63ca8d61f); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal8382d6421d7d53db04caaeb63ca8d61f)): ?>
+<?php $component = $__componentOriginal8382d6421d7d53db04caaeb63ca8d61f; ?>
+<?php unset($__componentOriginal8382d6421d7d53db04caaeb63ca8d61f); ?>
+<?php endif; ?> -->
 <?php $__currentLoopData = $sections; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $section): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
   <?php if(isset($sectionMap[$section])): ?>
     <?php if($section === 'hero'): ?>

@@ -216,4 +216,4 @@ function handleSwipe() {
         }
     }
 }
-</script><?php /**PATH /Users/dang/Local Sites/heygirlsbkk/app/public/wp-content/themes/heygirlsbkk/resources/views/components/product-images.blade.php ENDPATH**/ ?>
+</script><?php /**PATH /Users/dang/Local Sites/heygirlsbkk/app/public/wp-content/themes/heygirlsbkk/resources/views/components/product/images.blade.php ENDPATH**/ ?>

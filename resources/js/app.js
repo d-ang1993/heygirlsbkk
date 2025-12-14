@@ -6,9 +6,6 @@ import.meta.glob([
 // Import live search functionality
 import './live-search.js';
 
-// Import cart functionality
-import './cart.js';
-
 // Import reusable ProgressCarousel component
 import { ProgressCarousel } from './progress-carousel.js';
 

@@ -1,0 +1,123 @@
+/**
+ * React Hero Component Styles
+ * Styles for the React-based hero component
+ */
+
+.hero-react {
+  position: relative;
+  height: var(--hero-height, 60vh);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 500px;
+  overflow: hidden;
+}
+
+.hero-react--fullscreen {
+  height: 100vh;
+  min-height: 70vh;
+}
+
+.hero-react .container {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  z-index: 3;
+  max-width: 1200px;
+  width: 100%;
+  padding: 0 20px 80px 60px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+/* Text Container - Stacks content vertically */
+.text-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+  max-width: 600px;
+}
+
+
+
+/* Background */
+.hero-react__bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  z-index: 1;
+}
+
+/* Overlay */
+.hero-react__overlay {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  z-index: 2;
+  opacity: var(--overlay-opacity, 0.35);
+}
+
+
+@keyframes slideUpFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Typography */
+.hero-react__title {
+  font-size: clamp(32px, 6vw, 64px);
+  color: #fff;
+  margin: 0 0 0.5rem;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+}
+
+.hero-react__subtitle {
+  color: #fff;
+  font-size: clamp(16px, 2.2vw, 20px);
+  margin-bottom: 1.25rem;
+  opacity: 0.95;
+  line-height: 1.5;
+}
+
+.hero-react__cta {
+  display: inline-block;
+  padding: 12px 24px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #000;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  margin-top: 1rem;
+  border: none;
+}
+
+.hero-react__cta:hover {
+  background: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .hero-react {
+    min-height: 400px;
+  }
+
+  .hero-react__title {
+    font-size: clamp(24px, 8vw, 48px);
+  }
+}
+

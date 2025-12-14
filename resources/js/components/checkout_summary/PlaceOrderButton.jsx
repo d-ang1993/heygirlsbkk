@@ -1,5 +1,6 @@
 /** @jsxImportSource react */
 import React from "react";
+import { Button } from "../ui";
 
 export default function PlaceOrderButton({
   isFormValid = false,
@@ -15,25 +16,36 @@ export default function PlaceOrderButton({
     ? "Continue"
     : "Place order";
 
+  // Only disable when form is not valid (not when submitting, as we want to show it's processing)
+  const isDisabled = !isFormValid;
+  
+  // Prevent double submission while keeping button enabled visually
+  const handleClick = (e) => {
+    if (isSubmitting) {
+      e.preventDefault();
+      return false;
+    }
+  };
+  
   return (
     <div className="border-t border-gray-200 px-4 py-6 sm:px-6">
-      <button
+      <Button
         type="submit"
         // This name/id/value/data-value combo matches Woo defaults
         name="woocommerce_checkout_place_order"
         id="place_order"
         value={buttonLabel}
         data-value={buttonLabel}
-        disabled={!isFormValid || isSubmitting}
-        title={!isFormValid ? "Complete required fields to continue" : ""}
-        className={`w-full rounded-md border border-transparent px-4 py-3 text-base font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-50 transition-opacity ${
-          isFormValid && !isSubmitting
-            ? "bg-indigo-600 hover:bg-indigo-700 cursor-pointer"
-            : "bg-indigo-600 opacity-60 cursor-not-allowed"
-        }`}
+        variant="primary"
+        size="md"
+        fullWidth
+        disabled={isDisabled}
+        dimWhenDisabled={true}
+        onClick={handleClick}
+        title={!isFormValid ? "Complete required fields to continue" : isSubmitting ? "Processing payment..." : ""}
       >
         {buttonLabel}
-      </button>
+      </Button>
     </div>
   );
 }

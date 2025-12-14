@@ -148,10 +148,15 @@ if (!$shop_menu) {
                         </div>
                     </div>
                 </div>
-                <a href="#" class="navbar-link navbar-bag cart-trigger" data-cart-url="<?php echo e(wc_get_cart_url()); ?>">
+                <!-- <a href="#" class="navbar-link navbar-bag cart-trigger" data-cart-url="<?php echo e(wc_get_cart_url()); ?>">
                     BAG(<span class="bag-count"><?php echo e(WC()->cart->get_cart_contents_count()); ?></span>)
-                </a>
-            </div>
+                </a> -->
+                
+                <div 
+                    id="bag-button-react" 
+                    data-cart-url="<?php echo e(wc_get_cart_url()); ?>"
+                    data-bag-count="<?php echo e(WC()->cart->get_cart_contents_count()); ?>"
+                ></div>
         </div>
 
         <!-- Dropdown Menu -->
@@ -332,5 +337,9 @@ if (!$shop_menu) {
     </div>
 </div>
 <?php endif; ?>
+
+
+<?php echo app('Illuminate\Foundation\Vite')->reactRefresh(); ?>
+<?php echo app('Illuminate\Foundation\Vite')('resources/js/bag-button.jsx'); ?>
 
 <?php endif; ?><?php /**PATH /Users/dang/Local Sites/heygirlsbkk/app/public/wp-content/themes/heygirlsbkk/resources/views/components/navbar.blade.php ENDPATH**/ ?>

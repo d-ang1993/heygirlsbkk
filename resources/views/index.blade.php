@@ -15,6 +15,7 @@ $sectionMap = [
 ];
 @endphp
 
+<!-- <x-hero-react /> -->
 @foreach($sections as $section)
   @if(isset($sectionMap[$section]))
     @if($section === 'hero')
