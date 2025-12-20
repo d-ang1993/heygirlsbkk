@@ -89,7 +89,7 @@
     </div>
   </div>
 
-  <!-- Product Form -->
+  <!-- Product Forms -->
       
   @include('components.product.form')
   
