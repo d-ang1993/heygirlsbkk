@@ -46,8 +46,10 @@
   <!-- Product Short Description -->
   @if($product_short_description)
     <div class="product-short-description">
-      {!! wpautop($product_short_description) !!}
-      <a href="#" class="description-toggle">Read more</a>
+      <div class="description-content-wrapper">
+        <div class="description-text">{!! wpautop($product_short_description) !!}</div>
+      </div>
+      <a href="#" class="description-toggle" style="display: none;">Read more</a>
     </div>
   @endif
 

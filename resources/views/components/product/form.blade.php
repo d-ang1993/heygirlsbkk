@@ -39,7 +39,7 @@
             @endforeach
           @endif
           
-          <button type="button" class="btn btn-primary add-to-cart-btn" data-product-id="{{ $product_id }}" disabled>
+          <button type="button" class="product-cta add-to-cart-btn" data-product-id="{{ $product_id }}" disabled>
             ADD TO CART
           </button>
         </form>
@@ -48,7 +48,7 @@
           @csrf
           <input type="hidden" name="add-to-cart" value="{{ $product_id }}">
           <input type="hidden" name="quantity" value="1" class="quantity-input">
-          <button type="button" name="add-to-cart" value="{{ $product_id }}" class="btn btn-primary add-to-cart-btn" data-product_id="{{ $product_id }}">
+          <button type="button" name="add-to-cart" value="{{ $product_id }}" class="product-cta add-to-cart-btn" data-product_id="{{ $product_id }}">
             ADD TO CART
           </button>
         </form>

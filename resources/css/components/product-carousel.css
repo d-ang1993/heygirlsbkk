@@ -17,6 +17,31 @@
   margin-right: -30px;
   align-self: flex-start;
   order: 1;
+  max-height: 600px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  padding-right: 5px;
+  /* Custom scrollbar styling */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+.thumbnail-sidebar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.thumbnail-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.thumbnail-sidebar::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+}
+
+.thumbnail-sidebar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.3);
 }
 
 /* Thumbnail Container */
@@ -24,7 +49,7 @@
   width: 60px;
   height: 60px;
   border: 2px solid transparent;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
   transition: all 0.10s ease;
@@ -38,6 +63,7 @@
 .thumbnail-container:hover {
   opacity: 0.9;
   border-color: #f271ba;
+  border-width: 1.5px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
@@ -45,7 +71,8 @@
 .thumbnail-container.active {
   opacity: 1;
   border-color: #f271ba;
-  box-shadow: 0 0 0 2px rgba(242, 113, 186, 0.4);
+  border-width: 1.5px;
+  box-shadow: 0 0 0 1px rgba(242, 113, 186, 0.3);
   background: #fff;
 }
 
@@ -96,6 +123,15 @@
   background: #f8f9fa; /* Fallback background */
   min-height: 100%;
   flex-shrink: 0;
+  /* Optimize image rendering for photos (smooth, not pixelated) */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: auto;
+  /* Force hardware acceleration for smoother rendering */
+  transform: translateZ(0);
+  will-change: opacity;
+  /* Prevent subpixel rendering issues */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 .carousel-arrow {
@@ -181,7 +217,7 @@
 }
 
 .selected-color-label {
-  font-size: 1rem;
+  font-size: 14px;
   font-weight: 900;
   color: #333;
   position: relative;

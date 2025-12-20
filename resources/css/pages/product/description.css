@@ -1,0 +1,612 @@
+/* ========================================
+   PRODUCT DESCRIPTION (UPDATED – more premium + consistent)
+   Drop-in replacement for your section CSS
+   ======================================== */
+
+   :root{
+    /* Brand neutrals */
+    --ink: #111;
+    --ink-70: rgba(17,17,17,.70);
+    --ink-60: rgba(17,17,17,.60);
+    --ink-45: rgba(17,17,17,.45);
+    --line: rgba(17,17,17,.10);
+  
+    /* Soft canvas tones */
+    --paper: #ffffff;
+    --panel: #faf8f6;
+  
+    /* Brand brown (tune these) */
+    --cta: #A18B78;
+    --cta-hover: #927B68;
+    --cta-press: #836C5A;
+  
+    /* Radii + shadow */
+    --r-lg: 18px;
+    --r-md: 14px;
+    --shadow-soft: 0 10px 28px rgba(0,0,0,.08);
+    --shadow-hover: 0 16px 42px rgba(0,0,0,.12);
+  }
+  
+  /* ----------------------------------------
+     SHORT DESCRIPTION (above fold)
+  ---------------------------------------- */
+  .product-short-description{
+    font-size: 14px;
+    line-height: 1.65;
+    color: rgba(17, 17, 17, 0.68);
+    margin-bottom: 6px;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+  }
+  
+  .product-short-description .description-content-wrapper{
+    position: relative;
+    overflow: hidden;
+    transition: max-height 280ms ease;
+  }
+  
+  .product-short-description.is-collapsed .description-content-wrapper{
+    max-height: 4.95em; /* ~3 lines */
+  }
+  
+  .product-short-description:not(.is-collapsed) .description-content-wrapper{
+    max-height: none;
+  }
+  
+  .product-short-description.is-collapsed .description-content-wrapper::after{
+    content:'';
+    position:absolute;
+    bottom:0; left:0; right:0;
+    height: 1.65em;
+    background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1));
+    pointer-events:none;
+  }
+  
+  /* Toggle – more “boutique link” */
+  .description-toggle{
+    display:inline-flex;
+    align-items:center;
+    gap: 8px;
+    color: rgba(17,17,17,.86);
+    font-size: 13px;
+    cursor: pointer;
+    font-weight: 500;
+    margin-top: 10px;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(17,17,17,.22);
+    padding-bottom: 2px;
+    transition: border-color 180ms ease, color 180ms ease, transform 180ms ease;
+    user-select:none;
+  }
+  
+  .description-toggle:hover{
+    color: rgba(17,17,17,1);
+    border-bottom-color: rgba(17,17,17,.45);
+    transform: translateY(-1px);
+  }
+  
+  /* ----------------------------------------
+     EDITORIAL SPREAD (Magazine Layout)
+  ---------------------------------------- */
+  .editorial-spread{
+    display:grid;
+    grid-template-columns: minmax(0,1.1fr) minmax(0,.9fr);
+    gap: clamp(28px, 6vw, 80px);
+    padding: 56px 0;
+    border-top: 1px solid rgba(17,17,17,.10);
+  }
+  
+  /* Left Column Wrapper - Contains main image (70%) + additional images (30%) */
+  .spread-left-wrapper{
+    display: grid;
+    grid-template-columns: 70% 30%;
+    gap: 16px;
+    align-items: stretch;
+  }
+  
+  /* Left Column - Main Image Background with Overlays (70% width) */
+  .spread-left{
+    position: relative;
+    min-height: 480px;
+    max-height: 600px;
+    aspect-ratio: 3 / 4;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    border-radius: var(--r-md);
+    overflow: hidden;
+  }
+  
+  /* Additional Images Container - Stacked vertically (30% width, matches main image height) */
+  .spread-left-images{
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 12px;
+    height: 100%;
+    align-self: stretch;
+  }
+  
+  /* Individual additional image items - fill allocated grid space with editorial styling */
+  .spread-left-image-item{
+    position: relative;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    border-radius: var(--r-md);
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    filter: brightness(0.98) contrast(1.01);
+  }
+  
+  /* Editorial gradient overlay for additional images */
+  .spread-left-image-item::before{
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom,
+      rgba(0,0,0,.12) 0%,
+      transparent 35%,
+      transparent 65%,
+      rgba(0,0,0,.35) 100%
+    );
+    opacity: 1;
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  /* Subtle editorial vignette effect */
+  .spread-left-image-item::after{
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center,
+      transparent 0%,
+      transparent 60%,
+      rgba(0,0,0,.06) 100%);
+    opacity: 1;
+    pointer-events: none;
+    z-index: 2;
+  }
+  
+  /* Gradient overlay for text readability - slightly darker for visual balance */
+  .spread-left-overlay{
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom,
+      rgba(0,0,0,.20) 0%,
+      transparent 30%,
+      transparent 60%,
+      rgba(0,0,0,.48) 100%
+    );
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  /* Top content - title overlay (absolute positioning) */
+  .spread-left-content{
+    position: absolute;
+    top: 40px;
+    left: 36px;
+    right: 36px;
+    z-index: 2;
+  }
+  
+  .spread-kicker{
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,.85);
+    margin-bottom: 12px;
+    font-weight: 500;
+    text-shadow: 0 2px 8px rgba(0,0,0,.2);
+  }
+  
+  .spread-title{
+    font-size: clamp(28px, 2.8vw, 48px);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin: 0;
+    color: #fff;
+    font-weight: 700;
+    text-shadow: 0 2px 12px rgba(0,0,0,.3);
+  }
+  
+  /* Bottom content - description overlay (absolute positioning) */
+  .spread-left-bottom{
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 2;
+    padding: 36px;
+    background: linear-gradient(to top, rgba(0,0,0,.6), rgba(0,0,0,.3), transparent);
+  }
+  
+  .spread-body{
+    font-size: 15px;
+    line-height: 1.75;
+    color: rgba(255,255,255,.95);
+    margin: 0 0 20px 0;
+    text-shadow: 0 1px 4px rgba(0,0,0,.3);
+  }
+  
+  .spread-body p{
+    margin: 0 0 1em 0;
+  }
+  
+  .spread-body p:last-child{
+    margin-bottom: 0;
+  }
+  
+  .spread-notes{
+    display:grid;
+    gap: 10px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255,255,255,.2);
+  }
+  
+  .spread-notes > div{
+    display:flex;
+    justify-content: space-between;
+    gap: 14px;
+    font-size: 13px;
+    color: rgba(255,255,255,.9);
+  }
+  
+  .spread-notes span:first-child{
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    font-size: 11px;
+    color: rgba(255,255,255,.7);
+    font-weight: 500;
+  }
+  
+  /* Right Column */
+  .spread-right{
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    padding-left: clamp(28px, 5vw, 50px);
+  }
+  
+  /* Faint vertical divider line for visual balance - smaller, better positioned */
+  .spread-right::before{
+    content: '';
+    position: absolute;
+    left: clamp(12px, 2.5vw, 20px);
+    top: 20%;
+    bottom: 20%;
+    width: 1px;
+    height: 60%;
+    background: rgba(17,17,17,.06);
+  }
+  
+  .spread-index{
+    display:flex;
+    align-items:center;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  
+  .index-label{
+    font-size: 11px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: rgba(17,17,17,.55);
+    font-weight: 500;
+  }
+  
+  .index-line{
+    height: 1px;
+    flex: 1;
+    background: rgba(17,17,17,.12);
+  }
+  
+  /* Right side content wrapper - text first, then images */
+  .spread-right-content{
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+  
+  /* Text content section */
+  .spread-right-text{
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .spread-right-intro{
+    font-size: 15px;
+    line-height: 1.7;
+    color: rgba(17,17,17,.72);
+    margin: 0;
+    max-width: 56ch;
+  }
+  
+  /* Accordion Dropdowns */
+  .spec-accordions{
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-top: 24px;
+    border-top: 1px solid rgba(17,17,17,.08);
+  }
+  
+  .spec-accordion{
+    border-bottom: 1px solid rgba(17,17,17,.08);
+  }
+  
+  .spec-accordion-header{
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s ease;
+  }
+  
+  .spec-accordion-header:hover{
+    opacity: 0.7;
+  }
+  
+  .spec-accordion-header[aria-expanded="true"]{
+    padding-bottom: 14px;
+  }
+  
+  .spec-accordion-label{
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    font-size: 11px;
+    color: rgba(17,17,17,.55);
+    font-weight: 500;
+    padding-right: 20px;
+  }
+  
+  .spec-accordion-chevron{
+    width: 12px;
+    height: 12px;
+    color: rgba(17,17,17,.55);
+    transition: transform 0.3s ease;
+    flex-shrink: 0;
+    margin-left: auto;
+  }
+  
+  .spec-accordion-header[aria-expanded="true"] .spec-accordion-chevron{
+    transform: rotate(180deg);
+  }
+  
+  .spec-accordion-content{
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.3s ease;
+    padding: 0;
+  }
+  
+  .spec-accordion-header[aria-expanded="true"] + .spec-accordion-content{
+    max-height: 500px;
+    padding: 0 0 12px 0;
+  }
+  
+  .spec-accordion-content p{
+    font-size: 13px;
+    line-height: 1.6;
+    color: rgba(17,17,17,.72);
+    margin: 0;
+    padding-right: 32px;
+    padding-bottom: 12px;
+  }
+  
+  .spec-colors-list,
+  .spec-sizes-list{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-right: 32px;
+    padding-bottom: 12px;
+  }
+  
+  .spec-color-item,
+  .spec-size-item{
+    font-size: 13px;
+    color: rgba(17,17,17,.72);
+  }
+  
+  .spec-color-item:not(:last-child)::after,
+  .spec-size-item:not(:last-child)::after{
+    content: ',';
+    margin-left: 2px;
+  }
+  
+  /* Image grid - smaller, more compact */
+  .index-grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    position: relative;
+    align-items: start;
+  }
+  
+  /* Scattered editorial positioning - only 2 images now */
+  .index-card:nth-child(1){
+    grid-column: 1;
+    grid-row: 1;
+    margin-top: 0;
+    transform: translateY(0);
+  }
+  
+  .index-card:nth-child(2){
+    grid-column: 2;
+    grid-row: 1;
+    margin-top: 20px;
+    transform: translateX(-4px);
+  }
+  
+  
+  .index-card{
+    display:block;
+    text-decoration:none;
+    color: inherit;
+    border-radius: 16px;
+    overflow:hidden;
+    border: 1px solid rgba(17,17,17,.08);
+    background: #faf8f6;
+    box-shadow: 0 10px 28px rgba(0,0,0,.08);
+    transition: transform .35s cubic-bezier(.2,.8,.2,1),
+                box-shadow .35s cubic-bezier(.2,.8,.2,1);
+  }
+  
+  .index-card:hover{
+    box-shadow: 0 16px 42px rgba(0,0,0,.12);
+  }
+  
+  /* Hover adds lift while preserving scattered position */
+  .index-card:nth-child(1):hover{
+    transform: translateY(-2px);
+  }
+  
+  .index-card:nth-child(2):hover{
+    transform: translateY(-2px) translateX(-4px);
+  }
+  
+  .index-card img{
+    width:100%;
+    aspect-ratio: 4/5;
+    object-fit: cover;
+    display:block;
+  }
+  
+  .index-caption{
+    display:flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 12px 14px;
+  }
+  
+  .index-tag{
+    font-size: 11px;
+    letter-spacing: .12em;
+    color: rgba(17,17,17,.55);
+    font-weight: 500;
+  }
+  
+  .index-text{
+    font-size: 13px;
+    color: rgba(17,17,17,.80);
+  }
+  
+   /* ----------------------------------------
+     RESPONSIVE
+   ---------------------------------------- */
+   
+   /* Tablet and below - stack columns vertically */
+   @media (max-width: 1024px){
+     .editorial-spread{
+       grid-template-columns: 1fr;
+       padding: 44px 0;
+       gap: 36px;
+     }
+     
+     .spread-right{
+       padding-left: 0;
+     }
+     
+     .spread-right::before{
+       display: none;
+     }
+   }
+   
+   /* When side-by-side layout would cause overlap, use full width for main image */
+   @media (max-width: 900px){
+     .spread-left-wrapper{
+       grid-template-columns: 1fr;
+       gap: 16px;
+     }
+     
+     .spread-left{
+       width: 100%;
+       min-height: 500px;
+     }
+     
+     .spread-left-images{
+       grid-template-columns: 1fr 1fr;
+       grid-template-rows: auto;
+       gap: 16px;
+       height: auto;
+     }
+     
+     .spread-left-image-item{
+       aspect-ratio: 3 / 4;
+       height: auto;
+     }
+     
+     .spread-left-content{
+       padding: 32px 28px;
+     }
+     
+     .spread-left-bottom{
+       padding: 28px;
+     }
+     
+     .index-grid{
+       grid-template-columns: 1fr 1fr;
+     }
+   }
+   
+   /* Mobile - smaller adjustments */
+   @media (max-width: 768px){
+     .editorial-spread{
+       padding: 36px 0;
+       gap: 28px;
+     }
+     
+     .spread-left-wrapper{
+       gap: 14px;
+     }
+     
+     .spread-left-images{
+       gap: 14px;
+     }
+   }
+   
+   @media (max-width: 520px){
+     .spread-left{
+       min-height: 450px;
+     }
+     
+     .spread-left-content{
+       padding: 24px 20px;
+     }
+     
+     .spread-left-bottom{
+       padding: 20px;
+     }
+     
+     .spread-left-images{
+       grid-template-columns: 1fr;
+       gap: 14px;
+     }
+     
+     .index-grid{
+       grid-template-columns: 1fr;
+       gap: 14px;
+     }
+     
+     .spread-body{
+       font-size: 14px;
+     }
+     
+     .spread-title{
+       font-size: 28px;
+     }
+   }
+  

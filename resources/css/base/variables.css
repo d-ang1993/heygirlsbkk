@@ -21,12 +21,12 @@
      BRAND COLORS
      ======================================== */
   
-  /* PRIMARY COLOR - Pink (#f7a9d0)
+  /* PRIMARY COLOR - Beige/Taupe (#c4b5a8)
    * Use for: Navbar, Footer, Primary buttons, Main brand elements
    * This is the dominant color of your brand */
-  --color-primary: #f7a9d0;           /* Soft Pink - Main brand color */
-  --color-primary-dark: #f271ba;      /* Darker Pink - Hover states */
-  --color-primary-darker: #e252a2;    /* Even Darker Pink - Active states */
+  --color-primary: #c4b5a8;           /* Warm Beige - Main brand color (darker version of #dccfc2) */
+  --color-primary-dark: #b8a89a;      /* Darker Beige - Hover states */
+  --color-primary-darker: #a89687;    /* Even Darker Beige - Active states */
   
   /* SECONDARY COLOR - Mint (#a9f7d0)
    * Use for: Accent elements, Alternative buttons, Highlights, Call-outs

@@ -6,6 +6,9 @@ import.meta.glob([
 // Import live search functionality
 import './live-search.js';
 
+// Import product description accordion
+import './product-description-accordion.js';
+
 // Import reusable ProgressCarousel component
 import { ProgressCarousel } from './progress-carousel.js';
 
@@ -92,6 +95,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Import Product Variations JavaScript
 import './product-variations.js';
+
+// Import Product Description Toggle
+import './product-description-toggle.js';
 
 // Import Wishlist Integration
 import './wishlist-integration.js';

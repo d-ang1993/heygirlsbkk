@@ -827,7 +827,7 @@ input[name="password2"] {
   font-size: 1rem;
   font-weight: 500;
   line-height: 1.4;
-  flex: 1;
+  /* flex: 1; */
 }
 
 .product-title a {

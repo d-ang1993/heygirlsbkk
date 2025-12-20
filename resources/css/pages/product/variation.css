@@ -1,0 +1,171 @@
+/* ========================================
+   PRODUCT VARIATIONS
+   ======================================== */
+
+.variation-label { 
+  display: block; 
+  font-weight: 500; 
+  margin-bottom: 8px; 
+  color: #333; 
+  font-size: 14px;
+}
+
+.color-selection { 
+  margin-bottom: 16px; 
+}
+
+.color-dots { 
+  display: flex; 
+  gap: 8px; 
+  flex-wrap: wrap; 
+}
+
+.color-dot { 
+  width: 28px; 
+  height: 28px; 
+  border-radius: 50%; 
+  border: 1px solid #ddd; 
+  cursor: pointer; 
+  transition: all 0.15s; 
+  position: relative; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+}
+
+.color-dot:hover { 
+  border-color: #000; 
+  transform: scale(1.05); 
+}
+
+.color-dot.selected { 
+  border-color: #000; 
+  border-width: 2px; 
+}
+
+.color-dot.out-of-stock { 
+  opacity: 0.3; 
+  cursor: not-allowed; 
+  position: relative; 
+}
+
+.color-dot.out-of-stock::after { 
+  content: ''; 
+  position: absolute; 
+  top: 50%; 
+  left: 50%; 
+  width: 1px; 
+  height: 16px; 
+  background: #ff0000; 
+  transform: translate(-50%, -50%) rotate(45deg); 
+  z-index: 1; 
+}
+
+.color-dot.out-of-stock::before { 
+  content: ''; 
+  position: absolute; 
+  top: 50%; 
+  left: 50%; 
+  width: 1px; 
+  height: 16px; 
+  background: #ff0000; 
+  transform: translate(-50%, -50%) rotate(-45deg); 
+  z-index: 1; 
+}
+
+.out-of-stock-x { 
+  color: #ff0000; 
+  font-weight: bold; 
+  font-size: 14px; 
+}
+
+.size-selection { 
+  margin-bottom: 16px; 
+}
+
+.size-buttons { 
+  display: flex; 
+  gap: 6px; 
+  flex-wrap: wrap; 
+  margin-bottom: 8px; 
+  justify-content: flex-start;
+}
+
+.size-button { 
+  padding: 8px 12px; 
+  border: 1px solid #ddd; 
+  background: #fff; 
+  cursor: pointer; 
+  transition: all 0.15s; 
+  font-weight: 400; 
+  min-width: 40px; 
+  font-size: 13px; 
+  text-align: center; 
+  border-radius: 1px;
+}
+
+.size-button:hover { 
+  border-color: #000; 
+}
+
+.size-button.selected { 
+  background: #000; 
+  color: #fff; 
+  border-color: #000; 
+}
+
+.size-button.out-of-stock { 
+  opacity: 0.3; 
+  cursor: not-allowed; 
+  text-decoration: line-through; 
+  background: #f5f5f5; 
+  color: #999; 
+  border-color: #ddd; 
+}
+
+.size-button:disabled { 
+  opacity: 0.3; 
+  cursor: not-allowed; 
+  background: #f5f5f5; 
+  color: #999; 
+  border-color: #ddd; 
+}
+
+/* Single Color Product Styling */
+.color-dots.single-color .color-dot.single-color-selected {
+  border: 2px solid #000 !important;
+  transform: scale(1.1);
+}
+
+.color-dots.single-color .color-dot {
+  cursor: default;
+}
+
+.color-dots.single-color .color-dot:hover {
+  transform: none;
+}
+
+/* Selected Color Display - Gradient Text */
+#selected-color-name {
+  font-weight: 700 !important;
+  letter-spacing: 0.8px;
+  font-size: 1.1em;
+  transition: all 0.3s ease;
+  background: linear-gradient(120deg, var(--text-color, #333), #000);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Ensure gradient works properly when class is applied */
+#selected-color-name.gradient-text {
+  background: linear-gradient(120deg, var(--text-color, #333), #000);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Remove underline from the "Color:" label */
+.selected-color-label {
+  text-decoration: none !important;
+}

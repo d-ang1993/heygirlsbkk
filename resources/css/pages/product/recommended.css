@@ -1,0 +1,543 @@
+/* ========================================
+   PRODUCT PAGE - RECOMMENDED PRODUCTS
+   ======================================== */
+
+.related-products {
+  margin: 56px 0;
+  padding: 48px 0;
+  background: #fff;
+  border-top: 1px solid rgba(17, 17, 17, 0.10);
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.related-products h2 {
+  font-size: clamp(28px, 2.4vw, 36px);
+  font-weight: 650;
+  margin-bottom: clamp(32px, 4vw, 52px);
+  text-align: center;
+  color: #111;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+/* ========================
+   Carousel Container
+   ======================== */
+.related-products-carousel {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  max-width: 100%;
+  padding: 0 clamp(40px, 5vw, 72px);
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black clamp(40px, 5vw, 72px),
+    black calc(100% - clamp(40px, 5vw, 72px)),
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black clamp(40px, 5vw, 72px),
+    black calc(100% - clamp(40px, 5vw, 72px)),
+    transparent 100%
+  );
+}
+
+.related-products-track {
+  display: flex;
+  gap: clamp(20px, 2.5vw, 28px);
+  align-items: stretch;
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+  transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  width: 100%;
+  max-width: 100%;
+}
+
+.related-products-track.no-transition {
+  transition: none !important;
+}
+
+/* ========================
+   Product Cards
+   ======================== */
+.related-product-card {
+  flex: 0 0 calc((100% - 4rem) / 4);
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  overflow: hidden;
+  position: relative;
+  box-shadow: none;
+}
+
+
+/* ========================
+   Product Images
+   ======================== */
+.related-product-card {
+  position: relative;
+}
+
+.related-product-card .related-product-image-link {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+.related-product-card img {
+  width: 100% !important;
+  height: clamp(240px, 28vw, 320px) !important;
+  object-fit: cover !important;
+  background: #faf8f6;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  image-rendering: optimize-contrast;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  will-change: auto;
+}
+
+
+/* ========================
+   Heart Icon
+   ======================== */
+.related-product-card .heart-icon {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 2;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.related-product-card .heart-icon svg {
+  width: 18px;
+  height: 18px;
+  stroke: #6b7280;
+  stroke-width: 1.5;
+  fill: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.related-product-card .heart-icon:hover {
+  background: #fff;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.related-product-card .heart-icon:hover svg {
+  stroke: #374151;
+}
+
+.related-product-card .heart-icon.liked svg {
+  fill: #ef4444;
+  stroke: #ef4444;
+}
+
+/* ========================
+   Product Information Container
+   ======================== */
+.related-product-card .product-info-container {
+  padding: 10px 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 0;
+  background: #fff;
+  position: relative;
+  z-index: 2;
+}
+
+/* ========================
+   Color Swatches Section - Overlay on Image
+   ======================== */
+.related-product-card .product-colors-section {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: auto;
+  display: flex;
+  justify-content: center;
+  z-index: 3;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+  transform: translateX(-50%) translateY(10px);
+}
+
+.related-product-card:hover .product-colors-section {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+.related-product-card .product-colors {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  padding: 10px 16px;
+  background: #ffffff;
+  border-radius: 24px;
+  box-shadow: none;
+  white-space: nowrap;
+  overflow-x: visible;
+}
+
+.related-product-card .color-swatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.related-product-card .color-swatch:hover {
+  transform: scale(1.1);
+}
+
+.related-product-card .color-swatch.selected {
+  border: 2px solid #000;
+  transform: scale(1.1);
+}
+
+/* ========================
+   Product Name and Price Row
+   ======================== */
+.related-product-card .product-name-price-row {
+  order: 2;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin: 0;
+}
+
+/* ========================
+   Product Name Section
+   ======================== */
+.related-product-card .product-name-section {
+  flex: 1;
+  margin: 0;
+  padding-left: 0;
+  min-width: 0;
+}
+
+.related-product-card .product-name-section h3 {
+  font-size: 14px;
+  font-weight: 700;
+  color: #000;
+  margin: 0;
+  padding: 0;
+  line-height: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-align: left;
+  text-overflow: ellipsis;
+}
+
+.related-product-card .product-name-section h3 a {
+  color: #000;
+  text-decoration: none;
+}
+
+.related-product-card .product-name-section h3 a:hover {
+  color: #000;
+}
+
+/* ========================
+   Product Price Section
+   ======================== */
+.related-product-card .product-price-section {
+  order: 3;
+  flex-shrink: 0;
+  margin: 0;
+  padding-right: 0;
+  border-top: none;
+  display: flex;
+  align-items: center;
+}
+
+.related-product-card .product-price-section .price {
+  font-size: 12px;
+  font-weight: 400;
+  color: #ff6b9d;
+  margin: 0;
+  padding: 0;
+  text-align: right;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 0;
+  line-height: 1;
+}
+
+.related-product-card .product-price-section .price .price-regular {
+  font-size: 11px;
+  color: #999;
+  text-decoration: line-through;
+  font-weight: 400;
+}
+
+.related-product-card .quick-shop {
+  font-size: 0.9rem;
+  color: #000;
+  margin: 0 1rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  text-decoration: none;
+  border-bottom: 1px solid #000;
+  width: fit-content;
+  transition: opacity 0.3s ease;
+}
+
+.related-product-card .quick-shop:hover {
+  opacity: 0.7;
+}
+
+/* ========================
+   Navigation Arrows
+   ======================== */
+.related-carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  opacity: 0.85;
+}
+
+.related-carousel-arrow:hover {
+  background: rgba(255, 255, 255, 1);
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  opacity: 1;
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+.related-carousel-arrow svg {
+  width: 18px;
+  height: 18px;
+  stroke: #000;
+  stroke-width: 2;
+  transition: stroke 0.3s ease;
+}
+
+.related-carousel-arrow:hover svg {
+  stroke: #000;
+}
+
+.related-carousel-arrow--prev {
+  left: 8px;
+}
+
+.related-carousel-arrow--next {
+  right: 8px;
+}
+
+/* ========================
+   Dots Navigation
+   ======================== */
+.related-carousel-dots {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-top: 2.5rem;
+}
+
+.related-carousel-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.15);
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  cursor: pointer;
+  border: none;
+  padding: 0;
+}
+
+.related-carousel-dot.active {
+  background: #000;
+  width: 28px;
+  border-radius: 4px;
+}
+
+.related-carousel-dot:hover {
+  background: rgba(0, 0, 0, 0.35);
+  transform: scale(1.2);
+}
+
+/* ========================
+   Responsive Layouts
+   ======================== */
+
+/* Large Tablet — 3 Cards */
+@media (max-width: 1024px) {
+  .related-product-card {
+    flex: 0 0 calc((100% - 2rem) / 3);
+  }
+
+  .related-products-carousel {
+    padding: 0 clamp(32px, 4vw, 48px);
+    mask-image: linear-gradient(
+      to right,
+      transparent 0%,
+      black clamp(32px, 4vw, 48px),
+      black calc(100% - clamp(32px, 4vw, 48px)),
+      transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent 0%,
+      black clamp(32px, 4vw, 48px),
+      black calc(100% - clamp(32px, 4vw, 48px)),
+      transparent 100%
+    );
+  }
+
+  .related-product-card img {
+    height: clamp(280px, 32vw, 360px) !important;
+  }
+}
+
+/* Mobile — 2 Cards */
+@media (max-width: 768px) {
+  .related-products {
+    margin: 44px 0;
+    padding: 32px 0;
+  }
+
+  .related-products-carousel {
+    padding: 0 clamp(20px, 3vw, 28px);
+    mask-image: linear-gradient(
+      to right,
+      transparent 0%,
+      black clamp(20px, 3vw, 28px),
+      black calc(100% - clamp(20px, 3vw, 28px)),
+      transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent 0%,
+      black clamp(20px, 3vw, 28px),
+      black calc(100% - clamp(20px, 3vw, 28px)),
+      transparent 100%
+    );
+  }
+
+  .related-product-card {
+    flex: 0 0 calc((100% - 1rem) / 2);
+  }
+
+  .related-product-card img {
+    height: clamp(220px, 38vw, 300px) !important;
+  }
+
+  .related-carousel-arrow {
+    width: 40px;
+    height: 40px;
+  }
+
+  .related-carousel-arrow svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* Small Mobile — 1 Card */
+@media (max-width: 520px) {
+  .related-products {
+    margin: 36px 0;
+    padding: 28px 0;
+  }
+
+  .related-products-carousel {
+    padding: 0 16px;
+    mask-image: linear-gradient(
+      to right,
+      transparent 0%,
+      black 16px,
+      black calc(100% - 16px),
+      transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent 0%,
+      black 16px,
+      black calc(100% - 16px),
+      transparent 100%
+    );
+  }
+
+  .related-product-card {
+    flex: 0 0 100%;
+  }
+
+  .related-product-card img {
+    height: clamp(280px, 75vw, 360px) !important;
+  }
+
+  .related-products h2 {
+    font-size: clamp(24px, 5vw, 28px);
+    margin-bottom: 32px;
+  }
+
+  .related-carousel-dots {
+    margin-top: 28px;
+  }
+}
+
+/* ========================
+   Empty State
+   ======================== */
+.related-products.empty {
+  text-align: center;
+  padding: clamp(40px, 6vw, 60px) 0;
+}
+
+.related-products.empty p {
+  color: rgba(17, 17, 17, 0.6);
+  font-size: 16px;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+}
+

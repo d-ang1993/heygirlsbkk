@@ -208,27 +208,8 @@
         </div>
       @endif
 
-      <!-- Related Products -->
-      @if(!empty($related_products))
-        <div class="related-products">
-          <h2>Recommended Products</h2>
-          <div class="related-products-grid">
-            @foreach($related_products as $related_id)
-              @php $related_product = wc_get_product($related_id); @endphp
-              @if($related_product)
-                <div class="related-product-card">
-                  <a href="{{ $related_product->get_permalink() }}">
-                    <img src="{{ wp_get_attachment_image_url($related_product->get_image_id(), 'medium') }}" 
-                         alt="{{ $related_product->get_name() }}" />
-                    <h3>{{ $related_product->get_name() }}</h3>
-                    <div class="price">{!! $related_product->get_price_html() !!}</div>
-                  </a>
-                </div>
-              @endif
-            @endforeach
-          </div>
-        </div>
-      @endif
+      <!-- Recommended Products -->
+      @include('components.product.recommended')
 
     </div>
   </div>

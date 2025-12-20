@@ -44,7 +44,14 @@ if (!$shop_menu) {
     <div class="navbar-container">
         <!-- Top Bar -->
         <div class="navbar-top">
-            <div class="navbar-location">THAILAND</div>
+            <div class="navbar-location">
+
+                <a href="{{ home_url() }}" class="navbar-logo">
+                    <img src="{{ get_template_directory_uri() }}/resources/images/logo/HEYGIRLS.svg" 
+                         alt="{{ $navbar_logo }}" 
+                         class="logo-image" />
+                </a>
+            </div>
             <div class="navbar-account">
                 @if(is_user_logged_in())
                     {{-- User is logged in - show My Account --}}

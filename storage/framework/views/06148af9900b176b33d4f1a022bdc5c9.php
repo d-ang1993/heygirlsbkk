@@ -44,7 +44,14 @@ if (!$shop_menu) {
     <div class="navbar-container">
         <!-- Top Bar -->
         <div class="navbar-top">
-            <div class="navbar-location">THAILAND</div>
+            <div class="navbar-location">
+
+                <a href="<?php echo e(home_url()); ?>" class="navbar-logo">
+                    <img src="<?php echo e(get_template_directory_uri()); ?>/resources/images/logo/HEYGIRLS.svg" 
+                         alt="<?php echo e($navbar_logo); ?>" 
+                         class="logo-image" />
+                </a>
+            </div>
             <div class="navbar-account">
                 <?php if(is_user_logged_in()): ?>
                     

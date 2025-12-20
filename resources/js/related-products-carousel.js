@@ -21,6 +21,8 @@ class RelatedProductsCarousel {
       this.isAnimating = false;
       this.isSnapping = false;
       this.resizeTimeout = null;
+      this.cardWidth = 0;
+      this.gap = 0;
   
       this.dotIndex = 0; // 🟢 keeps track of which dot is active manually
   
@@ -31,11 +33,7 @@ class RelatedProductsCarousel {
   
     updateVisibleCards() {
       const w = window.innerWidth;
-      if (w <= 480) this.visibleCards = 1;
-      else if (w <= 768) this.visibleCards = 2;
-      else if (w <= 1024) this.visibleCards = 2;
-      else this.visibleCards = 3;
-
+      this.visibleCards = w <= 480 ? 1 : w <= 1024 ? 2 : 3;
       this.realCount = this.cards.length;
       this.totalSlides = Math.ceil(this.realCount / this.visibleCards);
     }
@@ -68,6 +66,7 @@ class RelatedProductsCarousel {
       this.track.classList.add('no-transition');
       this.createDots();
       this.addListeners();
+      this.updateCardDimensions();
       this.updateCarousel(false);
   
       requestAnimationFrame(() => {
@@ -96,39 +95,36 @@ class RelatedProductsCarousel {
       this.updateDots();
     }
   
-    getGap() {
+    updateCardDimensions() {
+      if (!this.cards[0]) return;
+      this.cardWidth = this.cards[0].offsetWidth || 0;
+      
+      if (this.gap === 0) {
       const gap = parseFloat(getComputedStyle(this.track).gap);
-      return isNaN(gap) ? 24 : gap;
+        this.gap = isNaN(gap) ? 24 : gap;
+      }
     }
   
     updateCarousel(animate = true) {
-      const firstCard = this.cards[0];
-      if (!firstCard) return;
+      if (!this.cards.length) return;
   
-      const cardWidth = firstCard.offsetWidth || 0;
-      const offset = this.currentIndex * (cardWidth + this.getGap());
+      if (!this.cardWidth) this.updateCardDimensions();
   
-      this.track.style.transition = animate ? 'transform 0.5s ease' : 'none';
-      this.track.style.transform = `translateX(-${offset}px)`;
+      const offset = this.currentIndex * (this.cardWidth + this.gap);
+      this.track.style.transition = animate ? 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none';
+      this.track.style.transform = `translate3d(-${offset}px, 0, 0)`;
   
       if (animate) {
         this.isAnimating = true;
-        this.track.addEventListener(
-          'transitionend',
-          () => {
+        this.track.addEventListener('transitionend', () => {
             this.isAnimating = false;
-  
             if (this.currentIndex >= this.cloneBuffer + this.realCount) {
               this.snapTo(this.currentIndex - this.realCount);
             } else if (this.currentIndex < this.cloneBuffer) {
               this.snapTo(this.currentIndex + this.realCount);
             }
-          },
-          { once: true }
-        );
+        }, { once: true });
       }
-  
-      this.updateDots();
     }
   
     snapTo(index) {
@@ -136,7 +132,7 @@ class RelatedProductsCarousel {
       this.track.style.transition = 'none';
       this.currentIndex = index;
       this.updateCarousel(false);
-      void this.track.offsetHeight;
+      this.track.offsetHeight; // Force reflow
       this.track.style.transition = '';
       this.isSnapping = false;
     }
@@ -150,30 +146,24 @@ class RelatedProductsCarousel {
     next() {
       if (this.isAnimating || this.isSnapping) return;
       this.currentIndex++;
-      this.updateCarousel(true);
-  
-      // 🟢 move dot forward
       this.dotIndex = (this.dotIndex + 1) % this.totalSlides;
+      this.updateCarousel(true);
       this.updateDots();
     }
   
     prev() {
       if (this.isAnimating || this.isSnapping) return;
       this.currentIndex--;
-      this.updateCarousel(true);
-  
-      // 🟢 move dot backward
       this.dotIndex = (this.dotIndex - 1 + this.totalSlides) % this.totalSlides;
+      this.updateCarousel(true);
       this.updateDots();
     }
   
     goToSlide(slideIndex) {
       if (this.isAnimating || this.isSnapping) return;
-      const firstReal = this.cloneBuffer;
-      const target = firstReal + slideIndex * this.visibleCards;
-      this.currentIndex = target;
-      this.updateCarousel(true);
+      this.currentIndex = this.cloneBuffer + slideIndex * this.visibleCards;
       this.dotIndex = slideIndex;
+      this.updateCarousel(true);
       this.updateDots();
     }
   
@@ -185,33 +175,37 @@ class RelatedProductsCarousel {
     handleResize() {
       const prevVisible = this.visibleCards;
       this.updateVisibleCards();
+      this.cardWidth = 0; // Force recalculation
   
-      if (prevVisible !== this.visibleCards) {
+      const needsReclone = prevVisible !== this.visibleCards;
+      
+      if (needsReclone) {
         this.track.classList.add('no-transition');
         this.cloneEdges();
         this.createDots();
+      }
+      
+      this.updateCardDimensions();
         this.updateCarousel(false);
   
-        requestAnimationFrame(() => {
-          this.track.classList.remove('no-transition');
-        });
-      } else {
-        this.updateCarousel(false);
+      if (needsReclone) {
+        requestAnimationFrame(() => this.track.classList.remove('no-transition'));
       }
     }
   
     addTouchSupport() {
-      let sx = 0, ex = 0;
+      let startX = 0;
       const threshold = 50;
   
       this.track.addEventListener('touchstart', e => {
-        sx = e.changedTouches[0].screenX;
+        startX = e.changedTouches[0].screenX;
       }, { passive: true });
   
       this.track.addEventListener('touchend', e => {
-        ex = e.changedTouches[0].screenX;
-        const d = sx - ex;
-        if (Math.abs(d) > threshold) (d > 0 ? this.next() : this.prev());
+        const delta = startX - e.changedTouches[0].screenX;
+        if (Math.abs(delta) > threshold) {
+          delta > 0 ? this.next() : this.prev();
+        }
       }, { passive: true });
     }
   }
@@ -231,28 +225,20 @@ class RelatedProductsCarousel {
     initRelatedProductsCarousels();
   }
   
-  // Color swatch functionality
-document.addEventListener('DOMContentLoaded', function() {
-  // Add click handlers for color swatches
-  document.querySelectorAll('.related-product-card .color-swatch').forEach(swatch => {
-    swatch.addEventListener('click', function() {
-      // Remove selected class from siblings
-      const siblings = this.parentElement.querySelectorAll('.color-swatch');
-      siblings.forEach(s => s.classList.remove('selected'));
-      
-      // Add selected class to clicked swatch
-      this.classList.add('selected');
-    });
-  });
+  // Color swatch functionality - use event delegation for better performance
+  document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('color-swatch')) {
+      const swatches = e.target.parentElement.querySelectorAll('.color-swatch');
+      swatches.forEach(s => s.classList.remove('selected'));
+      e.target.classList.add('selected');
+    }
 });
 
 // Wishlist functionality
 function toggleWishlist(productId) {
-  const heartIcon = event.target.closest('.heart-icon');
+    const heartIcon = event?.target?.closest('.heart-icon');
   if (heartIcon) {
     heartIcon.classList.toggle('liked');
-    
-    // Here you would typically make an AJAX call to save to wishlist
     console.log('Toggled wishlist for product:', productId);
   }
 }

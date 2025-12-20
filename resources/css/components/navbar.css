@@ -23,6 +23,13 @@
   letter-spacing: 1px;
 }
 
+.logo-image {
+  width: 50px;
+  height:50px;
+  object-fit: cover;
+}
+
+
 .navbar-location {
   font-weight: 500;
 }

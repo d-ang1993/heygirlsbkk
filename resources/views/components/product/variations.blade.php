@@ -54,18 +54,7 @@
     
   @endphp
   
-  <!-- Debug Script -->
-  <script>
-    console.log("Product ID HELLO:", {!! $product->get_id() !!});
-    console.log("Product Type:", "{!! $product_type !!}");
-    console.log("All Variations:", {!! json_encode($variations) !!});
-    console.log("All Attributes:", {!! json_encode($attributes) !!});
-    console.log("Color Variations:", {!! json_encode($color_variations) !!});
-    console.log("Size Variations:", {!! json_encode($size_variations) !!});
-    console.log("Product is variable:", {!! $product->is_type('variable') ? 'true' : 'false' !!});
-    console.log("Has attributes:", {!! $product->has_attributes() ? 'true' : 'false' !!});
-    console.log("Variations data passed:", {!! json_encode($variations_data ?? []) !!});
-  </script>
+  
   
   <!-- Single Color Styling -->
   <style>
@@ -286,7 +275,80 @@
       </div>
     @endif
   @endif
-@endif
+
+  {{-- React Component Container (commented out for now - will be enabled in the future) --}}
+  {{-- 
+  <div style="margin-top: 40px; padding: 20px; border: 2px dashed #ccc; background: #f9f9f9;">
+    <h3 style="margin-bottom: 15px; font-size: 18px; font-weight: bold;">React Version (Testing)</h3>
+    <div id="product-variations-react-container"></div>
+  </div>
+
+  <!-- Pass data to React component -->
+  @php
+    // Extract sizes array for React (similar to how Blade template does it)
+    $sizes_for_react = [];
+    if (!empty($variations) && is_array($variations)) {
+      foreach ($variations as $variation) {
+        if (isset($variation['attributes'])) {
+          foreach ($variation['attributes'] as $attr_key => $attr_value) {
+            if (stripos($attr_key, 'size') !== false && !empty($attr_value)) {
+              if (!in_array($attr_value, $sizes_for_react)) {
+                $sizes_for_react[] = $attr_value;
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    // Prepare color variations with hex color values for React
+    $color_variations_with_colors = [];
+    if (!empty($color_variations) && is_array($color_variations)) {
+      foreach ($color_variations as $color_key => $variation) {
+        $color_name = str_replace(['-', '_'], ' ', $color_key);
+        $color_name = ucwords($color_name);
+        
+        // Get the term by slug from the 'pa_color' taxonomy
+        $color_term = get_term_by('slug', $color_key, 'pa_color');
+        
+        // Default fallback color
+        $dot_color = '#cccccc';
+        
+        if ($color_term) {
+          // Get hex color from Variation Swatches for WooCommerce plugin
+          $color_meta = get_term_meta($color_term->term_id, 'product_attribute_color', true);
+          if (!empty($color_meta)) {
+            $dot_color = $color_meta;
+          }
+        }
+        
+        $color_variations_with_colors[$color_key] = [
+          'variation_id' => $variation['variation_id'] ?? null,
+          'color_name' => $color_name,
+          'color_hex' => $dot_color,
+          'variation' => $variation
+        ];
+      }
+    }
+  @endphp
+  <script>
+    // Prepare data for React component
+    window.productVariationsReactData = {
+      productId: {!! $product->get_id() ?? 0 !!},
+      productType: "{!! $product_type ?? 'simple' !!}",
+      variations: {!! json_encode($variations ?? []) !!},
+      attributes: {!! json_encode($attributes ?? []) !!},
+      colorVariations: {!! json_encode($color_variations_with_colors ?? []) !!},
+      sizeVariations: {!! json_encode($size_variations ?? []) !!},
+      sizes: {!! json_encode($sizes_for_react ?? []) !!},
+      availableAttributes: {!! json_encode($availableAttributes ?? []) !!}
+    };
+    
+    console.log("🔵 ProductVariationsReact: Data prepared:", window.productVariationsReactData);
+  </script>
+  
+  @vite('resources/js/product-variations-react.jsx')
+  --}}
 
 <script>
 // Color Selection Functionality
@@ -413,3 +475,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 </script>
+@endif

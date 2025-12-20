@@ -8,37 +8,94 @@
     
     $product_name = $product->get_name();
     
-    // Get featured image
+    // Get featured image ID
     $featured_id = $product->get_image_id();
-    $featured_url = wp_get_attachment_url($featured_id);
     
-    // Get gallery images
-    $gallery_ids = $product->get_gallery_image_ids();
-    $gallery_urls = array_map('wp_get_attachment_url', $gallery_ids);
+    // Helper function to create image data structure with main and thumbnail
+    // Use 'full' or 'large' size for better quality, browser will select appropriate from srcset
+    $make = function($id) {
+        // Use 'full' size for maximum quality, srcset will handle responsive sizing
+        $full_url = wp_get_attachment_image_url($id, 'full');
+        $large_url = wp_get_attachment_image_url($id, 'large');
+        $single_url = wp_get_attachment_image_url($id, 'woocommerce_single');
+        
+        // Generate comprehensive srcset with multiple sizes for better browser selection
+        $srcset = wp_get_attachment_image_srcset($id, 'full');
+        
+        // If srcset is empty, create a basic one
+        if (empty($srcset) && $full_url) {
+            $image_meta = wp_get_attachment_metadata($id);
+            if ($image_meta && isset($image_meta['width'])) {
+                $srcset = $full_url . ' ' . $image_meta['width'] . 'w';
+            }
+        }
+        
+        return [
+            'main'  => $full_url ?: $single_url, // Use full size for best quality
+            'main_srcset' => $srcset,
+            // Accurate sizes attribute: desktop is ~60% of 1200px container = ~720px, but account for padding
+            // Mobile is full viewport width
+            'main_sizes'  => '(max-width: 768px) 100vw, (max-width: 1200px) 60vw, 720px',
+            'thumb' => wp_get_attachment_image_url($id, 'woocommerce_thumbnail'),
+            'thumb_srcset' => wp_get_attachment_image_srcset($id, 'woocommerce_thumbnail'),
+            'thumb_sizes'  => '60px',
+        ];
+    };
     
-    // Merge into one array
-    $all_images = array_filter(array_merge([$featured_url], $gallery_urls));
+    $main_images = [];
+    
+    // Add featured image
+    if ($featured_id) {
+        $main_images[] = $make($featured_id);
+    }
+    
+    // Add gallery images
+    foreach ($product->get_gallery_image_ids() as $gid) {
+        $main_images[] = $make($gid);
+    }
     
     // If no images, use placeholder
-    if (empty($all_images)) {
-        $all_images = [wc_placeholder_img_src('woocommerce_single')];
+    if (empty($main_images)) {
+        $main_images = [[
+            'main' => wc_placeholder_img_src('woocommerce_single'),
+            'main_srcset' => '',
+            'main_sizes' => '',
+            'thumb' => wc_placeholder_img_src('woocommerce_thumbnail'),
+            'thumb_srcset' => '',
+            'thumb_sizes' => '60px',
+        ]];
     }
+    
 ?>
 
 <!-- Product Images Carousel -->
 <div class="product-images-carousel">
+    <!-- Preload main product image for faster initial load -->
+    <?php if(!empty($main_images[0]['main'])): ?>
+        <link rel="preload" as="image" href="<?php echo e($main_images[0]['main']); ?>" fetchpriority="high">
+        <?php if(isset($main_images[1]['main']) && !empty($main_images[1]['main'])): ?>
+            <link rel="preload" as="image" href="<?php echo e($main_images[1]['main']); ?>">
+        <?php endif; ?>
+    <?php endif; ?>
+    
     <!-- Thumbnail Sidebar (if multiple images) -->
-    <?php if(count($all_images) > 1): ?>
+    <?php if(count($main_images) > 1): ?>
         <div class="thumbnail-sidebar">
-            <?php $__currentLoopData = $all_images; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $image): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+            <?php $__currentLoopData = $main_images; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $img): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                 <div class="thumbnail-container <?php echo e($index === 0 ? 'active' : ''); ?>" data-image-index="<?php echo e($index); ?>">
                     <img 
-                        src="<?php echo e($image); ?>" 
+                        src="<?php echo e($img['thumb']); ?>" 
+                        <?php if(!empty($img['thumb_srcset'])): ?>
+                            srcset="<?php echo e($img['thumb_srcset']); ?>"
+                            sizes="<?php echo e($img['thumb_sizes']); ?>"
+                        <?php endif; ?>
                         alt="<?php echo e($product_name); ?> - Image <?php echo e($index + 1); ?>" 
                         class="thumbnail-image"
-                        loading="lazy"
+                        loading="<?php echo e($index < 2 ? 'eager' : 'lazy'); ?>"
+                        decoding="async"
                         width="60"
                         height="60"
+                        fetchpriority="<?php echo e($index === 0 ? 'high' : 'auto'); ?>"
                     />
                 </div>
             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -47,19 +104,25 @@
     
     <div class="main-image-container">
         <div class="main-image" id="main-image">
+            <?php
+                $img = $main_images[0];
+            ?>
             <img 
-                src="<?php echo e($all_images[0]); ?>" 
+                src="<?php echo e($img['main']); ?>"
+                <?php if(!empty($img['main_srcset'])): ?>
+                    srcset="<?php echo e($img['main_srcset']); ?>"
+                    sizes="<?php echo e($img['main_sizes']); ?>"
+                <?php endif; ?>
                 alt="<?php echo e($product_name); ?>" 
                 class="product-main-image"
                 id="main-product-image"
                 loading="eager"
-                decoding="sync"
-                width="800"
-                height="800"
+                decoding="async"
+                fetchpriority="high"
             />
             
             <!-- Navigation Arrows (if multiple images) -->
-            <?php if(count($all_images) > 1): ?>
+            <?php if(count($main_images) > 1): ?>
                 <button class="carousel-arrow carousel-arrow--prev" data-direction="-1">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="15,18 9,12 15,6"></polyline>
@@ -74,9 +137,9 @@
         </div>
         
         <!-- Image Dots (for mobile) - inside main image container -->
-        <?php if(count($all_images) > 1): ?>
+        <?php if(count($main_images) > 1): ?>
             <div class="image-dots">
-                <?php $__currentLoopData = $all_images; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $image): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <?php $__currentLoopData = $main_images; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $img): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <span class="dot <?php echo e($index === 0 ? 'active' : ''); ?>" data-image-index="<?php echo e($index); ?>"></span>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </div>
@@ -87,24 +150,37 @@
 <script>
 // Product Images Carousel - Optimized for immediate response
 let currentImageIndex = 0;
-const images = <?php echo json_encode($all_images, 15, 512) ?>;
+const imagesData = <?php echo json_encode($main_images, 15, 512) ?>; // Full image data with srcset for updates
+
+// Reusable prefetch hint element for next image
+let nextHintEl = null;
+function hintNext(url) {
+    if (!url) return;
+    if (!nextHintEl) {
+        nextHintEl = document.createElement('link');
+        nextHintEl.rel = 'prefetch'; // better than preload for "next"
+        nextHintEl.as = 'image';
+        document.head.appendChild(nextHintEl);
+    }
+    nextHintEl.href = url;
+}
 
 function changeImage(direction) {
-    if (images.length <= 1) return;
+    if (imagesData.length <= 1) return;
     
     currentImageIndex += direction;
     
-    if (currentImageIndex >= images.length) {
+    if (currentImageIndex >= imagesData.length) {
         currentImageIndex = 0;
     } else if (currentImageIndex < 0) {
-        currentImageIndex = images.length - 1;
+        currentImageIndex = imagesData.length - 1;
     }
     
     updateImage();
 }
 
 function selectImage(index) {
-    if (index >= 0 && index < images.length) {
+    if (index >= 0 && index < imagesData.length) {
         currentImageIndex = index;
         updateImage();
     }
@@ -112,20 +188,62 @@ function selectImage(index) {
 
 function updateImage() {
     const mainImg = document.getElementById('main-product-image');
-    if (mainImg && images[currentImageIndex]) {
-        // Add a smooth fade effect
-        mainImg.style.opacity = '0.7';
-        setTimeout(() => {
-            mainImg.src = images[currentImageIndex];
+    if (!mainImg || !imagesData[currentImageIndex]) return;
+    
+    const imageData = imagesData[currentImageIndex];
+    const newImageUrl = imageData.main;
+    
+    // Hint next image for smoother transitions (reuses single prefetch element)
+    const nextIndex = (currentImageIndex + 1) % imagesData.length;
+    hintNext(imagesData[nextIndex]?.main);
+    
+    // Add a smooth fade effect
+    mainImg.style.opacity = '0.7';
+    mainImg.style.transition = 'opacity 0.2s ease';
+    
+    // Update src and srcset - rely on browser caching + prefetch hint for smooth loading
+    // Important: Update srcset BEFORE src to prevent blurry intermediate state
+    if (imageData.main_srcset) {
+        mainImg.srcset = imageData.main_srcset;
+    } else {
+        mainImg.removeAttribute('srcset');
+    }
+    if (imageData.main_sizes) {
+        mainImg.sizes = imageData.main_sizes;
+    } else {
+        mainImg.removeAttribute('sizes');
+    }
+    // Set src last to trigger load with correct srcset already in place
+    mainImg.src = newImageUrl;
+    
+    // Restore opacity once image loads (or immediately if cached)
+    if (mainImg.complete && mainImg.naturalHeight !== 0) {
+        // Image already loaded/cached
+        mainImg.style.opacity = '1';
+    } else {
+        // Wait for load
+        mainImg.onload = function() {
             mainImg.style.opacity = '1';
-        }, 100);
+        };
     }
     
     // Update thumbnail states immediately
     const thumbnails = document.querySelectorAll('.thumbnail-container');
+    const thumbnailSidebar = document.querySelector('.thumbnail-sidebar');
+    const activeThumbnail = thumbnails[currentImageIndex];
+    
     thumbnails.forEach((thumbnail, index) => {
         thumbnail.classList.toggle('active', index === currentImageIndex);
     });
+    
+    // Scroll active thumbnail into view
+    if (activeThumbnail && thumbnailSidebar) {
+        activeThumbnail.scrollIntoView({
+            behavior: 'smooth',
+            block: 'nearest',
+            inline: 'nearest'
+        });
+    }
     
     // Update dot states
     const dots = document.querySelectorAll('.dot');

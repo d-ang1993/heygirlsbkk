@@ -54,18 +54,7 @@
     
   ?>
   
-  <!-- Debug Script -->
-  <script>
-    console.log("Product ID HELLO:", <?php echo $product->get_id(); ?>);
-    console.log("Product Type:", "<?php echo $product_type; ?>");
-    console.log("All Variations:", <?php echo json_encode($variations); ?>);
-    console.log("All Attributes:", <?php echo json_encode($attributes); ?>);
-    console.log("Color Variations:", <?php echo json_encode($color_variations); ?>);
-    console.log("Size Variations:", <?php echo json_encode($size_variations); ?>);
-    console.log("Product is variable:", <?php echo $product->is_type('variable') ? 'true' : 'false'; ?>);
-    console.log("Has attributes:", <?php echo $product->has_attributes() ? 'true' : 'false'; ?>);
-    console.log("Variations data passed:", <?php echo json_encode($variations_data ?? []); ?>);
-  </script>
+  
   
   <!-- Single Color Styling -->
   <style>
@@ -288,7 +277,9 @@
       </div>
     <?php endif; ?>
   <?php endif; ?>
-<?php endif; ?>
+
+  
+  
 
 <script>
 // Color Selection Functionality
@@ -414,4 +405,5 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-</script><?php /**PATH /Users/dang/Local Sites/heygirlsbkk/app/public/wp-content/themes/heygirlsbkk/resources/views/components/product/variations.blade.php ENDPATH**/ ?>
+</script>
+<?php endif; ?><?php /**PATH /Users/dang/Local Sites/heygirlsbkk/app/public/wp-content/themes/heygirlsbkk/resources/views/components/product/variations.blade.php ENDPATH**/ ?>

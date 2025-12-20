@@ -47,9 +47,10 @@
   <!-- Product Short Description -->
   <?php if($product_short_description): ?>
     <div class="product-short-description">
-      <?php echo wpautop($product_short_description); ?>
-
-      <a href="#" class="description-toggle">Read more</a>
+      <div class="description-content-wrapper">
+        <div class="description-text"><?php echo wpautop($product_short_description); ?></div>
+      </div>
+      <a href="#" class="description-toggle" style="display: none;">Read more</a>
     </div>
   <?php endif; ?>
 

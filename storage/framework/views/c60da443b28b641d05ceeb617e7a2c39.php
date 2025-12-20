@@ -39,7 +39,7 @@
             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
           <?php endif; ?>
           
-          <button type="button" class="btn btn-primary add-to-cart-btn" data-product-id="<?php echo e($product_id); ?>" disabled>
+          <button type="button" class="product-cta add-to-cart-btn" data-product-id="<?php echo e($product_id); ?>" disabled>
             ADD TO CART
           </button>
         </form>
@@ -48,7 +48,7 @@
           <?php echo csrf_field(); ?>
           <input type="hidden" name="add-to-cart" value="<?php echo e($product_id); ?>">
           <input type="hidden" name="quantity" value="1" class="quantity-input">
-          <button type="button" name="add-to-cart" value="<?php echo e($product_id); ?>" class="btn btn-primary add-to-cart-btn" data-product_id="<?php echo e($product_id); ?>">
+          <button type="button" name="add-to-cart" value="<?php echo e($product_id); ?>" class="product-cta add-to-cart-btn" data-product_id="<?php echo e($product_id); ?>">
             ADD TO CART
           </button>
         </form>

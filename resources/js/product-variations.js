@@ -6,19 +6,8 @@ document.addEventListener('DOMContentLoaded', function() {
     customCartForm.addEventListener('submit', function(event) {
       event.preventDefault();
       event.stopPropagation();
-      console.log('Custom cart form submission prevented, using AJAX instead');
     });
   }
-  
-  // Debug: Log any other form submissions that might be happening
-  document.addEventListener('submit', function(event) {
-    if (event.target.classList.contains('cart') || event.target.classList.contains('variations_form') || event.target.classList.contains('custom-add-cart-form')) {
-      console.log('=== FORM SUBMISSION DETECTED ===');
-      console.log('Form class:', event.target.className);
-      console.log('Form action:', event.target.action);
-      console.log('Event target:', event.target);
-    }
-  });
   
   // Product variation selection functionality
   const addToCartBtn = document.querySelector('.add-to-cart-btn');
@@ -36,53 +25,63 @@ document.addEventListener('DOMContentLoaded', function() {
   const variations = window.productVariations || [];
 
   
+  // Cache DOM elements for better performance
+  let colorDotsCache = null;
+  let sizeButtonsCache = null;
+  
+  function getColorDots() {
+    if (!colorDotsCache) {
+      colorDotsCache = Array.from(document.querySelectorAll('.color-dot'));
+    }
+    return colorDotsCache;
+  }
+  
+  function getSizeButtons() {
+    if (!sizeButtonsCache) {
+      sizeButtonsCache = Array.from(document.querySelectorAll('.size-button'));
+    }
+    return sizeButtonsCache;
+  }
+  
   // Event delegation for all variation types
   document.addEventListener('click', function(e) {
-  // Color selection
+    // Color selection
     if (e.target.classList.contains('color-dot')) {
-      e.preventDefault(); // Prevent any inline onclick from running
+      e.preventDefault();
       e.stopPropagation();
       
       const dot = e.target;
       if (dot.classList.contains('out-of-stock')) return;
       
-      // Remove selected class from all color dots
-      document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
+      // Remove selected class from all color dots (using cache)
+      getColorDots().forEach(d => d.classList.remove('selected'));
       
       // Add selected class to clicked dot
       dot.classList.add('selected');
       selectedAttributes.color = dot.getAttribute('data-color');
       
-      // ✅ Reset quantity to 1 when color changes
       updateQuantityDisplay(1);
-      
-      // Update all variation availability
       updateAllVariationAvailability();
-      
-      // Update display and button
       updateProductDisplay();
+      enableQuantityButtons(); // Ensure buttons are enabled after variation selection
     }
   
-  // Size selection
+    // Size selection
     if (e.target.classList.contains('size-button')) {
       const button = e.target;
       if (button.classList.contains('out-of-stock')) return;
       
-      // Remove selected class from all size buttons
-      document.querySelectorAll('.size-button').forEach(b => b.classList.remove('selected'));
+      // Remove selected class from all size buttons (using cache)
+      getSizeButtons().forEach(b => b.classList.remove('selected'));
       
       // Add selected class to clicked button
       button.classList.add('selected');
       selectedAttributes.sizes = button.getAttribute('data-size');
       
-      // ✅ Reset quantity to 1 when size changes
       updateQuantityDisplay(1);
-      
-      // Update all variation availability
       updateAllVariationAvailability();
-      
-      // Update display and button
       updateProductDisplay();
+      enableQuantityButtons(); // Ensure buttons are enabled after variation selection
     }
   });
   
@@ -92,70 +91,125 @@ document.addEventListener('DOMContentLoaded', function() {
   const spinnerUp = document.querySelector('.spinner-btn.up');
   const spinnerDown = document.querySelector('.spinner-btn.down');
   
-  // Debug: Check if quantity elements are found
-  console.log('🔍 Quantity elements found:');
-  console.log('  quantityValue:', quantityValue);
-  console.log('  minusBtn:', minusBtn);
-  console.log('  plusBtn:', plusBtn);
-  console.log('  spinnerUp:', spinnerUp);
-  console.log('  spinnerDown:', spinnerDown);
-  
   function updateQuantityDisplay(value) {
-    console.log('🔄 updateQuantityDisplay called with:', value);
-    console.log('🔄 quantityValue element:', quantityValue);
     if (quantityValue) {
       quantityValue.textContent = value;
-      console.log('✅ Updated quantity display to:', value);
-    } else {
-      console.error('❌ quantityValue element not found!');
+    }
+    
+    // Update hidden input fields (for both variable and simple products)
+    const hiddenQuantityById = document.getElementById('quantity');
+    const hiddenQuantityByClass = document.querySelector('.quantity-input');
+    
+    if (hiddenQuantityById) {
+      hiddenQuantityById.value = value;
+    }
+    if (hiddenQuantityByClass) {
+      hiddenQuantityByClass.value = value;
     }
   }
   
   function getCurrentQuantity() {
-    const current = quantityValue ? parseInt(quantityValue.textContent) || 1 : 1;
-    console.log('📊 getCurrentQuantity:', current, 'element:', quantityValue, 'textContent:', quantityValue?.textContent);
-    return current;
+    return quantityValue ? parseInt(quantityValue.textContent) || 1 : 1;
+  }
+  
+  function getMaxQuantity() {
+    // Get max quantity based on selected variation stock
+    if (window.selectedVariation) {
+      // Check multiple possible properties for stock quantity
+      const stockQty = window.selectedVariation.stock_quantity || 
+                      window.selectedVariation.stockQuantity || 
+                      window.selectedVariation.max_qty ||
+                      window.selectedVariation.maxQty;
+      
+      // If stock quantity exists and is a valid number, use it
+      if (stockQty !== null && stockQty !== undefined && stockQty !== '' && !isNaN(stockQty)) {
+        return parseInt(stockQty);
+      }
+      
+      // If in_stock is true but no stock quantity, assume unlimited
+      if (window.selectedVariation.in_stock) {
+        return 999;
+      }
+      
+      // If out of stock, max is 0
+      return 0;
+    }
+    
+    // No variation selected, allow up to 999
+    return 999;
+  }
+  
+  function handleQuantityChange(delta) {
+    const currentValue = getCurrentQuantity();
+    const newValue = currentValue + delta;
+    const maxValue = getMaxQuantity();
+    
+    // Validate the new value
+    if (newValue < 1) {
+      updateQuantityDisplay(1);
+    } else if (maxValue > 0 && newValue > maxValue) {
+      updateQuantityDisplay(maxValue);
+    } else {
+      updateQuantityDisplay(newValue);
+    }
+  }
+  
+  // Enable quantity buttons and ensure they work
+  function enableQuantityButtons() {
+    const currentValue = getCurrentQuantity();
+    const maxValue = getMaxQuantity();
+    
+    if (minusBtn) {
+      // Disable minus button only if quantity is already at minimum (1)
+      const isAtMin = currentValue <= 1;
+      minusBtn.disabled = isAtMin;
+      minusBtn.style.pointerEvents = isAtMin ? 'none' : 'auto';
+      minusBtn.style.opacity = isAtMin ? '0.5' : '1';
+    }
+    
+    if (plusBtn) {
+      // Disable plus button if max is 0 (out of stock) or if at max quantity
+      const isAtMax = maxValue > 0 && currentValue >= maxValue;
+      const isOutOfStock = maxValue <= 0;
+      plusBtn.disabled = isAtMax || isOutOfStock;
+      plusBtn.style.pointerEvents = (isAtMax || isOutOfStock) ? 'none' : 'auto';
+      plusBtn.style.opacity = (isAtMax || isOutOfStock) ? '0.5' : '1';
+    }
   }
   
   if (minusBtn) {
-    minusBtn.addEventListener('click', function() {
-      const currentValue = getCurrentQuantity();
-      if (currentValue > 1) {
-        updateQuantityDisplay(currentValue - 1);
-      }
+    minusBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      handleQuantityChange(-1);
+      enableQuantityButtons(); // Update button states after change
     });
   }
     
   if (plusBtn) {
-    plusBtn.addEventListener('click', function() {
-      const currentValue = getCurrentQuantity();
-      // ✅ Get current selectedVariation dynamically (not from closure)
-      const maxValue = window.selectedVariation ? window.selectedVariation.stock_quantity : 999;
-      console.log('➕ Plus clicked - current:', currentValue, 'max:', maxValue, 'selectedVariation:', window.selectedVariation);
-      if (currentValue < maxValue) {
-        updateQuantityDisplay(currentValue + 1);
-      }
+    plusBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      handleQuantityChange(1);
+      enableQuantityButtons(); // Update button states after change
     });
   }
   
   if (spinnerUp) {
-    spinnerUp.addEventListener('click', function() {
-      const currentValue = getCurrentQuantity();
-      // ✅ Get current selectedVariation dynamically (not from closure)
-      const maxValue = window.selectedVariation ? window.selectedVariation.stock_quantity : 999;
-      console.log('⬆️ SpinnerUp clicked - current:', currentValue, 'max:', maxValue, 'selectedVariation:', window.selectedVariation);
-      if (currentValue < maxValue) {
-        updateQuantityDisplay(currentValue + 1);
-      }
+    spinnerUp.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      handleQuantityChange(1);
+      enableQuantityButtons();
     });
   }
   
   if (spinnerDown) {
-    spinnerDown.addEventListener('click', function() {
-      const currentValue = getCurrentQuantity();
-      if (currentValue > 1) {
-        updateQuantityDisplay(currentValue - 1);
-      }
+    spinnerDown.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      handleQuantityChange(-1);
+      enableQuantityButtons();
     });
   }
   
@@ -180,21 +234,12 @@ document.addEventListener('DOMContentLoaded', function() {
         return Object.entries(testAttributes).every(([key, value]) => v[key] === value);
       });
       
-      console.log(matchingVariation)
       if (matchingVariation && matchingVariation.in_stock) {
         element.classList.remove('out-of-stock');
         element.disabled = false;
-        if (element.style) {
-          element.style.opacity = '1';
-          element.style.cursor = 'pointer';
-        }
       } else {
         element.classList.add('out-of-stock');
         element.disabled = true;
-        if (element.style) {
-          element.style.opacity = '0.5';
-          element.style.cursor = 'not-allowed';
-        }
       }
     });
   }
@@ -225,10 +270,6 @@ document.addEventListener('DOMContentLoaded', function() {
       document.querySelectorAll(selector).forEach(element => {
         element.classList.remove('out-of-stock');
         element.disabled = false;
-        if (element.style) {
-          element.style.opacity = '1';
-          element.style.cursor = 'pointer';
-        }
       });
     });
   }
@@ -238,12 +279,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // ✅ Use dynamic attributes from window.productAttributes
     const requiredAttributes = window.productAttributes || [];
-    console.log('🎯 Dynamic attributes from product:', window.productAttributes);
-    console.log('🎯 Using required attributes:', requiredAttributes);
     
     // If no dynamic attributes found, return empty array
     if (!requiredAttributes || requiredAttributes.length === 0) {
-      console.log('⚠️ No dynamic attributes found, returning empty array');
       return [];
     }
     
@@ -275,33 +313,23 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     const finalAttributes = [...selectableAttributes, ...additionalAttributes];
-    console.log('🎯 Final selectable attributes:', finalAttributes);
-    
     return finalAttributes;
   }
 
   function checkRequiredAttributes() {
     if (variations.length === 0) {
-      console.log('No variations found');
       return false;
     }
     
     const requiredAttributes = getSelectableAttributes();
-    console.log('Required attributes:', requiredAttributes);
-    console.log('Selected attributes:', selectedAttributes);
     
     // Check if we have all required attributes selected
-    const hasAll = requiredAttributes.every(attr => selectedAttributes[attr]);
-    console.log('Has all required attributes:', hasAll);
-    return hasAll;
+    return requiredAttributes.every(attr => selectedAttributes[attr]);
   }
   
   function updateProductDisplay() {
-    console.log('updateProductDisplay called');
-  
     // Check if we have all required attributes selected
     const hasRequiredAttributes = checkRequiredAttributes();
-    console.log('Has required attributes:', hasRequiredAttributes);
   
     if (hasRequiredAttributes) {
       selectedVariation = variations.find(v => {
@@ -314,15 +342,11 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // ✅ Make selectedVariation available globally for quantity buttons
       window.selectedVariation = selectedVariation;
-  
-      console.log('Selected variation:', selectedVariation);
-      console.log('Selected attributes:', selectedAttributes);
       
       // ✅ Update hidden variation_id input field in the form
       const variationInput = document.getElementById('variation_id');
       if (variationInput && selectedVariation?.id) {
         variationInput.value = selectedVariation.id;
-        console.log('🔧 Updated variation_id field to:', selectedVariation.id);
       }
   
       if (selectedVariation) {
@@ -348,11 +372,11 @@ document.addEventListener('DOMContentLoaded', function() {
               event.stopPropagation();
               addToCart(event);
             });
-            console.log('🧩 Add to Cart bound once.');
-          } else {
-            console.log('⚠️ Add to Cart already bound, skipping rebind.');
           }
         }
+        
+        // ✅ Enable quantity buttons when variation is selected
+        enableQuantityButtons();
   
         // ✅ Update wishlist button with current variation using the wishlist integration module
         const variationId = selectedVariation.id || selectedVariation.variation_id || selectedVariation.variationId;
@@ -393,10 +417,6 @@ function addToCart(event) {
     event.stopImmediatePropagation();
   }
 
-  console.log('=== ADD TO CART CALLED ===');
-  console.log('selectedVariation:', selectedVariation);
-  console.log('selectedAttributes:', selectedAttributes);
-
   if (!selectedVariation) {
     showCartMessage('Please select all required options', 'error');
     return;
@@ -405,7 +425,6 @@ function addToCart(event) {
   // Find the native WooCommerce form
   const nativeForm = document.querySelector('.woocommerce-native-form form');
   if (!nativeForm) {
-    console.error('❌ Native WooCommerce form not found');
     showCartMessage('Form not available', 'error');
     return;
   }
@@ -414,7 +433,6 @@ function addToCart(event) {
   updateNativeForm(nativeForm);
   
   // Submit the form via AJAX to avoid page reload
-  console.log('✅ Submitting native WooCommerce form via AJAX');
   submitFormViaAjax(nativeForm);
 }
 
@@ -424,15 +442,12 @@ function updateNativeForm(form) {
   const variationIdInput = form.querySelector('input[name="variation_id"]');
   if (variationIdInput && selectedVariation) {
     variationIdInput.value = selectedVariation.id;
-    console.log('🔧 Updated variation_id to:', selectedVariation.id);
   }
 
   // Update quantity
   const quantityInput = form.querySelector('input[name="quantity"]');
   if (quantityInput) {
-    const quantity = getCurrentQuantity();
-    quantityInput.value = quantity;
-    console.log('🔧 Updated quantity to:', quantity);
+    quantityInput.value = getCurrentQuantity();
   }
 
   // Update attribute inputs
@@ -445,7 +460,6 @@ function updateNativeForm(form) {
       } else if (key.startsWith('pa_')) {
         attrKey = `attribute_${key}`;
       } else {
-        // Use the key as-is for the attribute key
         attrKey = `attribute_pa_${key}`;
       }
 
@@ -453,9 +467,6 @@ function updateNativeForm(form) {
       const attrInput = form.querySelector(`input[name="${attrKey}"]`);
       if (attrInput) {
         attrInput.value = value;
-        console.log(`🔧 Updated ${attrKey} to:`, value);
-      } else {
-        console.warn(`⚠️ Attribute input not found: ${attrKey}`);
       }
     }
   });
@@ -470,9 +481,6 @@ function submitFormViaAjax(form) {
   
   // Get the form action URL
   const formAction = form.action || window.location.href;
-  
-  console.log('🚀 Submitting AJAX request to:', formAction);
-  console.log('📦 Form Data:', Object.fromEntries([...formData.entries()]));
   
   // Show loading state
   const button = document.querySelector('.add-to-cart-btn');
@@ -506,12 +514,10 @@ function submitFormViaAjax(form) {
     try {
       return JSON.parse(text);
     } catch (e) {
-      console.warn('Non-JSON response, assuming success');
       return { success: true };
     }
   })
   .then(data => {
-    console.log('📦 WooCommerce AJAX Response:', data);
     
     if (data.success === false) {
       showCartMessage('Error: ' + (data.data || 'Unknown error'), 'error');
@@ -572,8 +578,7 @@ function submitFormViaAjax(form) {
     }, 500);
   })
   .catch(err => {
-    console.error('❌ AJAX Add to cart error:', err);
-    showCartMessage('❌ Error adding product to cart', 'error');
+    showCartMessage('Error adding product to cart', 'error');
     reEnableAddToCartButton(originalText, originalBackground);
   });
 }
@@ -599,7 +604,6 @@ function reEnableAddToCartButton(originalText = 'ADD TO CART', originalBackgroun
     } else {
       button.style.background = '';
     }
-    console.log('✅ Add to cart button re-enabled (no rebind)');
   } else {
     updateProductDisplay();
   }
@@ -637,15 +641,8 @@ function reEnableAddToCartButton(originalText = 'ADD TO CART', originalBackgroun
     // If there's only one color, auto-select it
     if (colorDots.length === 1) {
       const singleColor = colorDots[0].getAttribute('data-color');
-      console.log('🎨 Auto-selecting single color:', singleColor);
-      
-      // Add selected class to the single color dot
       colorDots[0].classList.add('selected');
-      
-      // Set in selectedAttributes
       selectedAttributes.color = singleColor;
-      
-      console.log('✅ Single color auto-selected:', selectedAttributes);
     }
   }
   
@@ -657,6 +654,31 @@ function reEnableAddToCartButton(originalText = 'ADD TO CART', originalBackgroun
   
   // Check initial stock availability for single color products
   checkInitialStockAvailability();
+  
+  // Enable quantity buttons on page load
+  enableQuantityButtons();
+  
+  // Handle simple product add to cart (non-variable products)
+  // Only bind if this is a simple product (no variations)
+  if (variations.length === 0 && addToCartBtn && !addToCartBtn.dataset.bound) {
+    addToCartBtn.addEventListener('click', function(event) {
+      event.preventDefault();
+      
+      // Ensure quantity is updated before form submission
+      const currentQty = getCurrentQuantity();
+      const qtyInput = document.querySelector('input[name="quantity"]');
+      if (qtyInput) {
+        qtyInput.value = currentQty;
+      }
+      
+      // Submit the form
+      const form = addToCartBtn.closest('form');
+      if (form) {
+        form.submit();
+      }
+    });
+    addToCartBtn.dataset.bound = 'true';
+  }
 });
 
 // Check initial stock availability for single color products
@@ -669,38 +691,21 @@ function checkInitialStockAvailability() {
   
   // Only proceed if we have exactly one color and multiple sizes
   if (colorDots.length === 1 && sizeButtons.length > 1) {
-    console.log('Single color product detected, checking initial stock availability');
-    
-    // Get the single color
     const singleColor = colorDots[0].getAttribute('data-color');
-    console.log('Single color:', singleColor);
     
     // Check stock for each size with this color
     sizeButtons.forEach(sizeButton => {
       const size = sizeButton.getAttribute('data-size');
-      console.log('Checking stock for size:', size);
-      
-      // Find variation that matches this color and size
       const matchingVariation = variations.find(v => {
         return v.color === singleColor && v.sizes === size;
       });
       
-      console.log('Matching variation for', size + ':', matchingVariation);
-      
       if (matchingVariation && !matchingVariation.in_stock) {
-        // Mark this size as out of stock
         sizeButton.classList.add('out-of-stock');
         sizeButton.disabled = true;
-        sizeButton.style.opacity = '0.3';
-        sizeButton.style.cursor = 'not-allowed';
-        console.log('Size', size, 'marked as out of stock');
       } else if (matchingVariation && matchingVariation.in_stock) {
-        // Ensure size is available
         sizeButton.classList.remove('out-of-stock');
         sizeButton.disabled = false;
-        sizeButton.style.opacity = '1';
-        sizeButton.style.cursor = 'pointer';
-        console.log('Size', size, 'confirmed as in stock');
       }
     });
   }
