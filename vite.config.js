@@ -38,6 +38,7 @@ export default ({ mode }) => {
           'resources/js/thankyou-page.jsx',
           'resources/js/hero-react.jsx',
           'resources/js/product-variations-react.jsx',
+          'resources/js/bag-button.jsx',
         ],
       },
       // Remove manifestDir to put manifest.json directly in outDir
@@ -66,6 +67,7 @@ export default ({ mode }) => {
           'resources/js/thankyou-page.jsx',
           'resources/js/hero-react.jsx',
           'resources/js/product-variations-react.jsx',
+          'resources/js/bag-button.jsx',
         ],
         refresh: true,
         buildDirectory: 'build',
