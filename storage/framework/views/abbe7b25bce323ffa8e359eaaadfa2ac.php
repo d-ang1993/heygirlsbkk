@@ -170,7 +170,7 @@
         </div>
         <div class="spread-left-bottom">
           <div class="spread-body">
-            <?php echo wpautop($product_description); ?>
+            <?php echo wpautop($product_short_description); ?>
 
           </div>
         </div>

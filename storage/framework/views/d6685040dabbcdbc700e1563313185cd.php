@@ -45,10 +45,10 @@
 </div>
 
   <!-- Product Short Description -->
-  <?php if($product_short_description): ?>
+  <?php if($product_description): ?>
     <div class="product-short-description">
       <div class="description-content-wrapper">
-        <div class="description-text"><?php echo wpautop($product_short_description); ?></div>
+        <div class="description-text"><?php echo wpautop($product_description); ?></div>
       </div>
       <a href="#" class="description-toggle" style="display: none;">Read more</a>
     </div>
