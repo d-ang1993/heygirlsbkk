@@ -193,9 +193,27 @@ class CustomizerServiceProvider extends ServiceProvider
             // Heading
             $wp_customize->add_setting('hero_heading', ['default' => 'NEW ARRIVAL', 'transport' => 'postMessage']);
             $wp_customize->add_control('hero_heading', [
-                'type'    => 'text',
+                'type'    => 'textarea',
                 'label'   => __('Heading', 'sage'),
                 'section' => 'hero_section',
+                'description' => __('Use line breaks or &lt;br&gt; tags to add line breaks. Each line will be on a new line.', 'sage'),
+            ]);
+
+            // Heading Line Break Mode
+            $wp_customize->add_setting('hero_heading_line_breaks', [
+                'default' => 'manual',
+                'transport' => 'refresh',
+            ]);
+            $wp_customize->add_control('hero_heading_line_breaks', [
+                'type'    => 'select',
+                'label'   => __('Heading Line Break Mode', 'sage'),
+                'section' => 'hero_section',
+                'choices' => [
+                    'manual' => 'Manual (use line breaks or &lt;br&gt; tags)',
+                    'each-word' => 'Each Word on New Line',
+                    'preserve-spaces' => 'Preserve Line Breaks from Text',
+                ],
+                'description' => __('How to handle line breaks in the heading', 'sage'),
             ]);
 
             // Subheading
@@ -224,6 +242,156 @@ class CustomizerServiceProvider extends ServiceProvider
                 'label'   => __('CTA URL', 'sage'),
                 'section' => 'hero_section',
             ]);
+
+            // Font Sizes
+            $wp_customize->add_setting('hero_heading_font_size', [
+                'default' => 'clamp(32px, 6vw, 64px)',
+                'transport' => 'postMessage',
+            ]);
+            $wp_customize->add_control('hero_heading_font_size', [
+                'type'    => 'text',
+                'label'   => __('Heading Font Size', 'sage'),
+                'section' => 'hero_section',
+                'description' => __('e.g., 48px, 3rem, or clamp(32px, 6vw, 64px) for responsive', 'sage'),
+            ]);
+
+            $wp_customize->add_setting('hero_subheading_font_size', [
+                'default' => 'clamp(16px, 2.2vw, 20px)',
+                'transport' => 'postMessage',
+            ]);
+            $wp_customize->add_control('hero_subheading_font_size', [
+                'type'    => 'text',
+                'label'   => __('Subheading Font Size', 'sage'),
+                'section' => 'hero_section',
+                'description' => __('e.g., 18px, 1.25rem, or clamp(16px, 2.2vw, 20px) for responsive', 'sage'),
+            ]);
+
+            $wp_customize->add_setting('hero_cta_font_size', [
+                'default' => '1rem',
+                'transport' => 'postMessage',
+            ]);
+            $wp_customize->add_control('hero_cta_font_size', [
+                'type'    => 'text',
+                'label'   => __('Button Font Size', 'sage'),
+                'section' => 'hero_section',
+                'description' => __('e.g., 16px, 1rem, or 1.125rem', 'sage'),
+            ]);
+
+            // Font Weights
+            $wp_customize->add_setting('hero_heading_font_weight', [
+                'default' => '800',
+                'transport' => 'postMessage',
+            ]);
+            $wp_customize->add_control('hero_heading_font_weight', [
+                'type'    => 'select',
+                'label'   => __('Heading Font Weight', 'sage'),
+                'section' => 'hero_section',
+                'choices' => [
+                    '100' => '100 (Thin)',
+                    '200' => '200 (Extra Light)',
+                    '300' => '300 (Light)',
+                    '400' => '400 (Normal)',
+                    '500' => '500 (Medium)',
+                    '600' => '600 (Semi Bold)',
+                    '700' => '700 (Bold)',
+                    '800' => '800 (Extra Bold)',
+                    '900' => '900 (Black)',
+                ],
+            ]);
+
+            $wp_customize->add_setting('hero_subheading_font_weight', [
+                'default' => '400',
+                'transport' => 'postMessage',
+            ]);
+            $wp_customize->add_control('hero_subheading_font_weight', [
+                'type'    => 'select',
+                'label'   => __('Subheading Font Weight', 'sage'),
+                'section' => 'hero_section',
+                'choices' => [
+                    '100' => '100 (Thin)',
+                    '200' => '200 (Extra Light)',
+                    '300' => '300 (Light)',
+                    '400' => '400 (Normal)',
+                    '500' => '500 (Medium)',
+                    '600' => '600 (Semi Bold)',
+                    '700' => '700 (Bold)',
+                    '800' => '800 (Extra Bold)',
+                    '900' => '900 (Black)',
+                ],
+            ]);
+
+            $wp_customize->add_setting('hero_cta_font_weight', [
+                'default' => '600',
+                'transport' => 'postMessage',
+            ]);
+            $wp_customize->add_control('hero_cta_font_weight', [
+                'type'    => 'select',
+                'label'   => __('Button Font Weight', 'sage'),
+                'section' => 'hero_section',
+                'choices' => [
+                    '100' => '100 (Thin)',
+                    '200' => '200 (Extra Light)',
+                    '300' => '300 (Light)',
+                    '400' => '400 (Normal)',
+                    '500' => '500 (Medium)',
+                    '600' => '600 (Semi Bold)',
+                    '700' => '700 (Bold)',
+                    '800' => '800 (Extra Bold)',
+                    '900' => '900 (Black)',
+                ],
+            ]);
+
+            // Button Font Family
+            $wp_customize->add_setting('hero_cta_font_family', [
+                'default' => 'Hiragino Sans GB',
+                'transport' => 'postMessage',
+            ]);
+            $wp_customize->add_control('hero_cta_font_family', [
+                'type'    => 'select',
+                'label'   => __('Button Font Family', 'sage'),
+                'section' => 'hero_section',
+                'choices' => [
+                    'Hiragino Sans GB' => 'Hiragino Sans GB',
+                    'Noto Serif Display' => 'Noto Serif Display (Regular)',
+                    'Noto Serif Display Italic' => 'Noto Serif Display (Italic)',
+                    'Noto Serif Display Condensed' => 'Noto Serif Display (Condensed)',
+                    'Arial' => 'Arial',
+                    'Helvetica' => 'Helvetica',
+                    'Georgia' => 'Georgia',
+                    'Times New Roman' => 'Times New Roman',
+                    'Courier New' => 'Courier New',
+                    'Verdana' => 'Verdana',
+                    'Trebuchet MS' => 'Trebuchet MS',
+                    'Impact' => 'Impact',
+                    'Comic Sans MS' => 'Comic Sans MS',
+                    'Palatino' => 'Palatino',
+                    'Garamond' => 'Garamond',
+                    'Bookman' => 'Bookman',
+                    'Avant Garde' => 'Avant Garde',
+                    'Verdana' => 'Verdana',
+                    'Lucida Grande' => 'Lucida Grande',
+                    'Lucida Sans Unicode' => 'Lucida Sans Unicode',
+                    'Tahoma' => 'Tahoma',
+                    'Geneva' => 'Geneva',
+                    'sans-serif' => 'Sans Serif',
+                    'serif' => 'Serif',
+                    'monospace' => 'Monospace',
+                    'cursive' => 'Cursive',
+                    'fantasy' => 'Fantasy',
+                    '-apple-system' => 'Apple System',
+                ],
+            ]);
+
+            // Button Color
+            $wp_customize->add_setting('hero_cta_color', [
+                'default' => '#c4b5a8',
+                'transport' => 'postMessage',
+            ]);
+            $wp_customize->add_control(new \WP_Customize_Color_Control($wp_customize, 'hero_cta_color', [
+                'label'   => __('Button Background Color', 'sage'),
+                'section' => 'hero_section',
+                'description' => __('Choose the background color for the CTA button', 'sage'),
+            ]));
 
             // Background image
             $wp_customize->add_setting('hero_bg_image', ['transport' => 'refresh']);
@@ -259,13 +427,164 @@ class CustomizerServiceProvider extends ServiceProvider
                 ],
             ]);
 
-            // Alignment
-            $wp_customize->add_setting('hero_align', ['default' => 'center', 'transport' => 'refresh']);
-            $wp_customize->add_control('hero_align', [
+            // Font Selection - Heading
+            $wp_customize->add_setting('hero_heading_font_family', [
+                'default' => 'Hiragino Sans GB',
+                'transport' => 'postMessage',
+            ]);
+            $wp_customize->add_control('hero_heading_font_family', [
                 'type'    => 'select',
-                'label'   => __('Text alignment', 'sage'),
+                'label'   => __('Heading Font Family', 'sage'),
                 'section' => 'hero_section',
-                'choices' => ['left' => 'Left', 'center' => 'Center', 'right' => 'Right'],
+                'choices' => [
+                    'Hiragino Sans GB' => 'Hiragino Sans GB',
+                    'Noto Serif Display' => 'Noto Serif Display (Regular)',
+                    'Noto Serif Display Italic' => 'Noto Serif Display (Italic)',
+                    'Noto Serif Display Condensed' => 'Noto Serif Display (Condensed)',
+                    'Arial' => 'Arial',
+                    'Helvetica' => 'Helvetica',
+                    'Georgia' => 'Georgia',
+                    'Times New Roman' => 'Times New Roman',
+                    'Courier New' => 'Courier New',
+                    'Verdana' => 'Verdana',
+                    'Trebuchet MS' => 'Trebuchet MS',
+                    'Impact' => 'Impact',
+                    'Comic Sans MS' => 'Comic Sans MS',
+                    'Palatino' => 'Palatino',
+                    'Garamond' => 'Garamond',
+                    'Bookman' => 'Bookman',
+                    'Avant Garde' => 'Avant Garde',
+                    'system-ui' => 'System UI',
+                    '-apple-system' => 'Apple System',
+                ],
+            ]);
+
+            // Font Selection - Subheading
+            $wp_customize->add_setting('hero_subheading_font_family', [
+                'default' => 'Hiragino Sans GB',
+                'transport' => 'postMessage',
+            ]);
+            $wp_customize->add_control('hero_subheading_font_family', [
+                'type'    => 'select',
+                'label'   => __('Subheading Font Family', 'sage'),
+                'section' => 'hero_section',
+                'choices' => [
+                    'Hiragino Sans GB' => 'Hiragino Sans GB',
+                    'Noto Serif Display' => 'Noto Serif Display (Regular)',
+                    'Noto Serif Display Italic' => 'Noto Serif Display (Italic)',
+                    'Noto Serif Display Condensed' => 'Noto Serif Display (Condensed)',
+                    'Arial' => 'Arial',
+                    'Helvetica' => 'Helvetica',
+                    'Georgia' => 'Georgia',
+                    'Times New Roman' => 'Times New Roman',
+                    'Courier New' => 'Courier New',
+                    'Verdana' => 'Verdana',
+                    'Trebuchet MS' => 'Trebuchet MS',
+                    'Impact' => 'Impact',
+                    'Comic Sans MS' => 'Comic Sans MS',
+                    'Palatino' => 'Palatino',
+                    'Garamond' => 'Garamond',
+                    'Bookman' => 'Bookman',
+                    'Avant Garde' => 'Avant Garde',
+                    'system-ui' => 'System UI',
+                    '-apple-system' => 'Apple System',
+                ],
+            ]);
+
+            // Grid Layout - Column Position
+            $wp_customize->add_setting('hero_grid_column', [
+                'default' => 'left',
+                'transport' => 'refresh',
+            ]);
+            $wp_customize->add_control('hero_grid_column', [
+                'type'    => 'select',
+                'label'   => __('Text Column Position', 'sage'),
+                'section' => 'hero_section',
+                'choices' => [
+                    'left' => 'Left Column',
+                    'right' => 'Right Column',
+                ],
+                'description' => __('Choose which column the text appears in (grid layout)', 'sage'),
+            ]);
+
+            // Grid Layout - Vertical Alignment
+            $wp_customize->add_setting('hero_grid_vertical', [
+                'default' => 'center',
+                'transport' => 'refresh',
+            ]);
+            $wp_customize->add_control('hero_grid_vertical', [
+                'type'    => 'select',
+                'label'   => __('Vertical Alignment', 'sage'),
+                'section' => 'hero_section',
+                'choices' => [
+                    'top' => 'Top',
+                    'center' => 'Center',
+                    'bottom' => 'Bottom',
+                ],
+                'description' => __('Vertical position within the column', 'sage'),
+            ]);
+
+            // Grid Layout - Horizontal Alignment
+            $wp_customize->add_setting('hero_grid_horizontal', [
+                'default' => 'center',
+                'transport' => 'refresh',
+            ]);
+            $wp_customize->add_control('hero_grid_horizontal', [
+                'type'    => 'select',
+                'label'   => __('Horizontal Alignment', 'sage'),
+                'section' => 'hero_section',
+                'choices' => [
+                    'flex-start' => 'Left (Flex Start)',
+                    'center' => 'Center',
+                    'flex-end' => 'Right (Flex End)',
+                ],
+                'description' => __('Horizontal alignment of text within the column', 'sage'),
+            ]);
+
+            // Background Position
+            $wp_customize->add_setting('hero_bg_position', [
+                'default' => 'center center',
+                'transport' => 'postMessage',
+            ]);
+            $wp_customize->add_control('hero_bg_position', [
+                'type'    => 'select',
+                'label'   => __('Background Image Position', 'sage'),
+                'section' => 'hero_section',
+                'choices' => [
+                    'left top' => 'Left Top',
+                    'center top' => 'Center Top',
+                    'right top' => 'Right Top',
+                    'left center' => 'Left Center',
+                    'center center' => 'Center Center',
+                    'right center' => 'Right Center',
+                    'left bottom' => 'Left Bottom',
+                    'center bottom' => 'Center Bottom',
+                    'right bottom' => 'Right Bottom',
+                ],
+                'description' => __('Controls where the background image is positioned', 'sage'),
+            ]);
+
+            // Background Position (Mobile)
+            $wp_customize->add_setting('hero_bg_position_mobile', [
+                'default' => 'center center',
+                'transport' => 'postMessage',
+            ]);
+            $wp_customize->add_control('hero_bg_position_mobile', [
+                'type'    => 'select',
+                'label'   => __('Background Image Position (Mobile)', 'sage'),
+                'section' => 'hero_section',
+                'choices' => [
+                    'left top' => 'Left Top',
+                    'center top' => 'Center Top',
+                    'right top' => 'Right Top',
+                    'left center' => 'Left Center',
+                    'center center' => 'Center Center',
+                    'right center' => 'Right Center',
+                    'left bottom' => 'Left Bottom',
+                    'center bottom' => 'Center Bottom',
+                    'right bottom' => 'Right Bottom',
+                ],
+                'description' => __('Background position for mobile devices (≤768px)', 'sage'),
             ]);
 
             // Height
@@ -917,6 +1236,19 @@ class CustomizerServiceProvider extends ServiceProvider
                 'type' => 'checkbox',
             ]);
 
+            // Logo image upload
+            $wp_customize->add_setting('navbar_logo_image', [
+                'default' => '',
+                'transport' => 'refresh',
+                'sanitize_callback' => 'esc_url_raw',
+            ]);
+
+            $wp_customize->add_control(new \WP_Customize_Image_Control($wp_customize, 'navbar_logo_image', [
+                'label' => __('Logo Image', 'sage'),
+                'section' => 'navbar_section',
+                'description' => __('Upload your logo image (SVG recommended). If not set, will use default HEYGIRLS.svg', 'sage'),
+            ]));
+
             // Logo text
             $wp_customize->add_setting('navbar_logo', [
                 'default' => 'HEYGIRLSBKK',
@@ -924,7 +1256,7 @@ class CustomizerServiceProvider extends ServiceProvider
             ]);
 
             $wp_customize->add_control('navbar_logo', [
-                'label' => __('Logo Text', 'sage'),
+                'label' => __('Logo Text (for alt text and center logo)', 'sage'),
                 'section' => 'navbar_section',
                 'type' => 'text',
             ]);

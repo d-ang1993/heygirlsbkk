@@ -1035,6 +1035,65 @@ add_action( 'wp_head', function() {
 });
 
 /**
+ * Critical CSS and Resource Hints for Hero Section (Above the Fold)
+ * Ensures hero section loads first for optimal performance
+ */
+add_action('wp_head', function() {
+    if (is_admin()) return;
+    
+    // Only on frontend pages that might have hero
+    if (!is_front_page() && !is_home() && !is_shop() && !is_product_category()) {
+        return;
+    }
+    
+    // Get first hero image for preload (if available)
+    // This matches the hero-new component's image selection logic
+    $firstHeroImage = '';
+    if (is_front_page() || is_home() || is_shop()) {
+        // Try to get first product image for hero (matches hero-new component logic)
+        $heroProducts = wc_get_products([
+            'limit' => 1,
+            'status' => 'publish',
+            'orderby' => 'date',
+            'order' => 'DESC'
+        ]);
+        
+        if (!empty($heroProducts)) {
+            $product = $heroProducts[0];
+            $imageId = $product->get_image_id();
+            if ($imageId) {
+                $imageUrl = wp_get_attachment_image_url($imageId, 'woocommerce_single');
+                if ($imageUrl) {
+                    $firstHeroImage = $imageUrl;
+                }
+            }
+        }
+    }
+    
+    // Output preload for first hero image with high priority
+    if ($firstHeroImage) {
+        echo '<link rel="preload" as="image" href="' . esc_url($firstHeroImage) . '" fetchpriority="high">' . "\n";
+    }
+    
+    // Critical CSS for hero-new (above-the-fold styles)
+    echo '<style id="hero-new-critical-css">';
+    echo '/* Critical CSS for hero-new - Above the fold */';
+    echo '.hero-new{height:70vh!important;max-height:70vh!important;background:#fff!important;position:relative!important;overflow:hidden!important;display:flex;align-items:center}';
+    echo '.hero-new__container{position:relative;max-width:1280px;margin-left:auto;margin-right:auto;padding:0 1rem;width:100%;height:100%;display:flex;align-items:center}';
+    echo '.hero-new__content{position:relative;display:grid;grid-template-columns:1fr;gap:2.5rem}';
+    echo '.hero-new__text{max-width:512px;padding:2rem 1.5rem}';
+    echo '.hero-new__title{font-size:2.25rem;font-weight:700;line-height:1.1;letter-spacing:-0.025em;color:#111827;margin:0}';
+    echo '.hero-new__subtitle{margin-top:1rem;font-size:1.25rem;color:#6b7280;line-height:1.5;margin-bottom:0}';
+    echo '.hero-new__cta{display:inline-block;padding:0.875rem 2.25rem;background:var(--color-primary-dark,#4f46e5);color:#fff;text-decoration:none;border-radius:0.375rem;font-weight:500;font-size:1rem;margin-top:1.5rem}';
+    echo '.hero-new__grid{display:flex;align-items:center;gap:1.5rem;justify-content:center}';
+    echo '.hero-new__grid-column{display:grid;grid-template-columns:1fr;gap:1.5rem;flex-shrink:0}';
+    echo '.hero-new__grid-item{width:176px;height:256px;overflow:hidden;border-radius:0.5rem;position:relative}';
+    echo '.hero-new__grid-image{width:100%;height:100%;object-fit:cover;display:block}';
+    echo '@media(min-width:1024px){.hero-new__content{grid-template-columns:1fr 1fr;gap:4rem;align-items:center}.hero-new__text{max-width:none;padding:3rem 2.5rem}}';
+    echo '</style>' . "\n";
+}, 1); // Priority 1 to run early
+
+/**
  * Debug Cart Contents
  * Add this to see what's actually in the cart
  */

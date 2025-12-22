@@ -45,9 +45,72 @@
   max-width: 1200px;
   width: 100%;
   padding: 0 20px;
+  height: 100%;
+}
+
+/* Grid Layout for Hero */
+.hero__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  height: 100%;
+  width: 100%;
+}
+
+.hero__grid-left,
+.hero__grid-right {
   display: flex;
-  justify-content: center;
+  position: relative;
+}
+
+/* Ensure text is above any overlays */
+.hero__inner--grid {
+  position: relative;
+  z-index: 2;
+}
+
+/* Vertical Alignment Classes */
+.hero__grid--vertical-top {
+  align-items: flex-start;
+}
+
+.hero__grid--vertical-center {
   align-items: center;
+}
+
+.hero__grid--vertical-bottom {
+  align-items: flex-end;
+}
+
+/* Horizontal Alignment Classes */
+.hero__grid--horizontal-flex-start {
+  justify-content: flex-start;
+}
+
+.hero__grid--horizontal-center {
+  justify-content: center;
+}
+
+.hero__grid--horizontal-flex-end {
+  justify-content: flex-end;
+}
+
+/* Text Alignment within Grid */
+.hero__grid--horizontal-flex-start .hero__inner--grid {
+  text-align: left;
+}
+
+.hero__grid--horizontal-center .hero__inner--grid {
+  text-align: center;
+}
+
+.hero__grid--horizontal-flex-end .hero__inner--grid {
+  text-align: right;
+}
+
+.hero__inner--grid {
+  width: 100%;
+  max-width: 100%;
 }
 
 .hero__bg {
@@ -56,6 +119,13 @@
   background-size: cover;
   background-position: center;
   z-index: 1;
+}
+
+/* Mobile background position override */
+@media (max-width: 768px) {
+  .hero__bg {
+    background-position: var(--hero-bg-position-mobile, center center) !important;
+  }
 }
 
 .hero__overlay {
@@ -92,27 +162,39 @@
 
 /* Hero text elements */
 .hero__title {
-  font-size: clamp(32px, 6vw, 64px);
   color: #fff;
   margin: 0 0 .5rem;
   text-shadow: 0 2px 12px rgba(0, 0, 0, .35);
   font-weight: 800;
   letter-spacing: .02em;
   line-height: 1.2;
+  white-space: pre-line; /* Preserve line breaks */
+  /* Font size is controlled via inline style from customizer */
+}
+
+/* Font weight is now controlled via inline style from customizer */
+
+/* Noto Serif Display Condensed styling - applied via inline style when selected */
+
+.hero__title br {
+  display: block;
+  content: "";
+  margin: 0;
 }
 
 .hero__subtitle {
   color: #fff;
-  font-size: clamp(16px, 2.2vw, 20px);
   margin-bottom: 1.25rem;
-  opacity: .95;
+  opacity: 0.8;
   line-height: 1.5;
+  font-family: inherit;
+  letter-spacing: 0.04em;
+  /* Font size is controlled via inline style from customizer */
 }
 
 .hero__cta {
   display: inline-block;
   padding: 12px 24px;
-  background: var(--color-primary);
   color: #fff;
   text-decoration: none;
   border-radius: 4px;
@@ -120,10 +202,11 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  /* Background color and font size are controlled via inline style from customizer */
 }
 
 .hero__cta:hover {
-  background: var(--color-primary-dark);
+  opacity: 0.9;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
@@ -276,6 +359,16 @@
 @media (max-width: 768px) {
   .hero {
     min-height: 400px;
+  }
+  
+  .hero__grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .hero__grid-left,
+  .hero__grid-right {
+    min-height: auto;
   }
   
   .hero__carousel-arrows {

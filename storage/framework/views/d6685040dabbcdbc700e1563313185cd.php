@@ -90,7 +90,7 @@
     </div>
   </div>
 
-  <!-- Product Form -->
+  <!-- Product Forms -->
       
   <?php echo $__env->make('components.product.form', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
   

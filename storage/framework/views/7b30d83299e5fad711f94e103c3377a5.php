@@ -59,12 +59,17 @@ unset($__defined_vars, $__key, $__value); ?>
         
         $images = [];
         foreach ($heroProducts as $product) {
-            $imageUrl = wp_get_attachment_image_url($product->get_image_id(), 'woocommerce_single');
+            $imageId = $product->get_image_id();
+            $imageUrl = wp_get_attachment_image_url($imageId, 'woocommerce_single');
             if ($imageUrl) {
+                // Get image dimensions for better CLS prevention
+                $imageMeta = wp_get_attachment_image_src($imageId, 'woocommerce_single');
                 $images[] = [
                     'url' => $imageUrl,
                     'alt' => $product->get_name(),
-                    'link' => $product->get_permalink()
+                    'link' => $product->get_permalink(),
+                    'width' => $imageMeta[1] ?? 176,
+                    'height' => $imageMeta[2] ?? 256
                 ];
             }
         }
@@ -116,7 +121,10 @@ unset($__defined_vars, $__key, $__value); ?>
                             src="<?php echo e($image['url']); ?>" 
                             alt="<?php echo e($image['alt'] ?? 'Product image'); ?>" 
                             class="hero-new__grid-image"
+                            width="<?php echo e($image['width'] ?? 176); ?>"
+                            height="<?php echo e($image['height'] ?? 256); ?>"
                             loading="<?php echo e($colIndex === 0 && $loop->index === 0 ? 'eager' : 'lazy'); ?>"
+                            fetchpriority="<?php echo e($colIndex === 0 && $loop->index === 0 ? 'high' : 'auto'); ?>"
                             decoding="async" />
                         </a>
                       </div>

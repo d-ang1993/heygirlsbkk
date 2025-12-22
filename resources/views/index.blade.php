@@ -18,27 +18,7 @@ $sectionMap = [
 <!-- <x-hero-react /> -->
 @foreach($sections as $section)
   @if(isset($sectionMap[$section]))
-    @if($section === 'hero')
-      {{-- Hero components: hero-new for desktop (>1023px), hero for mobile/tablet (<=1023px) --}}
-      <div class="hero-wrapper">
-        {{-- Desktop hero (>1023px) --}}
-        <div class="hero-desktop">
-          <x-hero-new 
-            :heading="get_theme_mod('hero_new_heading', get_theme_mod('hero_heading', 'Summer styles are finally here'))"
-            :subheading="get_theme_mod('hero_new_subheading', get_theme_mod('hero_subheading', 'This year, our new summer collection will shelter you from the harsh elements of a world that doesn\'t care if you live or die.'))"
-            :ctaText="get_theme_mod('hero_new_cta_text', get_theme_mod('hero_cta_text', 'Shop Collection'))"
-            :ctaUrl="get_theme_mod('hero_new_cta_url', get_theme_mod('hero_cta_url', '/shop'))"
-          />
-        </div>
-        
-        {{-- Mobile/Tablet hero (<=1023px) --}}
-        <div class="hero-mobile">
-          @include($sectionMap[$section])
-        </div>
-      </div>
-    @else
-      @include($sectionMap[$section])
-    @endif
+    @include($sectionMap[$section])
   @endif
 @endforeach
 

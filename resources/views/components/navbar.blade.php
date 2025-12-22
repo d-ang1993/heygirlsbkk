@@ -1,6 +1,11 @@
 @php
 $navbar_enable = get_theme_mod('navbar_enable', true);
 $navbar_logo = get_theme_mod('navbar_logo', 'HEYGIRLSBKK');
+// Get logo image from customizer, fallback to default
+$navbar_logo_image = get_theme_mod('navbar_logo_image', '');
+if (empty($navbar_logo_image)) {
+    $navbar_logo_image = get_template_directory_uri() . '/resources/images/logo/HEYGIRLS.svg';
+}
 
 // Get WordPress menus by location
 $primary_menu = null;
@@ -47,7 +52,7 @@ if (!$shop_menu) {
             <div class="navbar-location">
 
                 <a href="{{ home_url() }}" class="navbar-logo">
-                    <img src="{{ get_template_directory_uri() }}/resources/images/logo/HEYGIRLS.svg" 
+                    <img src="{{ $navbar_logo_image }}" 
                          alt="{{ $navbar_logo }}" 
                          class="logo-image" />
                 </a>
