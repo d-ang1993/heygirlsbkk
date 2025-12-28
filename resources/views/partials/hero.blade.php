@@ -68,6 +68,8 @@ $headingFontFamily = get_theme_mod('hero_heading_font_family', 'Hiragino Sans GB
 $subheadingFontFamily = get_theme_mod('hero_subheading_font_family', 'Hiragino Sans GB');
 $headingFontSize = get_theme_mod('hero_heading_font_size', 'clamp(32px, 6vw, 64px)');
 $headingFontWeight = get_theme_mod('hero_heading_font_weight', '800');
+$headingLetterSpacing = get_theme_mod('hero_heading_letter_spacing', '-0.10em');
+$headingLineHeight = get_theme_mod('hero_heading_line_height', '0.9');
 $subheadingFontSize = get_theme_mod('hero_subheading_font_size', 'clamp(16px, 2.2vw, 20px)');
 $subheadingFontWeight = get_theme_mod('hero_subheading_font_weight', '400');
 $ctaFontFamily = get_theme_mod('hero_cta_font_family', 'Hiragino Sans GB');
@@ -198,7 +200,7 @@ if ($carouselEnable && $carouselCategory) {
                 $ctaFontStyle = "font-family: '{$ctaFont}', var(--font-family-primary);";
               }
             @endphp
-            <h1 class="hero__title" style="{{ $headingStyle }}; font-size: {{ $headingFontSize }}; font-weight: {{ $headingFontWeight }};">{!! $heading !!}</h1>
+            <h1 class="hero__title" style="{{ $headingStyle }}; font-size: {{ $headingFontSize }}; font-weight: {{ $headingFontWeight }}; letter-spacing: {{ $headingLetterSpacing }}; line-height: {{ $headingLineHeight }};">{!! $heading !!}</h1>
             @if($sub)
               <p class="hero__subtitle" style="{{ $subheadingStyle }}; font-size: {{ $subheadingFontSize }}; font-weight: {{ $subheadingFontWeight }};">{!! $sub !!}</p>
             @endif
@@ -251,7 +253,7 @@ if ($carouselEnable && $carouselCategory) {
                 $ctaFontStyle = "font-family: '{$ctaFont}', var(--font-family-primary);";
               }
             @endphp
-            <h1 class="hero__title" style="{{ $headingStyle }}; font-size: {{ $headingFontSize }}; font-weight: {{ $headingFontWeight }};">{!! $heading !!}</h1>
+            <h1 class="hero__title" style="{{ $headingStyle }}; font-size: {{ $headingFontSize }}; font-weight: {{ $headingFontWeight }}; letter-spacing: {{ $headingLetterSpacing }}; line-height: {{ $headingLineHeight }};">{!! $heading !!}</h1>
             @if($sub)
               <p class="hero__subtitle" style="{{ $subheadingStyle }}; font-size: {{ $subheadingFontSize }}; font-weight: {{ $subheadingFontWeight }};">{!! $sub !!}</p>
             @endif

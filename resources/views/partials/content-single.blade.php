@@ -165,6 +165,71 @@
       
       // Get related products (change the number to show more/fewer)
       $related_products = wc_get_related_products($product_id, 6);
+      
+      // Get product categories for type and collection
+      $product_categories = wp_get_post_terms($product_id, 'product_cat', ['fields' => 'all']);
+      $product_collection = '';
+      $product_type_name = '';
+      
+      if (!empty($product_categories)) {
+        // Get the primary category (first one, or parent category if exists)
+        $primary_category = $product_categories[0];
+        foreach ($product_categories as $cat) {
+          // Prefer parent categories (collections) over child categories
+          if ($cat->parent == 0) {
+            $primary_category = $cat;
+            break;
+          }
+        }
+        $product_collection = $primary_category->name;
+        // For product_type, use the category name (e.g., "Dress", "Jumpsuit")
+        // If it's a child category, use that; otherwise use the parent
+        $product_type_name = '';
+        foreach ($product_categories as $cat) {
+          if ($cat->parent != 0) {
+            // Use child category name for type (more specific)
+            $product_type_name = $cat->name;
+            break;
+          }
+        }
+        // If no child category found, use the primary category name
+        if (empty($product_type_name)) {
+          $product_type_name = $primary_category->name;
+        }
+      }
+      
+      // Get all product attributes (size, color, etc.)
+      $product_attributes_list = [];
+      if ($product->is_type('variable')) {
+        $variation_attributes = $product->get_variation_attributes();
+        foreach ($variation_attributes as $attr_name => $attr_values) {
+          // Clean attribute name (remove pa_ prefix if present)
+          $clean_name = str_replace('pa_', '', $attr_name);
+          $clean_name = str_replace('attribute_', '', $clean_name);
+          $product_attributes_list[] = strtolower($clean_name);
+        }
+      } else {
+        $attributes = $product->get_attributes();
+        foreach ($attributes as $attr_name => $attribute) {
+          $clean_name = str_replace('pa_', '', $attr_name);
+          $product_attributes_list[] = strtolower($clean_name);
+        }
+      }
+      
+      // Build product data object for Mixpanel tracking (only include properties that exist)
+      $product_tracking_data = [];
+      if (!empty($product_type_name)) {
+        $product_tracking_data['product_type'] = $product_type_name;
+      }
+      if (!empty($product_attributes_list)) {
+        $product_tracking_data['product_attributes'] = $product_attributes_list;
+      }
+      if (!empty($product_collection)) {
+        $product_tracking_data['product_collection'] = $product_collection;
+      }
+      if (isset($product_in_stock)) {
+        $product_tracking_data['product_stock'] = $product_in_stock;
+      }
     }
   }
 @endphp
@@ -239,5 +304,8 @@
   <script>
     window.productVariations = @json($variations_data ?? []);
     window.productAddToCartUrl = '{{ $product ? $product->add_to_cart_url() : '' }}';
+    
+    // Store product data for Mixpanel tracking (will be tracked in app.js after Mixpanel initializes)
+    window.productDataForTracking = @json($product_tracking_data ?? []);
   </script>
 @endif

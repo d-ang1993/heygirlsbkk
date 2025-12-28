@@ -9,7 +9,7 @@ export default ({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
 
   return defineConfig({
-    // ✅ This is the correct base path for WordPress themes on Hostinger/live servers
+    // ✅ This is the correct base path for WordPress themes on Hostinger/live servers UPDATED
     base: '/wp-content/themes/heygirlsbkk/public/',
 
     server: {

@@ -68,6 +68,8 @@ $headingFontFamily = get_theme_mod('hero_heading_font_family', 'Hiragino Sans GB
 $subheadingFontFamily = get_theme_mod('hero_subheading_font_family', 'Hiragino Sans GB');
 $headingFontSize = get_theme_mod('hero_heading_font_size', 'clamp(32px, 6vw, 64px)');
 $headingFontWeight = get_theme_mod('hero_heading_font_weight', '800');
+$headingLetterSpacing = get_theme_mod('hero_heading_letter_spacing', '-0.10em');
+$headingLineHeight = get_theme_mod('hero_heading_line_height', '0.9');
 $subheadingFontSize = get_theme_mod('hero_subheading_font_size', 'clamp(16px, 2.2vw, 20px)');
 $subheadingFontWeight = get_theme_mod('hero_subheading_font_weight', '400');
 $ctaFontFamily = get_theme_mod('hero_cta_font_family', 'Hiragino Sans GB');
@@ -198,7 +200,7 @@ if ($carouselEnable && $carouselCategory) {
                 $ctaFontStyle = "font-family: '{$ctaFont}', var(--font-family-primary);";
               }
             ?>
-            <h1 class="hero__title" style="<?php echo e($headingStyle); ?>; font-size: <?php echo e($headingFontSize); ?>; font-weight: <?php echo e($headingFontWeight); ?>;"><?php echo $heading; ?></h1>
+            <h1 class="hero__title" style="<?php echo e($headingStyle); ?>; font-size: <?php echo e($headingFontSize); ?>; font-weight: <?php echo e($headingFontWeight); ?>; letter-spacing: <?php echo e($headingLetterSpacing); ?>; line-height: <?php echo e($headingLineHeight); ?>;"><?php echo $heading; ?></h1>
             <?php if($sub): ?>
               <p class="hero__subtitle" style="<?php echo e($subheadingStyle); ?>; font-size: <?php echo e($subheadingFontSize); ?>; font-weight: <?php echo e($subheadingFontWeight); ?>;"><?php echo $sub; ?></p>
             <?php endif; ?>
@@ -251,7 +253,7 @@ if ($carouselEnable && $carouselCategory) {
                 $ctaFontStyle = "font-family: '{$ctaFont}', var(--font-family-primary);";
               }
             ?>
-            <h1 class="hero__title" style="<?php echo e($headingStyle); ?>; font-size: <?php echo e($headingFontSize); ?>; font-weight: <?php echo e($headingFontWeight); ?>;"><?php echo $heading; ?></h1>
+            <h1 class="hero__title" style="<?php echo e($headingStyle); ?>; font-size: <?php echo e($headingFontSize); ?>; font-weight: <?php echo e($headingFontWeight); ?>; letter-spacing: <?php echo e($headingLetterSpacing); ?>; line-height: <?php echo e($headingLineHeight); ?>;"><?php echo $heading; ?></h1>
             <?php if($sub): ?>
               <p class="hero__subtitle" style="<?php echo e($subheadingStyle); ?>; font-size: <?php echo e($subheadingFontSize); ?>; font-weight: <?php echo e($subheadingFontWeight); ?>;"><?php echo $sub; ?></p>
             <?php endif; ?>

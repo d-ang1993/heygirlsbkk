@@ -3,6 +3,21 @@ import.meta.glob([
   '../fonts/**',
 ]);
 
+// Import Mixpanel SDK
+import mixpanel from "mixpanel-browser";
+
+// Import Mixpanel utilities
+import { trackPageView } from './utils/mixpanel.js';
+
+// Initialize Mixpanel
+mixpanel.init("3b9d79745dfe1d7cb251eda6f8387edb", {
+    debug: true,
+    track_pageview: false,
+    persistence: "localStorage",
+    autocapture: false,
+    record_sessions_percent: 100,
+});
+
 // Import live search functionality
 import './live-search.js';
 
@@ -91,6 +106,32 @@ function initNavbar() {
 // Initialize navbar when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
   setTimeout(initNavbar, 100);
+  
+  // Track page view
+  trackPageView();
+  
+  // Track Product Viewed event if on a product page
+  if (window.productDataForTracking) {
+    const productProps = {
+      user_id: window.mixpanelUser?.id || null,
+    };
+    
+    // Only add properties if they exist
+    if (window.productDataForTracking.product_type) {
+      productProps.product_type = window.productDataForTracking.product_type;
+    }
+    if (window.productDataForTracking.product_attributes) {
+      productProps.product_attributes = window.productDataForTracking.product_attributes;
+    }
+    if (window.productDataForTracking.product_collection) {
+      productProps.product_collection = window.productDataForTracking.product_collection;
+    }
+    if (window.productDataForTracking.product_stock !== undefined) {
+      productProps.product_stock = window.productDataForTracking.product_stock;
+    }
+    
+    mixpanel.track('Product Viewed', productProps);
+  }
 });
 
 // Import Product Variations JavaScript

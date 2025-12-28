@@ -459,6 +459,30 @@ class CustomizerServiceProvider extends ServiceProvider
                 ],
             ]);
 
+            // Heading Letter Spacing
+            $wp_customize->add_setting('hero_heading_letter_spacing', [
+                'default' => '-0.10em',
+                'transport' => 'postMessage',
+            ]);
+            $wp_customize->add_control('hero_heading_letter_spacing', [
+                'type'    => 'text',
+                'label'   => __('Heading Letter Spacing', 'sage'),
+                'section' => 'hero_section',
+                'description' => __('e.g., -0.10em, -0.05em, 0.02em, or 2px', 'sage'),
+            ]);
+
+            // Heading Line Height
+            $wp_customize->add_setting('hero_heading_line_height', [
+                'default' => '0.9',
+                'transport' => 'postMessage',
+            ]);
+            $wp_customize->add_control('hero_heading_line_height', [
+                'type'    => 'text',
+                'label'   => __('Heading Line Height', 'sage'),
+                'section' => 'hero_section',
+                'description' => __('e.g., 0.9, 1.0, 1.2, or 1.5', 'sage'),
+            ]);
+
             // Font Selection - Subheading
             $wp_customize->add_setting('hero_subheading_font_family', [
                 'default' => 'Hiragino Sans GB',

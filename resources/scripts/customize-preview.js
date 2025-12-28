@@ -71,6 +71,19 @@
         });
     });
 
+    // Hero heading letter spacing and line height live preview
+    wp.customize('hero_heading_letter_spacing', function(value) {
+        value.bind(function(newval) {
+            $('.hero__title').css('letter-spacing', newval);
+        });
+    });
+
+    wp.customize('hero_heading_line_height', function(value) {
+        value.bind(function(newval) {
+            $('.hero__title').css('line-height', newval);
+        });
+    });
+
     // New Drops Carousel live preview
     wp.customize('new_drops_title', function(value) {
         value.bind(function(newval) {

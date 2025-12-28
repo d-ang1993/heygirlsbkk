@@ -16,6 +16,70 @@ export default function OrderTotals({ checkoutData, formData }) {
         />
       </div>
 
+      {/* Display discount if applied */}
+      {(() => {
+        // Get discount total from checkoutData or formData
+        const discountTotal = checkoutData?.discount_total ?? formData?.discount_total ?? 0;
+        const hasAppliedCoupons = checkoutData?.applied_coupons?.length > 0;
+        
+        // Only show discount if there's a discount amount or applied coupons
+        if (discountTotal <= 0 && !hasAppliedCoupons) {
+          return null;
+        }
+        
+        // Format discount amount (discount_total is numeric, format as price)
+        const discountAmount = Math.abs(discountTotal);
+        const currencySymbol = '&#3647;'; // Thai Baht symbol
+        
+        // Get coupon type information to determine if it's percentage or fixed
+        const appliedCouponCode = checkoutData?.applied_coupons?.[0];
+        const couponInfo = appliedCouponCode 
+          ? (checkoutData?.coupon_info?.[appliedCouponCode] || {})
+          : {};
+        const discountType = couponInfo?.discount_type;
+        
+        // Determine discount display text based on coupon type
+        let discountText = '';
+        if (appliedCouponCode) {
+          if (discountType === 'percent' || discountType === 'percent_product') {
+            // Percentage-based discount - show the percentage from coupon amount
+            const couponPercent = couponInfo?.amount || 0;
+            discountText = ` - ${couponPercent}% off`;
+          } else if (discountType === 'fixed_cart' || discountType === 'fixed_product') {
+            // Fixed amount discount - show the fixed amount
+            discountText = ` - ฿${discountAmount.toFixed(2)} off`;
+          } else {
+            // Fallback: calculate percentage from discount amount and subtotal
+            const subtotalNum = extractPriceNumber(checkoutData.cart_subtotal || "0");
+            const calculatedPercent = subtotalNum > 0 
+              ? ((discountAmount / subtotalNum) * 100).toFixed(0)
+              : null;
+            discountText = calculatedPercent 
+              ? ` - ${calculatedPercent}% off`
+              : ` - ฿${discountAmount.toFixed(2)} off`;
+          }
+        }
+        
+        return (
+          <div className="flex items-center justify-between">
+            <dt className="text-sm">
+              Discount
+              {appliedCouponCode && (
+                <span className="block text-xs font-normal text-gray-500 mt-0.5">
+                  {appliedCouponCode}{discountText}
+                </span>
+              )}
+            </dt>
+            <dd
+              className="text-sm font-medium text-green-600"
+              dangerouslySetInnerHTML={{
+                __html: `<span class="woocommerce-Price-amount amount"><bdi><span class="woocommerce-Price-currencySymbol">${currencySymbol}</span>${discountAmount.toFixed(2)}</bdi></span>`,
+              }}
+            />
+          </div>
+        );
+      })()}
+
       {formData?.shipping_total && (
         <div className="flex items-center justify-between">
           <dt className="text-sm">Shipping</dt>
@@ -39,10 +103,14 @@ export default function OrderTotals({ checkoutData, formData }) {
           return null;
         }
         
-        // Calculate tax amount: (subtotal + shipping) * tax_rate
+        // Calculate tax amount: (subtotal - discount + shipping) * tax_rate
         const subtotalNum = extractPriceNumber(checkoutData.cart_subtotal || "0");
+        const discountTotal = checkoutData?.discount_total ?? formData?.discount_total ?? 0;
+        const discountAmount = Math.abs(discountTotal);
         const shippingNum = extractPriceNumber(formData.shipping_total || "0");
-        const taxAmount = (subtotalNum + shippingNum) * taxRate;
+        // Tax is calculated on discounted subtotal + shipping
+        const taxableAmount = (subtotalNum - discountAmount) + shippingNum;
+        const taxAmount = taxableAmount * taxRate;
         const taxRatePercent = (taxRate * 100).toFixed(2);
         
         // Get tax label from checkoutData or use default

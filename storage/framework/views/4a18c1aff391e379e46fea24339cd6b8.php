@@ -44,43 +44,54 @@
                   $_product = apply_filters('woocommerce_cart_item_product', $cart_item['data'], $cart_item, $cart_item_key);
                   $product_permalink = $_product && $_product->is_visible() ? $_product->get_permalink($cart_item) : '';
                   $variation_data = wc_get_formatted_cart_item_data($cart_item, true);
+                  
+                  // Optimize image: use medium size for smaller cards with srcset
+                  $image_id = $_product->get_image_id();
+                  $image_url = wp_get_attachment_image_url($image_id, 'medium') ?: wc_placeholder_img_src('medium');
+                  $image_srcset = wp_get_attachment_image_srcset($image_id, 'medium');
+                  $image_sizes = '(max-width: 768px) 120px, 150px';
                 ?>
 
                 <?php if($_product && $_product->exists() && $cart_item['quantity'] > 0): ?>
-                  <div class="cart-item-heygirlsbkk">
-                    <div class="cart-item-image">
-                      <img src="<?php echo e(wp_get_attachment_image_url($_product->get_image_id(), 'woocommerce_thumbnail')); ?>" 
+                  <div class="cart-page-item">
+                    <div class="cart-page-item-image">
+                      <img src="<?php echo e($image_url); ?>" 
+                           <?php if($image_srcset): ?>
+                             srcset="<?php echo e($image_srcset); ?>"
+                             sizes="<?php echo e($image_sizes); ?>"
+                           <?php endif; ?>
                            alt="<?php echo e($_product->get_name()); ?>" 
-                           loading="lazy" />
+                           loading="lazy"
+                           decoding="async" />
                     </div>
                     
-                    <div class="cart-item-details">
-                      <div class="cart-item-info">
-                        <h3 class="cart-item-name">
+                    <div class="cart-page-item-details">
+                      <div class="cart-page-item-info">
+                        <h3 class="cart-page-item-name">
                           <a href="<?php echo e(esc_url($product_permalink)); ?>">
                             <?php echo e($_product->get_name()); ?>
 
                           </a>
                         </h3>
                         <?php if($variation_data): ?>
-                          <div class="cart-item-variation"><?php echo $variation_data; ?></div>
+                          <div class="cart-page-item-variation"><?php echo $variation_data; ?></div>
                         <?php endif; ?>
                         
                       </div>
                       
-                      <div class="cart-item-controls">
-                        <div class="quantity-controls">
-                          <button type="button" class="quantity-btn minus" data-cart-item-key="<?php echo e($cart_item_key); ?>">-</button>
+                      <div class="cart-page-item-controls">
+                        <div class="cart-page-quantity-controls">
+                          <button type="button" class="cart-page-quantity-btn cart-page-quantity-minus" data-cart-item-key="<?php echo e($cart_item_key); ?>">-</button>
                           <input type="number" 
-                                 class="quantity-input" 
+                                 class="cart-page-quantity-input" 
                                  value="<?php echo e($cart_item['quantity']); ?>" 
                                  min="1" 
                                  data-cart-item-key="<?php echo e($cart_item_key); ?>"
                                  name="cart[<?php echo e($cart_item_key); ?>][qty]">
-                          <button type="button" class="quantity-btn plus" data-cart-item-key="<?php echo e($cart_item_key); ?>">+</button>
+                          <button type="button" class="cart-page-quantity-btn cart-page-quantity-plus" data-cart-item-key="<?php echo e($cart_item_key); ?>">+</button>
                         </div>
                         
-                        <div class="cart-item-price">
+                        <div class="cart-page-item-price">
                           <?php echo WC()->cart->get_product_subtotal($_product, $cart_item['quantity']); ?>
 
                         </div>
@@ -88,7 +99,7 @@
                     </div>
                     
                     <button type="button" 
-                            class="cart-item-remove" 
+                            class="cart-page-item-remove" 
                             data-cart-item-key="<?php echo e($cart_item_key); ?>"
                             title="Remove item">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -113,18 +124,6 @@
         <div class="cart-summary-section">
           <div class="cart-summary-content">
             
-            <div class="promo-code-section">
-              <button class="promo-code-toggle" type="button">
-                <span class="promo-code-icon">+</span>
-                <span class="promo-code-text">Enter promo code</span>
-              </button>
-              <div class="promo-code-form" style="display: none;">
-                <input type="text" placeholder="Enter promo code" class="promo-code-input">
-                <button type="button" class="promo-code-apply">Apply</button>
-              </div>
-            </div>
-
-            
             <div class="order-totals">
               <div class="total-line subtotal">
                 <span class="total-label">Subtotal:</span>
@@ -133,7 +132,7 @@
               
               <div class="total-line shipping">
                 <span class="total-label">Shipping:</span>
-                <span class="total-amount">฿ 180.00</span>
+                <span class="total-amount">TBD</span>
               </div>
               
               <div class="total-line estimated-total">
@@ -168,162 +167,164 @@
       font-family: 'Helvetica Neue', Arial, sans-serif;
     }
 
-    .cart-header {
+    .heygirlsbkk-cart-container .cart-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 30px;
       padding-bottom: 20px;
-      border-bottom: 1px solid #e5e7eb;
+      border-bottom: 2px solid var(--color-primary, #c4b5a8);
     }
 
-    .cart-title {
+    .heygirlsbkk-cart-container .cart-title {
       font-size: 24px;
       font-weight: 600;
-      color: #1f2937;
+      color: var(--color-primary-darker, #a89687);
       margin: 0;
     }
 
-    .cart-help {
-      color: #6b7280;
+    .heygirlsbkk-cart-container .cart-help {
+      color: var(--color-primary, #c4b5a8);
       font-size: 14px;
     }
 
-    .cart-empty-state {
+    .heygirlsbkk-cart-container .cart-empty-state {
       text-align: center;
       padding: 60px 20px;
       color: #6b7280;
     }
 
-    .empty-cart-icon {
+    .heygirlsbkk-cart-container .empty-cart-icon {
       margin-bottom: 20px;
-      color: #d1d5db;
+      color: var(--color-primary, #c4b5a8);
     }
 
-    .cart-empty-state h2 {
+    .heygirlsbkk-cart-container .cart-empty-state h2 {
       font-size: 24px;
       font-weight: 600;
-      color: #374151;
+      color: var(--color-primary-darker, #a89687);
       margin: 0 0 10px 0;
     }
 
-    .cart-empty-state p {
+    .heygirlsbkk-cart-container .cart-empty-state p {
       margin: 0 0 30px 0;
       font-size: 16px;
     }
 
-    .cart-main-layout {
+    .heygirlsbkk-cart-container .cart-main-layout {
       display: grid;
       grid-template-columns: 1fr 400px;
       gap: 40px;
       align-items: start;
     }
 
-    .cart-items-section {
+    .heygirlsbkk-cart-container .cart-items-section {
       background: #fff;
     }
 
-    .cart-items-list {
+    .heygirlsbkk-cart-container .cart-items-list {
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 1.25rem;
     }
 
-    .cart-item-heygirlsbkk {
+    /* Scoped to cart page only - won't affect other components */
+    .heygirlsbkk-cart-container .cart-page-item {
       display: flex;
-      gap: 30px;
-      padding: 30px;
-      border: 1px solid #e5e7eb;
+      gap: 1.5rem;
+      padding: 1.5rem;
+      border: 1px solid var(--color-primary, #c4b5a8);
       border-radius: 8px;
       background: #fff;
       position: relative;
-      margin-bottom: 20px;
+      margin-bottom: 1.25rem;
     }
 
-    .cart-item-image {
-      width: 240px;
-      height: 240px;
+    .heygirlsbkk-cart-container .cart-page-item-image {
+      width: 150px;
+      height: 150px;
       border-radius: 6px;
       overflow: hidden;
       flex-shrink: 0;
     }
 
-    .cart-item-image img {
+    .heygirlsbkk-cart-container .cart-page-item-image img {
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
 
-    .cart-item-details {
+    .heygirlsbkk-cart-container .cart-page-item-details {
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 0.625rem;
     }
 
-    .cart-item-info {
+    .heygirlsbkk-cart-container .cart-page-item-info {
       flex: 1;
     }
 
-    .cart-item-name {
-      margin: 0 0 8px 0;
-      font-size: 16px;
+    .heygirlsbkk-cart-container .cart-page-item-name {
+      margin: 0 0 0.5rem 0;
+      font-size: 1rem;
       font-weight: 600;
       color: #1f2937;
     }
 
-    .cart-item-name a {
-      color: inherit;
+    .heygirlsbkk-cart-container .cart-page-item-name a {
+      color: var(--color-primary-darker, #a89687);
       text-decoration: none;
     }
 
-    .cart-item-name a:hover {
+    .heygirlsbkk-cart-container .cart-page-item-name a:hover {
+      color: var(--color-primary-dark, #b8a89a);
       text-decoration: underline;
     }
 
-    .cart-item-variation {
-      font-size: 14px;
+    .heygirlsbkk-cart-container .cart-page-item-variation {
+      font-size: 0.875rem;
       color: #6b7280;
-      margin-bottom: 10px;
+      margin-bottom: 0.625rem;
     }
 
-
-    .cart-item-controls {
+    .heygirlsbkk-cart-container .cart-page-item-controls {
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
 
-    .quantity-controls {
+    .heygirlsbkk-cart-container .cart-page-quantity-controls {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 0.5rem;
     }
 
-    .quantity-btn {
+    .heygirlsbkk-cart-container .cart-page-quantity-btn {
       width: 28px; 
       height: 28px; 
-      border: 1px solid #d1d5db; 
+      border: 1px solid var(--color-primary, #c4b5a8); 
       background: #fff; 
       cursor: pointer; 
       display: flex; 
       align-items: center; 
       justify-content: center; 
-      font-size: 16px; 
+      font-size: 1rem; 
       font-weight: 500; 
-      color: #374151;
+      color: var(--color-primary-darker, #a89687);
       transition: all 0.2s ease;
       padding: 0;
       border-radius: 4px;
     }
 
-    .quantity-btn:hover { 
-      background: #f9fafb;
-      border-color: #9ca3af;
+    .heygirlsbkk-cart-container .cart-page-quantity-btn:hover { 
+      background: var(--color-primary, #c4b5a8);
+      border-color: var(--color-primary-dark, #b8a89a);
+      color: #fff;
     }
 
-    .quantity-input {
-      font-size: 14px;
+    .heygirlsbkk-cart-container .cart-page-quantity-input {
+      font-size: 0.875rem;
       font-weight: 500;
       color: #374151;
       font-family: sans-serif;
@@ -334,112 +335,63 @@
       padding: 0 0.25rem;
     }
 
-    .cart-item-price {
-      font-size: 16px;
+    .heygirlsbkk-cart-container .cart-page-item-price {
+      font-size: 1rem;
       font-weight: 600;
       color: #1f2937;
     }
 
-    .cart-item-remove {
+    .heygirlsbkk-cart-container .cart-page-item-remove {
       position: absolute;
       top: 15px;
       right: 15px;
       background: none;
       border: none;
       cursor: pointer;
-      color: #6b7280;
+      color: var(--color-primary, #c4b5a8);
       padding: 8px;
       border-radius: 4px;
       transition: all 0.2s ease;
     }
 
-    .cart-item-remove:hover {
-      background: #f3f4f6;
-      color: #374151;
+    .heygirlsbkk-cart-container .cart-page-item-remove:hover {
+      background: var(--color-primary, #c4b5a8);
+      color: #fff;
     }
 
-    .cart-summary-section {
+    .heygirlsbkk-cart-container .cart-summary-section {
       background: #fff;
-      border: 1px solid #e5e7eb;
+      border: 2px solid var(--color-primary, #c4b5a8);
       border-radius: 8px;
       padding: 20px;
       position: sticky;
       top: 20px;
     }
 
-    .promo-code-section {
+    .heygirlsbkk-cart-container .order-totals {
       margin-bottom: 20px;
     }
 
-    .promo-code-toggle {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: none;
-      border: none;
-      cursor: pointer;
-      color: #6b7280;
-      font-size: 14px;
-      padding: 0;
-    }
-
-    .promo-code-toggle:hover {
-      color: #374151;
-    }
-
-    .promo-code-icon {
-      font-size: 16px;
-      font-weight: 600;
-    }
-
-    .promo-code-form {
-      display: flex;
-      gap: 10px;
-      margin-top: 10px;
-    }
-
-    .promo-code-input {
-      flex: 1;
-      padding: 8px 12px;
-      border: 1px solid #d1d5db;
-      border-radius: 4px;
-      font-size: 14px;
-    }
-
-    .promo-code-apply {
-      padding: 8px 16px;
-      background: #f3f4f6;
-      border: 1px solid #d1d5db;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-      color: #374151;
-    }
-
-    .order-totals {
-      margin-bottom: 20px;
-    }
-
-    .total-line {
+    .heygirlsbkk-cart-container .total-line {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 10px;
     }
 
-    .total-label {
+    .heygirlsbkk-cart-container .total-label {
       font-size: 14px;
       color: #6b7280;
     }
 
-    .total-amount {
+    .heygirlsbkk-cart-container .total-amount {
       font-size: 14px;
       font-weight: 600;
-      color: #1f2937;
+      color: var(--color-primary-darker, #a89687);
     }
 
-    .estimated-total {
-      border-top: 1px solid #e5e7eb;
+    .heygirlsbkk-cart-container .estimated-total {
+      border-top: 2px solid var(--color-primary, #c4b5a8);
       padding-top: 10px;
       margin-top: 10px;
     }
@@ -450,14 +402,14 @@
       font-weight: 600;
     }
 
-    .checkout-section {
+    .heygirlsbkk-cart-container .checkout-section {
       text-align: center;
     }
 
-    .btn-checkout {
+    .heygirlsbkk-cart-container .btn-checkout {
       display: block;
       width: 100%;
-      background: #dc2626;
+      background: var(--color-primary-dark, #b8a89a);
       color: #fff;
       text-decoration: none;
       padding: 16px 24px;
@@ -468,10 +420,11 @@
       letter-spacing: 0.5px;
       transition: background 0.2s ease;
       margin-bottom: 15px;
+      border: none;
     }
 
-    .btn-checkout:hover {
-      background: #b91c1c;
+    .heygirlsbkk-cart-container .btn-checkout:hover {
+      background: var(--color-primary-darker, #a89687);
       color: #fff;
     }
 
@@ -494,34 +447,35 @@
       transition: all 0.2s ease;
     }
 
-    .btn-primary {
-      background: #dc2626;
+    .heygirlsbkk-cart-container .btn-primary {
+      background: var(--color-primary-dark, #b8a89a);
       color: #fff;
+      border: none;
     }
 
-    .btn-primary:hover {
-      background: #b91c1c;
+    .heygirlsbkk-cart-container .btn-primary:hover {
+      background: var(--color-primary-darker, #a89687);
       color: #fff;
     }
 
     @media (max-width: 768px) {
-      .cart-main-layout {
+      .heygirlsbkk-cart-container .cart-main-layout {
         grid-template-columns: 1fr;
-        gap: 20px;
+        gap: 1.25rem;
       }
       
-      .cart-summary-section {
+      .heygirlsbkk-cart-container .cart-summary-section {
         position: static;
       }
       
-      .cart-item-heygirlsbkk {
+      .heygirlsbkk-cart-container .cart-page-item {
         flex-direction: column;
-        gap: 15px;
+        gap: 1rem;
       }
       
-      .cart-item-image {
+      .heygirlsbkk-cart-container .cart-page-item-image {
         width: 100%;
-        height: 300px;
+        height: 250px;
       }
     }
   </style>
@@ -567,32 +521,32 @@
         }
       }
 
-      // Plus button
-      document.querySelectorAll('.quantity-btn.plus').forEach(btn => {
+      // Plus button (scoped to cart page)
+      document.querySelectorAll('.heygirlsbkk-cart-container .cart-page-quantity-plus').forEach(btn => {
         btn.addEventListener('click', function(e) {
           e.preventDefault();
           const cartItemKey = this.dataset.cartItemKey;
-          const quantityInput = document.querySelector(`input[data-cart-item-key="${cartItemKey}"]`);
+          const quantityInput = document.querySelector(`.heygirlsbkk-cart-container input[data-cart-item-key="${cartItemKey}"]`);
           let currentQuantity = parseInt(quantityInput.value) || 1;
           let newQuantity = currentQuantity + 1;
           updateQuantity(cartItemKey, newQuantity);
         });
       });
 
-      // Minus button
-      document.querySelectorAll('.quantity-btn.minus').forEach(btn => {
+      // Minus button (scoped to cart page)
+      document.querySelectorAll('.heygirlsbkk-cart-container .cart-page-quantity-minus').forEach(btn => {
         btn.addEventListener('click', function(e) {
           e.preventDefault();
           const cartItemKey = this.dataset.cartItemKey;
-          const quantityInput = document.querySelector(`input[data-cart-item-key="${cartItemKey}"]`);
+          const quantityInput = document.querySelector(`.heygirlsbkk-cart-container input[data-cart-item-key="${cartItemKey}"]`);
           let currentQuantity = parseInt(quantityInput.value) || 1;
           let newQuantity = Math.max(1, currentQuantity - 1);
           updateQuantity(cartItemKey, newQuantity);
         });
       });
 
-      // Quantity input change
-      document.querySelectorAll('.quantity-input').forEach(input => {
+      // Quantity input change (scoped to cart page)
+      document.querySelectorAll('.heygirlsbkk-cart-container .cart-page-quantity-input').forEach(input => {
         input.addEventListener('change', function() {
           const cartItemKey = this.dataset.cartItemKey;
           let newQuantity = Math.max(1, parseInt(this.value) || 1);
@@ -600,8 +554,8 @@
         });
       });
 
-      // Remove item buttons
-      document.querySelectorAll('.cart-item-remove').forEach(btn => {
+      // Remove item buttons (scoped to cart page)
+      document.querySelectorAll('.heygirlsbkk-cart-container .cart-page-item-remove').forEach(btn => {
         btn.addEventListener('click', function(e) {
           e.preventDefault();
           const cartItemKey = this.dataset.cartItemKey;
@@ -610,19 +564,6 @@
         });
       });
 
-      // Promo code toggle
-      const promoCodeToggle = document.querySelector('.promo-code-toggle');
-      const promoCodeForm = document.querySelector('.promo-code-form');
-      
-      if (promoCodeToggle && promoCodeForm) {
-        promoCodeToggle.addEventListener('click', function() {
-          if (promoCodeForm.style.display === 'none') {
-            promoCodeForm.style.display = 'flex';
-          } else {
-            promoCodeForm.style.display = 'none';
-          }
-        });
-      }
     });
   </script>
 <?php $__env->stopSection(); ?>

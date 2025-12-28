@@ -1,14 +1,25 @@
 {
-  "_client-W9jQdWFX.js": {
-    "file": "assets/client-W9jQdWFX.js",
+  "_QuantitySelector-DYjwfL_8.js": {
+    "file": "assets/QuantitySelector-DYjwfL_8.js",
+    "name": "QuantitySelector",
+    "imports": [
+      "_client-BKkrCZR-.js"
+    ]
+  },
+  "_client-BKkrCZR-.js": {
+    "file": "assets/client-BKkrCZR-.js",
     "name": "client"
+  },
+  "_mixpanel-B8S3LLsG.js": {
+    "file": "assets/mixpanel-B8S3LLsG.js",
+    "name": "mixpanel"
   },
   "editor.deps.json": {
     "file": "assets/editor.deps-DxpY22xl.json",
     "src": "editor.deps.json"
   },
   "resources/css/app.css": {
-    "file": "assets/app-BePTTBV7.css",
+    "file": "assets/app--QdCP9Yh.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
@@ -17,28 +28,49 @@
     "src": "resources/css/editor.css",
     "isEntry": true
   },
+  "resources/images/logo/HEYGIRLS.svg": {
+    "file": "assets/HEYGIRLS-DDE9qNMh.svg",
+    "src": "resources/images/logo/HEYGIRLS.svg"
+  },
   "resources/js/app.js": {
-    "file": "assets/app-CVYXsHX4.js",
+    "file": "assets/app-C26ILn0M.js",
     "name": "app",
     "src": "resources/js/app.js",
-    "isEntry": true
+    "isEntry": true,
+    "imports": [
+      "_mixpanel-B8S3LLsG.js"
+    ]
   },
   "resources/js/archive-filters.jsx": {
-    "file": "assets/archive-filters-BwJDudfq.js",
+    "file": "assets/archive-filters-CjgtRhwx.js",
     "name": "archive-filters",
     "src": "resources/js/archive-filters.jsx",
     "isEntry": true,
     "imports": [
-      "_client-W9jQdWFX.js"
+      "_client-BKkrCZR-.js"
+    ]
+  },
+  "resources/js/bag-button.jsx": {
+    "file": "assets/bag-button-BI2cxPPs.js",
+    "name": "bag-button",
+    "src": "resources/js/bag-button.jsx",
+    "isEntry": true,
+    "imports": [
+      "_client-BKkrCZR-.js",
+      "_QuantitySelector-DYjwfL_8.js"
+    ],
+    "css": [
+      "assets/bag-button-CxGbvXfO.css"
     ]
   },
   "resources/js/checkout-form.jsx": {
-    "file": "assets/checkout-form-SSWlDFkp.js",
+    "file": "assets/checkout-form-D7KGxNLG.js",
     "name": "checkout-form",
     "src": "resources/js/checkout-form.jsx",
     "isEntry": true,
     "imports": [
-      "_client-W9jQdWFX.js"
+      "_client-BKkrCZR-.js",
+      "_QuantitySelector-DYjwfL_8.js"
     ]
   },
   "resources/js/editor.js": {
@@ -48,12 +80,12 @@
     "isEntry": true
   },
   "resources/js/hero-react.jsx": {
-    "file": "assets/hero-react-BxcsaEg2.js",
+    "file": "assets/hero-react-CtiWcAcD.js",
     "name": "hero-react",
     "src": "resources/js/hero-react.jsx",
     "isEntry": true,
     "imports": [
-      "_client-W9jQdWFX.js"
+      "_client-BKkrCZR-.js"
     ]
   },
   "resources/js/image-optimization.js": {
@@ -62,13 +94,23 @@
     "src": "resources/js/image-optimization.js",
     "isEntry": true
   },
+  "resources/js/product-variations-react.jsx": {
+    "file": "assets/product-variations-react-DeNN9B9R.js",
+    "name": "product-variations-react",
+    "src": "resources/js/product-variations-react.jsx",
+    "isEntry": true,
+    "imports": [
+      "_client-BKkrCZR-.js"
+    ]
+  },
   "resources/js/thankyou-page.jsx": {
-    "file": "assets/thankyou-page-Cz7Ta0qK.js",
+    "file": "assets/thankyou-page-uSEtM15W.js",
     "name": "thankyou-page",
     "src": "resources/js/thankyou-page.jsx",
     "isEntry": true,
     "imports": [
-      "_client-W9jQdWFX.js"
+      "_client-BKkrCZR-.js",
+      "_mixpanel-B8S3LLsG.js"
     ]
   }
 }

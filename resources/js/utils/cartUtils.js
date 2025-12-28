@@ -3,19 +3,35 @@
  */
 
 /**
- * Calculate final total including subtotal, shipping, and tax
+ * Calculate final total including subtotal, discount, shipping, and tax
  * @param {string|number} subtotal - Cart subtotal
  * @param {string|number} shipping - Shipping cost
  * @param {number} vatTaxRate - VAT tax rate (e.g., 0.07 for 7%)
  * @param {Function} extractPriceNumber - Function to extract numeric value from price HTML
+ * @param {number} taxTotalAmount - Optional pre-calculated tax amount from WooCommerce
+ * @param {number} discountTotal - Optional discount amount (default: 0)
  * @returns {number} - Final total amount
  */
-export const calculateFinalTotal = (subtotal, shipping, vatTaxRate, extractPriceNumber) => {
+export const calculateFinalTotal = (subtotal, shipping, vatTaxRate, extractPriceNumber, taxTotalAmount = null, discountTotal = 0) => {
   const subtotalNum = extractPriceNumber(subtotal || "0");
   const shippingNum = extractPriceNumber(shipping || "0");
-  const taxRate = parseFloat(vatTaxRate || 0);
-  const taxAmount = (subtotalNum + shippingNum) * taxRate;
-  return subtotalNum + shippingNum + taxAmount;
+  const discountAmount = Math.abs(discountTotal || 0);
+  
+  // Calculate discounted subtotal
+  const discountedSubtotal = subtotalNum - discountAmount;
+  
+  // Use pre-calculated tax if available, otherwise calculate from rate
+  let taxAmount;
+  if (taxTotalAmount !== null && taxTotalAmount !== undefined) {
+    taxAmount = taxTotalAmount;
+  } else {
+    const taxRate = parseFloat(vatTaxRate || 0);
+    // Tax is calculated on (discounted subtotal + shipping)
+    taxAmount = (discountedSubtotal + shippingNum) * taxRate;
+  }
+  
+  // Final total = discounted subtotal + shipping + tax
+  return discountedSubtotal + shippingNum + taxAmount;
 };
 
 /**

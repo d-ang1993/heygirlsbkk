@@ -1390,9 +1390,20 @@ function handle_apply_checkout_coupon() {
         // Get updated cart totals
         $cart = WC()->cart;
         
+        // Get coupon type information for applied coupons
+        $coupon_info = array();
+        foreach ($cart->get_applied_coupons() as $applied_code) {
+            $coupon_obj = new WC_Coupon($applied_code);
+            $coupon_info[$applied_code] = array(
+                'discount_type' => $coupon_obj->get_discount_type(),
+                'amount' => $coupon_obj->get_amount(),
+            );
+        }
+        
         wp_send_json_success(array(
             'message' => sprintf(__('Coupon "%s" applied successfully.', 'woocommerce'), $coupon_code),
             'applied_coupons' => $cart->get_applied_coupons(),
+            'coupon_info' => $coupon_info,
             'cart_subtotal' => $cart->get_cart_subtotal(),
             'cart_total' => $cart->get_cart_total(),
             'cart_total_amount' => $cart->get_total(''),
@@ -1439,9 +1450,20 @@ function handle_remove_checkout_coupon() {
         // Get updated cart totals
         $cart = WC()->cart;
         
+        // Get coupon type information for remaining applied coupons
+        $coupon_info = array();
+        foreach ($cart->get_applied_coupons() as $applied_code) {
+            $coupon_obj = new WC_Coupon($applied_code);
+            $coupon_info[$applied_code] = array(
+                'discount_type' => $coupon_obj->get_discount_type(),
+                'amount' => $coupon_obj->get_amount(),
+            );
+        }
+        
         wp_send_json_success(array(
             'message' => sprintf(__('Coupon "%s" removed.', 'woocommerce'), $coupon_code),
             'applied_coupons' => $cart->get_applied_coupons(),
+            'coupon_info' => $coupon_info,
             'cart_subtotal' => $cart->get_cart_subtotal(),
             'cart_total' => $cart->get_cart_total(),
             'cart_total_amount' => $cart->get_total(''),

@@ -1,6 +1,7 @@
 /** @jsxImportSource react */
 import React, { useState, useEffect } from "react";
 import OrderSection from "./order_thankyou/OrderSection";
+import { trackEvent } from "../utils/mixpanel.js";
 
 export default function ThankYou({
   orderData = {},
@@ -17,6 +18,27 @@ export default function ThankYou({
     isPaid ? "paid" : isPromptPay ? "awaiting_payment" : "pending"
   );
   const [qrCodeImageUrl, setQrCodeImageUrl] = useState(qrCodeUrl);
+
+  // Track Purchase event on mount
+  useEffect(() => {
+    if (orderData?.id) {
+      const cart = orderData.items?.map(item => ({
+        product_id: item.productId,
+        name: item.name,
+        quantity: item.quantity,
+        price: item.price,
+      })) || [];
+      
+      trackEvent("Purchase", {
+        user_id: window.mixpanelUser?.id || null,
+        transaction_id: orderData.id.toString(),
+        revenue: parseFloat(orderData.total || 0),
+        currency: orderData.currency || "THB",
+        Cart: cart,
+        Price: parseFloat(orderData.total || 0),
+      });
+    }
+  }, [orderData]);
 
   // Poll for payment status updates if PromptPay
   useEffect(() => {

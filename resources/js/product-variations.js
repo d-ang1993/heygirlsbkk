@@ -533,6 +533,27 @@ function submitFormViaAjax(form) {
       });
     }
     
+    // Track Add to Cart event
+    if (typeof window.mixpanel !== 'undefined' && selectedVariation) {
+      const productId = selectedVariation.variation_id || selectedVariation.id;
+      const productName = document.querySelector('h1')?.textContent?.trim() || 'Unknown Product';
+      const category = document.querySelector('.product-category')?.textContent?.trim() || '';
+      const quantityInput = form.querySelector('input[name="quantity"]');
+      const quantity = quantityInput ? parseInt(quantityInput.value || '1', 10) : 1;
+      const price = parseFloat(selectedVariation.price || selectedVariation.regular_price || 0);
+      
+      window.mixpanel.track('Add to Cart', {
+        user_id: window.mixpanelUser?.id || null,
+        Cart: [{
+          product_id: productId,
+          name: productName,
+          quantity: quantity,
+          price: price,
+        }],
+        Category: category,
+      });
+    }
+    
     // Trigger WooCommerce events
     if (typeof jQuery !== 'undefined') {
       jQuery(document.body).trigger('added_to_cart', [
@@ -559,8 +580,19 @@ function submitFormViaAjax(form) {
       }, 2000);
     }
     
-    // Open cart drawer or redirect
+    // Open cart drawer or redirect (only on desktop, not mobile)
     setTimeout(() => {
+      // Check if mobile - on mobile, don't open cart drawer (it doesn't exist)
+      // User will navigate to cart page manually via cart icon
+      if (window.innerWidth <= 768) {
+        // On mobile, just update the bag count if available
+        if (typeof window.updateBagCount === 'function') {
+          setTimeout(() => window.updateBagCount(), 200);
+        }
+        return; // Don't try to open cart drawer on mobile
+      }
+      
+      // Desktop: Open cart drawer
       if (typeof window.openCartDrawer === 'function') {
         window.openCartDrawer(true);
       } else {

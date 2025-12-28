@@ -353,7 +353,7 @@ export default function CheckoutForm({
     console.log("🛒 =========================================");
   }, [cartItems, quantities, checkoutData, formData]);
 
-  // Calculate final_total whenever cart items, shipping, or taxes change
+  // Calculate final_total whenever cart items, shipping, taxes, or discount change
   // Use WooCommerce tax amount if available, otherwise calculate from rate
   const calculatedFinalTotal = useMemo(() => {
     return calculateFinalTotal(
@@ -361,13 +361,15 @@ export default function CheckoutForm({
       formData.shipping_total,
       formData.vat_tax,
       extractPriceNumber,
-      checkoutData.tax_total_amount // Use WooCommerce calculated tax if available
+      checkoutData.tax_total_amount, // Use WooCommerce calculated tax if available
+      checkoutData.discount_total || 0 // Include discount in calculation
     );
   }, [
     checkoutData.cart_subtotal,
     formData.shipping_total,
     formData.vat_tax,
     checkoutData.tax_total_amount,
+    checkoutData.discount_total,
   ]);
 
   // Update formData.final_total when calculated value changes
@@ -543,9 +545,11 @@ export default function CheckoutForm({
     setCheckoutData((prev) => ({
       ...prev,
       applied_coupons: couponData?.applied_coupons || prev.applied_coupons,
+      coupon_info: couponData?.coupon_info || prev.coupon_info || {},
       cart_subtotal: couponData?.cart_subtotal || prev.cart_subtotal,
       cart_total: couponData?.cart_total || prev.cart_total,
       cart_total_amount: couponData?.cart_total_amount || prev.cart_total_amount,
+      discount_total: couponData?.discount_total || prev.discount_total || 0,
     }));
     
     // Trigger WooCommerce events for any other listeners
@@ -563,10 +567,16 @@ export default function CheckoutForm({
     // This is purely React - backend returns everything we need
     setCheckoutData((prev) => ({
       ...prev,
-      applied_coupons: couponData?.applied_coupons || prev.applied_coupons,
+      // Ensure applied_coupons is an empty array if not provided or null
+      applied_coupons: couponData?.applied_coupons || [],
+      coupon_info: couponData?.coupon_info || {},
       cart_subtotal: couponData?.cart_subtotal || prev.cart_subtotal,
       cart_total: couponData?.cart_total || prev.cart_total,
       cart_total_amount: couponData?.cart_total_amount || prev.cart_total_amount,
+      // Explicitly set discount_total to 0 if coupons are removed (no coupons = no discount)
+      discount_total: (couponData?.applied_coupons?.length === 0) 
+        ? 0 
+        : (couponData?.discount_total ?? 0),
     }));
     
     // Trigger WooCommerce events for any other listeners

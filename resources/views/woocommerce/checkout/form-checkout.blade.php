@@ -357,6 +357,16 @@
       'cart_subtotal' => WC()->cart->get_cart_subtotal(),
       'cart_total' => WC()->cart->get_total(),
       'cart_total_amount' => WC()->cart->get_total(''), // Get numeric amount without currency symbol
+      'discount_total' => WC()->cart->get_discount_total(),
+      'applied_coupons' => WC()->cart->get_applied_coupons(),
+      'coupon_info' => array_reduce(WC()->cart->get_applied_coupons(), function($carry, $code) {
+          $coupon = new WC_Coupon($code);
+          $carry[$code] = array(
+              'discount_type' => $coupon->get_discount_type(),
+              'amount' => $coupon->get_amount(),
+          );
+          return $carry;
+      }, array()),
       'currency' => get_woocommerce_currency(),
       'stripe_publishable_key' => $stripe_publishable_key,
     ];

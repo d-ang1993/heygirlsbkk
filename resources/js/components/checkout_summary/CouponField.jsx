@@ -1,5 +1,6 @@
 /** @jsxImportSource react */
 import React, { useState, useEffect } from "react";
+import { extractPriceNumber } from "../../utils/priceUtils";
 
 export default function CouponField({ 
   checkoutData, 
@@ -63,6 +64,12 @@ export default function CouponField({
       return;
     }
 
+    // Check if this coupon is already applied (case-insensitive)
+    if (appliedCoupons.some(code => code.toLowerCase() === codeToApply.toLowerCase())) {
+      setError("This coupon is already applied");
+      return;
+    }
+
     setIsApplying(true);
     setError(null);
 
@@ -71,6 +78,39 @@ export default function CouponField({
     console.log("🎟️ Available valid coupons:", validCoupons);
 
     try {
+      // Remove any existing coupons first (only one coupon allowed at a time)
+      if (appliedCoupons.length > 0) {
+        console.log("🎟️ Removing existing coupon before applying new one:", appliedCoupons);
+        for (const existingCoupon of appliedCoupons) {
+          try {
+            const removeFormData = new FormData();
+            removeFormData.append("action", "remove_checkout_coupon");
+            removeFormData.append("coupon_code", existingCoupon);
+
+            const removeResponse = await fetch(ajaxUrl || "/wp-admin/admin-ajax.php", {
+              method: "POST",
+              body: removeFormData,
+            });
+
+            if (removeResponse.ok) {
+              const removeData = await removeResponse.json();
+              if (removeData.success) {
+                console.log("✅ Removed existing coupon:", existingCoupon);
+                // Update local state
+                setAppliedCoupons((prev) => prev.filter((code) => code !== existingCoupon));
+                // Notify parent component
+                if (onCouponRemoved && removeData.data) {
+                  onCouponRemoved(removeData.data);
+                }
+              }
+            }
+          } catch (removeErr) {
+            console.warn("⚠️ Error removing existing coupon:", existingCoupon, removeErr);
+            // Continue even if removal fails - backend will handle it
+          }
+        }
+      }
+
       // Use our custom AJAX handler that doesn't require WooCommerce checkout nonce
       const formData = new FormData();
       formData.append("action", "apply_checkout_coupon");
@@ -234,38 +274,58 @@ export default function CouponField({
       </button>
 
       {/* Applied coupons display */}
-      {appliedCoupons.length > 0 && (
-        <div className="mt-3 space-y-2">
-          {appliedCoupons.map((code) => (
-            <div
-              key={code}
-              className="flex items-center justify-between rounded-md bg-green-50 px-3 py-2 text-sm"
-            >
-              <span className="font-medium text-green-800">{code}</span>
-              <button
-                type="button"
-                onClick={() => handleRemoveCoupon(code)}
-                className="text-green-600 hover:text-green-800 transition-colors"
-                aria-label={`Remove coupon ${code}`}
+      {appliedCoupons.length > 0 && (() => {
+        // Calculate discount info
+        const discountTotal = checkoutData?.discount_total ?? 0;
+        const discountAmount = Math.abs(discountTotal);
+        const subtotalNum = extractPriceNumber(checkoutData?.cart_subtotal || "0");
+        const discountPercent = subtotalNum > 0 
+          ? ((discountAmount / subtotalNum) * 100).toFixed(0)
+          : null;
+        
+        return (
+          <div className="mt-3 space-y-2">
+            {appliedCoupons.map((code) => (
+              <div
+                key={code}
+                className="flex items-center justify-between rounded-md bg-green-50 px-3 py-2 text-sm"
               >
-                <svg
-                  className="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
+                <div className="flex flex-col">
+                  <span className="font-medium text-green-800">{code}</span>
+                  {discountAmount > 0 && (
+                    <span className="text-xs text-green-600 mt-0.5">
+                      {discountPercent 
+                        ? `Save ${discountPercent}% (฿${discountAmount.toFixed(2)})`
+                        : `Save ฿${discountAmount.toFixed(2)}`
+                      }
+                    </span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveCoupon(code)}
+                  className="text-green-600 hover:text-green-800 transition-colors"
+                  aria-label={`Remove coupon ${code}`}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+            ))}
+          </div>
+        );
+      })()}
 
       {/* Coupon form - using div instead of form to avoid nested forms */}
       {isExpanded && (
