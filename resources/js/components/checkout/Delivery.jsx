@@ -167,41 +167,85 @@ export default function Delivery({
     };
   }, [formData.billing_country, checkoutData, hasCountrySpecificZone, zoneToCountryMap]);
 
-  // Get zone names in a consistent order (country-specific zones first, then Global, then others)
-  // Filter out "Locations not covered by your other zones"
+  // Get zone names filtered by applicability
+  // Only show applicable zones: if country-specific match exists, show only that; otherwise show Global
   const zoneNames = useMemo(() => {
     const excludedZone = 'Locations not covered by your other zones';
-    const zones = Object.keys(groupedByZone).filter(zone => zone !== excludedZone);
+    const allZones = Object.keys(groupedByZone).filter(zone => zone !== excludedZone);
     
-    // Separate zones into categories
-    const countrySpecificZones = [];
-    const globalZone = [];
-    const otherZones = [];
+    // If no country selected, show Global zone as default
+    if (!formData.billing_country) {
+      const globalZone = allZones.find(zone => zone === 'Global');
+      return globalZone ? [globalZone] : [];
+    }
     
-    zones.forEach(zone => {
-      if (zone === 'Global') {
-        globalZone.push(zone);
-      } else if (zoneToCountryMap[zone] && zoneToCountryMap[zone] !== '*') {
-        // Zone is mapped to a specific country
-        countrySpecificZones.push(zone);
-      } else {
-        otherZones.push(zone);
+    // Find applicable zones for the selected country
+    const applicableZones = allZones.filter(zoneName => {
+      if (zoneName === 'Global') {
+        // Global is applicable if there's no country-specific zone match
+        return !hasCountrySpecificZone;
       }
+      
+      // Check if zone maps to the selected country code via dynamic mapping
+      const zoneCountryCode = zoneToCountryMap[zoneName];
+      if (zoneCountryCode && zoneCountryCode !== '*') {
+        // Check if zone country code matches selected country code
+        if (zoneCountryCode === formData.billing_country) {
+          return true;
+        }
+      }
+      
+      // Try to match zone name with country name (case-insensitive) as fallback
+      let selectedCountryName = null;
+      if (checkoutData && checkoutData.countries) {
+        const countryObj = checkoutData.countries.find(c => c.key === formData.billing_country);
+        if (countryObj) {
+          selectedCountryName = countryObj.label;
+        }
+      }
+      
+      if (selectedCountryName) {
+        const zoneNameLower = zoneName.toLowerCase();
+        const countryNameLower = selectedCountryName.toLowerCase();
+        if (zoneNameLower === countryNameLower || zoneNameLower.includes(countryNameLower)) {
+          return true;
+        }
+      }
+      
+      return false;
     });
     
-    // Sort country-specific zones alphabetically for consistency
-    countrySpecificZones.sort();
-    otherZones.sort();
+    // If we found country-specific zones, only show those
+    const countrySpecificZones = applicableZones.filter(zone => zone !== 'Global');
+    if (countrySpecificZones.length > 0) {
+      return countrySpecificZones;
+    }
     
-    // Return in order: country-specific zones, Global, then others
-    return [...countrySpecificZones, ...globalZone, ...otherZones];
-  }, [groupedByZone, zoneToCountryMap]);
+    // If no country-specific match, show Global as catch-all
+    const globalZone = applicableZones.find(zone => zone === 'Global');
+    return globalZone ? [globalZone] : [];
+  }, [groupedByZone, zoneToCountryMap, formData.billing_country, checkoutData, hasCountrySpecificZone]);
 
   // Calculate numeric subtotal from checkoutData
   const subtotal = useMemo(() => {
     if (!checkoutData || !checkoutData.cart_subtotal) return 0;
     return extractPriceNumber(checkoutData.cart_subtotal);
   }, [checkoutData]);
+
+  // Helper function to format price with Thai Baht symbol
+  const formatPrice = (amount) => {
+    if (amount <= 0) return '฿0.00';
+    return `฿${amount.toFixed(2)}`;
+  };
+
+  // Calculate how much more is needed for free shipping
+  const calculateFreeShippingRemaining = useMemo(() => {
+    return (method) => {
+      if (!method.min_amount) return null; // No minimum amount, free shipping always available
+      if (subtotal >= method.min_amount) return null; // Already eligible
+      return method.min_amount - subtotal;
+    };
+  }, [subtotal]);
 
   // Check if a shipping method meets free shipping criteria
   const meetsFreeShippingCriteria = useMemo(() => {
@@ -400,22 +444,19 @@ export default function Delivery({
         </div>
         <div className="ml-2 sm:ml-4 flex items-center gap-2 sm:gap-3 flex-shrink-0">
           {isComplete && (
-            <>
-              <svg
-                className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 flex-shrink-0"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-              <span className="text-xs sm:text-sm text-gray-600 hidden sm:inline">Edit</span>
-            </>
+            <svg
+              className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 flex-shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
           )}
           <svg
             className={`h-4 w-4 sm:h-5 sm:w-5 text-gray-500 transition-transform flex-shrink-0 ${
@@ -450,18 +491,13 @@ export default function Delivery({
                 const zoneMethods = groupedByZone[zoneName] || [];
                 if (zoneMethods.length === 0) return null;
 
-                const isApplicable = isZoneApplicable(zoneName);
-                const isGrayedOut = !isApplicable;
-
                 return (
                   <div 
                     key={zoneName} 
-                    className={`space-y-3 ${isGrayedOut ? 'opacity-50' : ''}`}
+                    className="space-y-3"
                   >
                     {/* Zone Header */}
-                    <h3 className={`text-xs sm:text-sm font-semibold uppercase tracking-wide ${
-                      isGrayedOut ? 'text-gray-400' : 'text-gray-900'
-                    }`}>
+                    <h3 className="text-xs sm:text-sm font-semibold uppercase tracking-wide text-gray-900">
                       {zoneName}
                     </h3>
                     
@@ -470,52 +506,57 @@ export default function Delivery({
                       {zoneMethods.map((method) => {
                         // Check if method meets free shipping criteria
                         const meetsCriteria = meetsFreeShippingCriteria(method);
-                        // Method is disabled if zone is grayed out OR if it has min_amount but doesn't meet criteria
-                        const isMethodDisabled = isGrayedOut || (method.min_amount && !meetsCriteria);
-                        const isMethodGrayedOut = isMethodDisabled;
+                        const isSelected = formData.shipping_method === method.id;
+                        const freeShippingRemaining = calculateFreeShippingRemaining(method);
 
                         return (
                           <div 
                             key={method.id} 
-                            className={`flex items-start ${isMethodGrayedOut ? 'opacity-50' : ''}`}
+                            className={`flex items-start ${isSelected ? 'bg-gray-50 rounded-lg p-2 -ml-2' : ''}`}
                           >
-                            <input
-                              id={`shipping_method_${method.id}`}
-                              name="shipping_method[0]"
-                              type="radio"
-                              value={method.id}
-                              checked={formData.shipping_method === method.id}
-                              onChange={(e) => {
-                                onInputChange(e);
-                                if (onShippingChange) onShippingChange(method.id, method.cost);
-                              }}
-                              disabled={isMethodDisabled}
-                              className="relative size-4 sm:size-4 mt-0.5 flex-shrink-0 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden [&:not(:checked)]:before:hidden touch-manipulation"
-                            />
-                            <label
-                              htmlFor={`shipping_method_${method.id}`}
-                              className={`ml-2 sm:ml-3 flex-1 min-w-0 ${
-                                isMethodGrayedOut ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 cursor-pointer'
-                              }`}
-                            >
+                            <div className="flex-1 min-w-0">
                               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2">
-                                <span className="text-xs sm:text-sm font-medium break-words">{method.label}</span>
+                                <div className="flex items-center gap-2">
+                                  {isSelected && (
+                                    <svg
+                                      className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600 flex-shrink-0"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      stroke="currentColor"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M5 13l4 4L19 7"
+                                      />
+                                    </svg>
+                                  )}
+                                  <span className="text-xs sm:text-sm font-medium break-words text-gray-900">
+                                    {method.label}
+                                  </span>
+                                </div>
                                 {method.cost && (
                                   <span
-                                    className={`text-xs sm:text-sm whitespace-nowrap ${isMethodGrayedOut ? 'text-gray-400' : 'text-gray-500'}`}
+                                    className={`text-xs sm:text-sm whitespace-nowrap ${
+                                      isSelected ? 'text-gray-900 font-medium' : 'text-gray-500'
+                                    }`}
                                     dangerouslySetInnerHTML={{ __html: method.cost }}
                                   />
                                 )}
                               </div>
-                              {method.min_amount && method.min_amount_formatted && (
-                                <div className={`mt-1 text-xs ${
-                                  isMethodGrayedOut ? 'text-gray-400' : 'text-gray-500'
-                                }`}>
-                                  Free shipping on orders over{' '}
-                                  <span dangerouslySetInnerHTML={{ __html: method.min_amount_formatted }} />
+                              {method.min_amount && (
+                                <div className="mt-1 text-xs text-gray-600">
+                                  {meetsCriteria ? (
+                                    <span className="text-green-600 font-medium">✓ Free shipping eligible</span>
+                                  ) : freeShippingRemaining !== null ? (
+                                    <span>
+                                      Spend {formatPrice(freeShippingRemaining)} more for free shipping
+                                    </span>
+                                  ) : null}
                                 </div>
                               )}
-                            </label>
+                            </div>
                           </div>
                         );
                       })}
@@ -530,52 +571,57 @@ export default function Delivery({
               {shippingMethods.map((method) => {
                 // Check if method meets free shipping criteria
                 const meetsCriteria = meetsFreeShippingCriteria(method);
-                // Method is disabled if it has min_amount but doesn't meet criteria
-                const isMethodDisabled = method.min_amount && !meetsCriteria;
-                const isMethodGrayedOut = isMethodDisabled;
+                const isSelected = formData.shipping_method === method.id;
+                const freeShippingRemaining = calculateFreeShippingRemaining(method);
 
                 return (
                   <div 
                     key={method.id} 
-                    className={`flex items-start ${isMethodGrayedOut ? 'opacity-50' : ''}`}
+                    className={`flex items-start ${isSelected ? 'bg-gray-50 rounded-lg p-2 -ml-2' : ''}`}
                   >
-                    <input
-                      id={`shipping_method_${method.id}`}
-                      name="shipping_method[0]"
-                      type="radio"
-                      value={method.id}
-                      checked={formData.shipping_method === method.id}
-                      onChange={(e) => {
-                        onInputChange(e);
-                        if (onShippingChange) onShippingChange(method.id, method.cost);
-                      }}
-                      disabled={isMethodDisabled}
-                      className="relative size-4 sm:size-4 mt-0.5 flex-shrink-0 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden [&:not(:checked)]:before:hidden touch-manipulation"
-                    />
-                    <label
-                      htmlFor={`shipping_method_${method.id}`}
-                      className={`ml-2 sm:ml-3 flex-1 min-w-0 ${
-                        isMethodGrayedOut ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 cursor-pointer'
-                      }`}
-                    >
+                    <div className="flex-1 min-w-0">
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2">
-                        <span className="text-xs sm:text-sm font-medium break-words">{method.label}</span>
+                        <div className="flex items-center gap-2">
+                          {isSelected && (
+                            <svg
+                              className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600 flex-shrink-0"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                          )}
+                          <span className="text-xs sm:text-sm font-medium break-words text-gray-900">
+                            {method.label}
+                          </span>
+                        </div>
                         {method.cost && (
                           <span
-                            className={`text-xs sm:text-sm whitespace-nowrap ${isMethodGrayedOut ? 'text-gray-400' : 'text-gray-500'}`}
+                            className={`text-xs sm:text-sm whitespace-nowrap ${
+                              isSelected ? 'text-gray-900 font-medium' : 'text-gray-500'
+                            }`}
                             dangerouslySetInnerHTML={{ __html: method.cost }}
                           />
                         )}
                       </div>
-                      {method.min_amount && method.min_amount_formatted && (
-                        <div className={`mt-1 text-xs ${
-                          isMethodGrayedOut ? 'text-gray-400' : 'text-gray-500'
-                        }`}>
-                          Free shipping on orders over{' '}
-                          <span dangerouslySetInnerHTML={{ __html: method.min_amount_formatted }} />
+                      {method.min_amount && (
+                        <div className="mt-1 text-xs text-gray-600">
+                          {meetsCriteria ? (
+                            <span className="text-green-600 font-medium">✓ Free shipping eligible</span>
+                          ) : freeShippingRemaining !== null ? (
+                            <span>
+                              Spend {formatPrice(freeShippingRemaining)} more for free shipping
+                            </span>
+                          ) : null}
                         </div>
                       )}
-                    </label>
+                    </div>
                   </div>
                 );
               })}
